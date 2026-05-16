@@ -1,0 +1,15 @@
+Dependencias principales
+pnpm add electron react react-dom react-router-dom
+pnpm add better-sqlite3
+pnpm add zustand
+pnpm add react-hook-form
+pnpm add zod
+pnpm add jspdf
+pnpm add dayjs
+Dependencias desarrollo
+pnpm add -D vite
+pnpm add -D @vitejs/plugin-react
+pnpm add -D electron-builder
+pnpm add -D concurrently
+pnpm add -D wait-on
+pnpm add -D cross-env

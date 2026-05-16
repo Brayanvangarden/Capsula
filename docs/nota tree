@@ -1,0 +1,151 @@
+Capsula/
+├── .npmrc
+├── .gitignore
+├── package.json
+├── pnpm-lock.yaml
+├── vite.config.js
+├── electron-builder.json
+├── README.md
+│
+├── docs/
+│   ├── Propuesta_Contrato.docx
+│   ├── Base_Datos.md
+│   └── Requerimientos.md
+│
+├── public/
+│   ├── icon.ico
+│   ├── splash.png
+│   └── logo.png
+│
+├── assets/
+│   ├── screenshots/
+│   └── templates/
+│
+├── src/
+│
+│   ├── main/                               ← Electron Backend
+│   │   ├── main.js
+│   │   ├── preload.js
+│   │   │
+│   │   ├── windows/
+│   │   │   └── mainWindow.js
+│   │   │
+│   │   ├── ipc/
+│   │   │   ├── auth.ipc.js
+│   │   │   ├── productos.ipc.js
+│   │   │   ├── categorias.ipc.js
+│   │   │   ├── inventario.ipc.js
+│   │   │   ├── clientes.ipc.js
+│   │   │   ├── ordenes.ipc.js
+│   │   │   ├── pagos.ipc.js
+│   │   │   └── usuarios.ipc.js
+│   │   │
+│   │   ├── services/
+│   │   │   ├── pdf.service.js
+│   │   │   ├── backup.service.js
+│   │   │   └── auth.service.js
+│   │   │
+│   │   └── utils/
+│   │       ├── paths.js
+│   │       ├── logger.js
+│   │       └── updater.js
+│   │
+│   ├── renderer/                           ← React Frontend
+│   │   ├── main.jsx
+│   │   ├── App.jsx
+│   │   │
+│   │   ├── routes/
+│   │   │   └── AppRoutes.jsx
+│   │   │
+│   │   ├── layouts/
+│   │   │   ├── DashboardLayout.jsx
+│   │   │   └── AuthLayout.jsx
+│   │   │
+│   │   ├── pages/
+│   │   │   ├── Login/
+│   │   │   ├── Dashboard/
+│   │   │   ├── Productos/
+│   │   │   ├── Categorias/
+│   │   │   ├── Inventario/
+│   │   │   ├── Clientes/
+│   │   │   ├── Ordenes/
+│   │   │   ├── Pagos/
+│   │   │   ├── Usuarios/
+│   │   │   ├── Reportes/
+│   │   │   └── Configuracion/
+│   │   │
+│   │   ├── components/
+│   │   │   ├── ui/
+│   │   │   ├── tables/
+│   │   │   ├── forms/
+│   │   │   ├── modals/
+│   │   │   ├── sidebar/
+│   │   │   └── navbar/
+│   │   │
+│   │   ├── context/
+│   │   │   └── AuthContext.jsx
+│   │   │
+│   │   ├── hooks/
+│   │   │   ├── useAuth.js
+│   │   │   ├── useProductos.js
+│   │   │   └── useClientes.js
+│   │   │
+│   │   ├── store/
+│   │   │   └── auth.store.js
+│   │   │
+│   │   ├── services/
+│   │   │   ├── auth.service.js
+│   │   │   ├── productos.service.js
+│   │   │   ├── categorias.service.js
+│   │   │   ├── inventario.service.js
+│   │   │   ├── clientes.service.js
+│   │   │   ├── ordenes.service.js
+│   │   │   ├── pagos.service.js
+│   │   │   └── usuarios.service.js
+│   │   │
+│   │   ├── utils/
+│   │   │   ├── currency.js
+│   │   │   ├── formatDate.js
+│   │   │   ├── validations.js
+│   │   │   └── pdf.js
+│   │   │
+│   │   └── styles/
+│   │       ├── globals.css
+│   │       ├── variables.css
+│   │       └── theme.css
+│   │
+│   ├── database/
+│   │   ├── db.js
+│   │   ├── initDatabase.js
+│   │   ├── schema.sql
+│   │   ├── seeds.sql
+│   │   │
+│   │   ├── migrations/
+│   │   │   └── migration_v1.js
+│   │   │
+│   │   └── repositories/
+│   │       ├── auth.repository.js
+│   │       ├── productos.repository.js
+│   │       ├── categorias.repository.js
+│   │       ├── inventario.repository.js
+│   │       ├── clientes.repository.js
+│   │       ├── ordenes.repository.js
+│   │       ├── pagos.repository.js
+│   │       └── usuarios.repository.js
+│   │
+│   └── shared/
+│       ├── constants/
+│       │   ├── roles.js
+│       │   └── estados.js
+│       │
+│       ├── validators/
+│       │   ├── producto.validator.js
+│       │   ├── cliente.validator.js
+│       │   └── usuario.validator.js
+│       │
+│       └── types/
+│           └── index.js
+│
+└── release/                               ← Builds generados
+    ├── win-unpacked/
+    └── installer/

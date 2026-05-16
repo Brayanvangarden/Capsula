@@ -1,0 +1,20 @@
+node_modules
+dist
+release
+.vscode
+.env
+.DS_Store
+
+# Electron
+out
+
+# Logs
+logs
+*.log
+
+# SQLite
+*.db
+*.sqlite
+
+# Build
+build
