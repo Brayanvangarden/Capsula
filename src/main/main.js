@@ -49,6 +49,9 @@ app.whenReady().then(() => {
 
   // 3️⃣ Crear ventana
   createWindow()
+}).catch(error => {
+  console.error('❌ Error en app.whenReady():', error)
+  app.quit()
 })
 
 app.on('window-all-closed', () => {

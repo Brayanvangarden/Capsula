@@ -3,7 +3,11 @@
 -- ════════════════════════════
 -- password: admin123 (hash bcrypt en producción)
 INSERT OR IGNORE INTO usuarios (nombre, usuario, password, rol)
-VALUES ('Administrador', 'admin', '1234', 'admin');
+VALUES
+  ('Administrador', 'admin', '1234', 'admin'),
+  ('David Soto', 'david', '1234', 'admin'),
+  ('María González', 'maria', '1234', 'vendedor'),
+  ('Carlos Ramírez', 'carlos', '1234', 'vendedor');
 
 -- ══════════════════════════════════════════════
 --  CATEGORÍAS DE CÁPSULAS
