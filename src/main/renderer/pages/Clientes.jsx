@@ -1,121 +1,119 @@
-// src/main/renderer/pages/Clientes.jsx
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useClientes } from '../hooks/useClientes'
 
-const { ipcRenderer } = window.require('electron')
+const EMPTY_FORM = {
+  nombre:    '',
+  apellido:  '',
+  cedula:    '',
+  telefono:  '',
+  correo:    '',
+  direccion: '',
+  notas:     '',
+}
 
 function Clientes() {
-  // ─── Estado principal ───────────────────────────────────────
-  const [tab, setTab]           = useState('lista')      // 'lista' | 'nuevo' | 'editar'
-  const [clientes, setClientes] = useState([])
+  const {
+    clientes,
+    loading,
+    error,
+    crearCliente,
+    actualizarCliente,
+    eliminarCliente,
+    buscarClientes,
+  } = useClientes()
+
+  const [tab, setTab] = useState('lista')
+  const [form, setForm] = useState(EMPTY_FORM)
+  const [clienteEdit, setClienteEdit] = useState(null)
   const [busqueda, setBusqueda] = useState('')
   const [loadingOp, setLoadingOp] = useState(false)
-  const [clienteEdit, setClienteEdit] = useState(null)
+  const [mensaje, setMensaje] = useState('')
 
-  const formVacio = {
-    nombre:    '',
-    apellido:  '',
-    cedula:    '',
-    telefono:  '',
-    correo:    '',
-    direccion: '',
-    notas:     '',
+  const clientesFiltrados = buscarClientes(busqueda)
+
+  const abrirNuevo = () => {
+    setClienteEdit(null)
+    setForm(EMPTY_FORM)
+    setMensaje('')
+    setTab('nuevo')
   }
 
-  const [formS, setFormS] = useState(formVacio)
-
-  // ─── Cargar clientes al montar ───────────────────────────────
-  useEffect(() => {
-    cargarClientes()
-  }, [])
-
-  // ─── IPC: obtener todos los clientes ────────────────────────
-  const cargarClientes = async () => {
-    try {
-      const resultado = await ipcRenderer.invoke('clientes:getAll')
-      setClientes(resultado || [])
-    } catch (error) {
-      console.error('Error al cargar clientes:', error)
-    }
-  }
-
-  // ─── IPC: crear cliente ─────────────────────────────────────
-  const handleCrear = async (e) => {
-    e.preventDefault()
-    setLoadingOp(true)
-    try {
-      await ipcRenderer.invoke('clientes:create', formS)
-      setFormS(formVacio)
-      setTab('lista')
-      await cargarClientes()
-    } catch (error) {
-      console.error('Error al crear cliente:', error)
-    } finally {
-      setLoadingOp(false)
-    }
-  }
-
-  // ─── IPC: actualizar cliente ────────────────────────────────
-  const handleActualizar = async (e) => {
-    e.preventDefault()
-    setLoadingOp(true)
-    try {
-      await ipcRenderer.invoke('clientes:update', { ...formS, id: clienteEdit.id })
-      setFormS(formVacio)
-      setClienteEdit(null)
-      setTab('lista')
-      await cargarClientes()
-    } catch (error) {
-      console.error('Error al actualizar cliente:', error)
-    } finally {
-      setLoadingOp(false)
-    }
-  }
-
-  // ─── IPC: eliminar cliente ──────────────────────────────────
-  const handleEliminar = async (id) => {
-    const confirmar = window.confirm('¿Estás seguro de eliminar este cliente?')
-    if (!confirmar) return
-    try {
-      await ipcRenderer.invoke('clientes:delete', id)
-      await cargarClientes()
-    } catch (error) {
-      console.error('Error al eliminar cliente:', error)
-    }
-  }
-
-  // ─── Abrir formulario de edición ────────────────────────────
   const abrirEditar = (cliente) => {
     setClienteEdit(cliente)
-    setFormS({
-      nombre:    cliente.nombre,
-      apellido:  cliente.apellido,
-      cedula:    cliente.cedula,
-      telefono:  cliente.telefono,
-      correo:    cliente.correo,
-      direccion: cliente.direccion,
-      notas:     cliente.notas,
+    setForm({
+      nombre:    cliente.nombre || '',
+      apellido:  cliente.apellido || '',
+      cedula:    cliente.cedula || '',
+      telefono:  cliente.telefono || '',
+      correo:    cliente.correo || '',
+      direccion: cliente.direccion || '',
+      notas:     cliente.notas || '',
     })
+    setMensaje('')
     setTab('editar')
   }
 
-  // ─── Filtro de búsqueda ─────────────────────────────────────
-  const clientesFiltrados = clientes.filter((c) =>
-    `${c.nombre} ${c.apellido} ${c.cedula} ${c.correo}`
-      .toLowerCase()
-      .includes(busqueda.toLowerCase())
-  )
+  const cerrarFormulario = () => {
+    setClienteEdit(null)
+    setForm(EMPTY_FORM)
+    setMensaje('')
+    setTab('lista')
+  }
 
-  // ─── Formulario reutilizable (crear / editar) ────────────────
+  const handleCrear = async (event) => {
+    event.preventDefault()
+    setMensaje('')
+    setLoadingOp(true)
+    try {
+      const resultado = await crearCliente(form)
+      if (!resultado.ok) {
+        setMensaje(resultado.message || 'No se pudo crear el cliente.')
+        return
+      }
+      setMensaje('Cliente creado correctamente.')
+      cerrarFormulario()
+    } finally {
+      setLoadingOp(false)
+    }
+  }
+
+  const handleActualizar = async (event) => {
+    event.preventDefault()
+    setMensaje('')
+    setLoadingOp(true)
+    try {
+      const resultado = await actualizarCliente({ id: clienteEdit.id, ...form })
+      if (!resultado.ok) {
+        setMensaje(resultado.message || 'No se pudo actualizar el cliente.')
+        return
+      }
+      setMensaje('Cliente actualizado correctamente.')
+      cerrarFormulario()
+    } finally {
+      setLoadingOp(false)
+    }
+  }
+
+  const handleEliminar = async (id) => {
+    const confirmar = window.confirm('¿Estás seguro de eliminar este cliente?')
+    if (!confirmar) return
+    const resultado = await eliminarCliente(id)
+    if (!resultado.ok) {
+      setMensaje(resultado.message || 'No se pudo eliminar el cliente.')
+      return
+    }
+    setMensaje('Cliente eliminado correctamente.')
+  }
+
   const renderFormulario = (onSubmit) => (
     <form onSubmit={onSubmit} className="form-container">
       <div className="form-grid">
-
         <div className="form-group">
           <label>Nombre *</label>
           <input
             type="text"
-            value={formS.nombre}
-            onChange={(e) => setFormS({ ...formS, nombre: e.target.value })}
+            value={form.nombre}
+            onChange={(e) => setForm({ ...form, nombre: e.target.value })}
             placeholder="Nombre del cliente"
             required
           />
@@ -125,8 +123,8 @@ function Clientes() {
           <label>Apellido *</label>
           <input
             type="text"
-            value={formS.apellido}
-            onChange={(e) => setFormS({ ...formS, apellido: e.target.value })}
+            value={form.apellido}
+            onChange={(e) => setForm({ ...form, apellido: e.target.value })}
             placeholder="Apellido del cliente"
             required
           />
@@ -136,8 +134,8 @@ function Clientes() {
           <label>Cédula / ID</label>
           <input
             type="text"
-            value={formS.cedula}
-            onChange={(e) => setFormS({ ...formS, cedula: e.target.value })}
+            value={form.cedula}
+            onChange={(e) => setForm({ ...form, cedula: e.target.value })}
             placeholder="Número de identificación"
           />
         </div>
@@ -146,8 +144,8 @@ function Clientes() {
           <label>Teléfono</label>
           <input
             type="tel"
-            value={formS.telefono}
-            onChange={(e) => setFormS({ ...formS, telefono: e.target.value })}
+            value={form.telefono}
+            onChange={(e) => setForm({ ...form, telefono: e.target.value })}
             placeholder="Ej: 8888-8888"
           />
         </div>
@@ -156,8 +154,8 @@ function Clientes() {
           <label>Correo Electrónico</label>
           <input
             type="email"
-            value={formS.correo}
-            onChange={(e) => setFormS({ ...formS, correo: e.target.value })}
+            value={form.correo}
+            onChange={(e) => setForm({ ...form, correo: e.target.value })}
             placeholder="correo@ejemplo.com"
           />
         </div>
@@ -166,8 +164,8 @@ function Clientes() {
           <label>Dirección</label>
           <input
             type="text"
-            value={formS.direccion}
-            onChange={(e) => setFormS({ ...formS, direccion: e.target.value })}
+            value={form.direccion}
+            onChange={(e) => setForm({ ...form, direccion: e.target.value })}
             placeholder="Dirección del cliente"
           />
         </div>
@@ -176,8 +174,8 @@ function Clientes() {
           <label>Notas</label>
           <textarea
             rows={3}
-            value={formS.notas}
-            onChange={(e) => setFormS({ ...formS, notas: e.target.value })}
+            value={form.notas}
+            onChange={(e) => setForm({ ...form, notas: e.target.value })}
             placeholder="Observaciones o información adicional..."
           />
         </div>
@@ -187,41 +185,36 @@ function Clientes() {
         <button
           type="button"
           className="btn-secondary"
-          onClick={() => { setTab('lista'); setFormS(formVacio); setClienteEdit(null) }}
+          onClick={cerrarFormulario}
         >
           ✖ Cancelar
         </button>
-        <button
-          type="submit"
-          className="btn-primary"
-          disabled={loadingOp}
-        >
+        <button type="submit" className="btn-primary" disabled={loadingOp}>
           {loadingOp
             ? 'Guardando...'
             : tab === 'editar' ? '✏️ Actualizar cliente' : '✅ Registrar cliente'}
         </button>
       </div>
+
+      {mensaje && <p className="message-success">{mensaje}</p>}
     </form>
   )
 
-  // ─── RENDER ─────────────────────────────────────────────────
   return (
     <div className="page-container">
       <div className="page-header">
         <h1>👥 Gestión de Clientes</h1>
         <div className="header-actions">
           {tab === 'lista' && (
-            <button
-              className="btn-primary"
-              onClick={() => { setFormS(formVacio); setTab('nuevo') }}
-            >
+            <button className="btn-primary" onClick={abrirNuevo}>
               ➕ Nuevo Cliente
             </button>
           )}
         </div>
       </div>
 
-      {/* ── TAB: LISTA ── */}
+      {error && <p className="message-error">{error}</p>}
+
       {tab === 'lista' && (
         <div className="list-container">
           <div className="search-bar">
@@ -256,16 +249,10 @@ function Clientes() {
                     <td>{cliente.telefono || '—'}</td>
                     <td>{cliente.correo || '—'}</td>
                     <td className="action-buttons">
-                      <button
-                        className="btn-edit"
-                        onClick={() => abrirEditar(cliente)}
-                      >
+                      <button className="btn-edit" onClick={() => abrirEditar(cliente)}>
                         ✏️
                       </button>
-                      <button
-                        className="btn-danger"
-                        onClick={() => handleEliminar(cliente.id)}
-                      >
+                      <button className="btn-danger" onClick={() => handleEliminar(cliente.id)}>
                         🗑️
                       </button>
                     </td>
@@ -277,7 +264,6 @@ function Clientes() {
         </div>
       )}
 
-      {/* ── TAB: NUEVO CLIENTE ── */}
       {tab === 'nuevo' && (
         <div className="form-section">
           <h2>➕ Registrar Nuevo Cliente</h2>
@@ -285,7 +271,6 @@ function Clientes() {
         </div>
       )}
 
-      {/* ── TAB: EDITAR CLIENTE ── */}
       {tab === 'editar' && (
         <div className="form-section">
           <h2>✏️ Editar Cliente — {clienteEdit?.nombre} {clienteEdit?.apellido}</h2>
