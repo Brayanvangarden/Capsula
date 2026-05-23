@@ -39,7 +39,9 @@ function Categorias() {
 
       <div className="page-header">
         <div>
-          <h1>🗂️ Categorías</h1>
+          <h1>🗂️ Categoría
+
+          </h1>
           <p>{categorias.length} categorías registradas</p>
         </div>
         <button className="btn-primary" onClick={abrirCrear}>+ Nueva categoría</button>
