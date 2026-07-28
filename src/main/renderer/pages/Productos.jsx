@@ -22,6 +22,8 @@ function Productos() {
   const [form, setForm]           = useState(EMPTY)
   const [filtro, setFiltro]       = useState('todos')
   const [confirmId, setConfirmId] = useState(null)
+  const [mensaje, setMensaje]     = useState('')
+  const [mensajeTipo, setMensajeTipo] = useState('success')
 
   // ── Filtros ──────────────────────────────────────────
   const listaFiltrada = (() => {
@@ -32,9 +34,10 @@ function Productos() {
   })()
 
   // ── Handlers ─────────────────────────────────────────
-  const abrirCrear = () => { setForm(EMPTY); setEditando(null); setModal(true) }
+  const abrirCrear = () => { setForm(EMPTY); setEditando(null); setMensaje(''); setModal(true) }
 
   const abrirEditar = (p) => {
+    setMensaje('')
     setForm({
       nombre: p.nombre, descripcion: p.descripcion ?? '',
       precio: p.precio, costo: p.costo ?? '',
@@ -48,17 +51,30 @@ function Productos() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setMensaje('')
+
     const data = {
       ...form,
       precio: parseFloat(form.precio),
       costo:  parseFloat(form.costo  || 0),
       stock:  parseInt(form.stock),
       stockMinimo: parseInt(form.stockMinimo || 0),
-      categoriaId: form.categoriaId || null,
+      categoriaId: form.categoriaId ? parseInt(form.categoriaId) : null,
       fechaVencimiento: form.fechaVencimiento || null
     }
-    if (editando) await actualizarProducto(editando, data)
-    else          await crearProducto(data)
+
+    const resultado = editando
+      ? await actualizarProducto({ id: editando, ...data })
+      : await crearProducto(data)
+
+    if (!resultado.ok) {
+      setMensajeTipo('error')
+      setMensaje(resultado.message || 'No se pudo guardar el producto.')
+      return
+    }
+
+    setMensajeTipo('success')
+    setMensaje(editando ? 'Producto actualizado correctamente.' : 'Producto guardado correctamente.')
     setModal(false)
   }
 
@@ -80,6 +96,12 @@ function Productos() {
         </div>
         <button className="btn-primary" onClick={abrirCrear}>+ Nuevo producto</button>
       </div>
+
+      {mensaje && (
+        <p className={mensajeTipo === 'success' ? 'message-success' : 'message-error'}>
+          {mensaje}
+        </p>
+      )}
 
       {/* Alertas rápidas */}
       {(stockBajo.length > 0 || proximosVencer.length > 0) && (

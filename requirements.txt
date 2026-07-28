@@ -1,0 +1,20 @@
+# Dependencias de producción
+better-sqlite3
+dayjs
+jspdf
+react
+react-dom
+react-hook-form
+react-router-dom
+zod
+zustand
+
+# Dependencias de desarrollo
+-D @electron/rebuild
+-D @vitejs/plugin-react
+-D concurrently
+-D cross-env
+-D electron
+-D electron-builder
+-D vite
+-D wait-on
