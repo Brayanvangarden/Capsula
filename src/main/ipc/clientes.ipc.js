@@ -1,13 +1,15 @@
 const { ipcMain }  = require('electron')
 const clientesRepo = require('../database/repositories/clientes.repository')
 const clientesPreciosRepo = require('../database/repositories/clientes_precios.repository')
+const { validarCliente } = require('../shared/validators/cliente.validator') 
 
 function registerClientesIpc() {
 
   // ── Obtener todos ──────────────────────────────────
-  ipcMain.handle('clientes:getAll', async () => {
+  ipcMain.handle('clientes:getAll', async (_, options = {}) => {
     try {
-      const data = clientesRepo.getAll()
+      const includeInactive = Boolean(options?.includeInactive)
+      const data = clientesRepo.getAll(includeInactive)
       return { ok: true, data }
     } catch (error) {
       return { ok: false, message: error.message }
@@ -17,6 +19,8 @@ function registerClientesIpc() {
   // ── Obtener por ID ─────────────────────────────────
   ipcMain.handle('clientes:getById', async (_, id) => {
     try {
+      if (!id) return { ok: false, message: 'El id del cliente es obligatorio' }
+
       const data = clientesRepo.getById(id)
       if (!data) return { ok: false, message: 'Cliente no encontrado' }
       return { ok: true, data }
@@ -84,7 +88,10 @@ function registerClientesIpc() {
   // ── Crear ──────────────────────────────────────────
   ipcMain.handle('clientes:create', async (_, formData) => {
     try {
-      const data = clientesRepo.create(formData)
+      const validacion = validarCliente(formData)
+      if (!validacion.ok) return validacion
+
+      const data = clientesRepo.create(validacion.data)
       return { ok: true, data, message: 'Cliente creado correctamente' }
     } catch (error) {
       return { ok: false, message: error.message }
@@ -94,7 +101,10 @@ function registerClientesIpc() {
   // ── Actualizar ─────────────────────────────────────
   ipcMain.handle('clientes:update', async (_, { id, ...formData }) => {
     try {
-      const data = clientesRepo.update(id, formData)
+      const validacion = validarCliente(formData)
+      if (!validacion.ok) return validacion
+
+      const data = clientesRepo.update(id, validacion.data)
       return { ok: true, data, message: 'Cliente actualizado correctamente' }
     } catch (error) {
       return { ok: false, message: error.message }
@@ -104,8 +114,10 @@ function registerClientesIpc() {
   // ── Eliminar lógico ────────────────────────────────
   ipcMain.handle('clientes:delete', async (_, id) => {
     try {
-      clientesRepo.remove(id)
-      return { ok: true, message: 'Cliente desactivado correctamente' }
+      if (!id) return { ok: false, message: 'El id del cliente es obligatorio' }
+
+      const data = clientesRepo.remove(id)
+      return { ok: true, data, message: 'Cliente desactivado correctamente' }
     } catch (error) {
       return { ok: false, message: error.message }
     }

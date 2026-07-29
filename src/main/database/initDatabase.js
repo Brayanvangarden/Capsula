@@ -10,6 +10,7 @@ function initDatabase() {
     const schemaPath = path.join(__dirname, 'schema.sql')
     const schema     = fs.readFileSync(schemaPath, 'utf-8')
     db.exec(schema)
+    ensureClientesColumns(db)
     console.log('✅ Esquema de base de datos creado')
 
     // 2️⃣ Verificar si necesita seeds (primera vez)
@@ -31,6 +32,27 @@ function initDatabase() {
   } catch (error) {
     console.error('❌ Error al inicializar la base de datos:', error)
     throw error
+  }
+}
+
+function ensureClientesColumns(db) {
+  const table = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'clientes'").get()
+  if (!table) return
+
+  const columns = db.prepare('PRAGMA table_info(clientes)').all()
+  const existing = new Set(columns.map(column => column.name))
+
+  const additions = [
+    ['apellido', 'TEXT'],
+    ['cedula', 'TEXT'],
+    ['notas', 'TEXT'],
+  ]
+
+  for (const [name, type] of additions) {
+    if (!existing.has(name)) {
+      db.exec(`ALTER TABLE clientes ADD COLUMN ${name} ${type}`)
+      console.log(`✅ Columna agregada a clientes: ${name}`)
+    }
   }
 }
 

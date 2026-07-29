@@ -278,7 +278,9 @@ h6 {
   border-radius: var(--radius-md);
   background: #ffffff;
   color: var(--color-text);
-  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .form-group input:focus {
@@ -446,6 +448,78 @@ h6 {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
 }
+.search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.search-bar::before {
+  content: '';
+  position: absolute;
+  left: 16px;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  background: var(--color-text-muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") center / contain no-repeat;
+  transition: background 0.15s ease;
+}
+
+.search-bar:focus-within::before {
+  background: var(--color-primary);
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 0.8rem 2.75rem 0.8rem 2.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: #ffffff;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.search-bar input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.search-bar input:hover {
+  border-color: #d1d5db;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1), var(--shadow-sm);
+}
+
+.search-bar-clear {
+  position: absolute;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.search-bar-clear:hover {
+  background: rgba(220, 38, 38, 0.12);
+  color: var(--color-danger);
+}
 
 .filtros {
   display: flex;
@@ -530,14 +604,51 @@ h6 {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.55);
   display: grid;
   place-items: center;
   padding: 1.5rem;
-  z-index: 50;
+  z-index: 1000;
 }
 
-.modal {
+.modal-card {
+  width: min(460px, 100%);
+  background: var(--color-surface);
+  border-radius: 1.2rem;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+  padding: 1.7rem;
+  text-align: center;
+}
+
+.modal-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 1rem;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.12);
+  display: grid;
+  place-items: center;
+  font-size: 1.7rem;
+}
+
+.modal-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+  color: var(--color-text);
+}
+
+.modal-card p {
+  margin: 0 0 1.2rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
   width: min(900px, 100%);
   max-height: calc(100vh - 3rem);
   overflow-y: auto;
@@ -785,11 +896,36 @@ h6 {
   background: rgba(15, 23, 42, 0.1);
 }
 
+.scrollable-form {
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+  padding-right: 0.35rem;
+}
+
+.scrollable-form::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollable-form::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.18);
+  border-radius: 999px;
+}
+
 .message-success,
 .message-error {
   margin-top: 1rem;
   padding: 1rem;
   border-radius: var(--radius-md);
+  font-weight: 600;
+}
+
+.message-success-banner {
+  margin: 0 0 1rem;
+  padding: 0.95rem 1rem;
+  border-radius: var(--radius-md);
+  background: rgba(22, 163, 74, 0.14);
+  color: #166534;
+  border: 1px solid rgba(22, 163, 74, 0.2);
   font-weight: 600;
 }
 

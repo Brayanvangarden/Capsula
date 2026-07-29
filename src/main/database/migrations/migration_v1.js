@@ -1,7 +1,19 @@
 function up(db) {
-  // Ejemplo: agregar columna si no existe
-  // Esta migración es el punto de partida v1
-  // Aquí irán los cambios futuros al esquema
+  const columns = db.prepare('PRAGMA table_info(clientes)').all()
+  const existingColumns = new Set(columns.map(column => column.name))
+
+  if (!existingColumns.has('apellido')) {
+    db.exec(`ALTER TABLE clientes ADD COLUMN apellido TEXT`)
+  }
+
+  if (!existingColumns.has('cedula')) {
+    db.exec(`ALTER TABLE clientes ADD COLUMN cedula TEXT`)
+  }
+
+  if (!existingColumns.has('notas')) {
+    db.exec(`ALTER TABLE clientes ADD COLUMN notas TEXT`)
+  }
+
   console.log('📦 Migración v1 aplicada')
 }
 
