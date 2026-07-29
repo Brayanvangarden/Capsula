@@ -50,12 +50,18 @@ contextBridge.exposeInMainWorld('api', {
   //  CLIENTES
   // ══════════════════════════════════════
   clientes: {
-    getAll:        ()            => ipcRenderer.invoke('clientes:getAll'),
-    getById:       (id)          => ipcRenderer.invoke('clientes:getById', id),
-    create:        (data)        => ipcRenderer.invoke('clientes:create', data),
-    update:        (data)        => ipcRenderer.invoke('clientes:update', data),
-    delete:        (id)          => ipcRenderer.invoke('clientes:delete', id),
-    updateBalance: (id, monto)   => ipcRenderer.invoke('clientes:updateBalance', { id, monto }),
+    getAll:               ()            => ipcRenderer.invoke('clientes:getAll'),
+    getById:              (id)          => ipcRenderer.invoke('clientes:getById', id),
+    create:               (data)        => ipcRenderer.invoke('clientes:create', data),
+    update:               (data)        => ipcRenderer.invoke('clientes:update', data),
+    delete:               (id)          => ipcRenderer.invoke('clientes:delete', id),
+    updateBalance:        (id, monto)   => ipcRenderer.invoke('clientes:updateBalance', { id, monto }),
+    getPrecioEspecial:    (cliente_id, producto_id) => ipcRenderer.invoke('clientes:getPrecioEspecial', { cliente_id, producto_id }),
+    getPreciosEspeciales: ()            => ipcRenderer.invoke('clientes:precios:getAll'),
+    getPreciosEspecialesByCliente: (cliente_id) => ipcRenderer.invoke('clientes:precios:getByClienteId', cliente_id),
+    createPrecioEspecial: (data)        => ipcRenderer.invoke('clientes:precios:create', data),
+    updatePrecioEspecial: (data)        => ipcRenderer.invoke('clientes:precios:update', data),
+    deletePrecioEspecial: (id)          => ipcRenderer.invoke('clientes:precios:delete', id),
   },
 
   // ══════════════════════════════════════
