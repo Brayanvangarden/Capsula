@@ -78,8 +78,21 @@ CREATE TABLE IF NOT EXISTS clientes (
 );
 
 -- ════════════════════════════════════════
---  ÓRDENES
+--  PRECIOS ESPECIALES POR CLIENTE
 -- ════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS clientes_precios (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  cliente_id      INTEGER NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
+  producto_id     INTEGER NOT NULL REFERENCES productos(id) ON DELETE CASCADE,
+  precio_unitario REAL    NOT NULL DEFAULT 0,
+  creado_en       TEXT    NOT NULL DEFAULT (datetime('now')),
+  actualizado     TEXT    NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(cliente_id, producto_id)
+);
+
+-- ════════════════════════════════════════
+--  ÓRDENES
+-- ════════════════════════════════
 CREATE TABLE IF NOT EXISTS ordenes (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   cliente_id      INTEGER NOT NULL REFERENCES clientes(id) ON DELETE RESTRICT,

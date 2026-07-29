@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useOrdenes } from '../hooks/useOrdenes'
 import { useClientes } from '../hooks/useClientes'
 import { useProductos } from '../hooks/useProductos'
+import { clientesService } from '../services/clientes.service'
 
 const NUEVA_LINEA = { productoId: '', cantidad: '1', precio: '0' }
 
@@ -54,6 +55,27 @@ function Ordenes() {
     setLineas((prev) => prev.map((linea, i) => i === index ? { ...linea, ...cambios } : linea))
   }
 
+  const handleProductoSelect = async (index, productoId) => {
+    const producto = productosActivos.find((item) => String(item.id) === productoId)
+    const precioInicial = producto ? String(producto.precio) : '0'
+
+    actualizarLinea(index, {
+      productoId,
+      precio: precioInicial,
+    })
+
+    if (!form.clienteId || !producto) return
+
+    const precioEspecial = await clientesService.getPrecioEspecial(
+      Number(form.clienteId),
+      producto.id
+    )
+
+    if (precioEspecial != null) {
+      actualizarLinea(index, { precio: String(precioEspecial) })
+    }
+  }
+
   const agregarLinea = () => setLineas((prev) => [...prev, NUEVA_LINEA])
 
   const removerLinea = (index) => setLineas((prev) => prev.filter((_, i) => i !== index))
@@ -64,6 +86,29 @@ function Ordenes() {
     (acc, linea) => acc + Number(linea.precio) * Number(linea.cantidad),
     0
   )
+
+  useEffect(() => {
+    if (!form.clienteId) return
+
+    const clienteId = Number(form.clienteId)
+    const actualizarPrecios = async () => {
+      const nuevasLineas = await Promise.all(lineas.map(async (linea) => {
+        if (!linea.productoId) return linea
+        const precioEspecial = await clientesService.getPrecioEspecial(
+          clienteId,
+          Number(linea.productoId)
+        )
+        if (precioEspecial != null) {
+          return { ...linea, precio: String(precioEspecial) }
+        }
+        return linea
+      }))
+      setLineas(nuevasLineas)
+    }
+
+    actualizarPrecios()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.clienteId])
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -286,14 +331,7 @@ function Ordenes() {
                         <select
                           required
                           value={linea.productoId}
-                          onChange={(e) => {
-                            const valor = e.target.value
-                            const prod = productosActivos.find((item) => String(item.id) === valor)
-                            actualizarLinea(index, {
-                              productoId: valor,
-                              precio: prod ? String(prod.precio) : '0',
-                            })
-                          }}
+                          onChange={(e) => handleProductoSelect(index, e.target.value)}
                         >
                           <option value="">Selecciona un producto</option>
                           {productosActivos.map((productoItem) => (
