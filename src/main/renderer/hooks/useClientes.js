@@ -48,9 +48,7 @@ export function useClientes() {
   const eliminarCliente = useCallback(async (id) => {
     try {
       await clientesService.delete(id)
-      setClientes(prev =>
-        prev.map(c => c.id === id ? { ...c, estado: 'inactivo' } : c)
-      )
+      setClientes(prev => prev.filter(c => c.id !== id))
       return { ok: true }
     } catch (err) {
       return { ok: false, message: err.message }
@@ -59,18 +57,22 @@ export function useClientes() {
 
   // ── Buscar localmente ───────────────────────────────
   const buscarClientes = useCallback((query) => {
-    if (!query) return clientes
+    const clientesActivos = clientes.filter(c => c.estado !== 'inactivo')
+
+    if (!query) return clientesActivos
+
     const q = query.toLowerCase()
-    return clientes.filter(c =>
-      c.nombre.toLowerCase().includes(q)   ||
-      c.empresa?.toLowerCase().includes(q) ||
-      c.telefono?.includes(q)              ||
-      c.correo?.toLowerCase().includes(q)
+    return clientesActivos.filter(c =>
+      (c.nombre ?? '').toLowerCase().includes(q)   ||
+      (c.apellido ?? '').toLowerCase().includes(q) ||
+      (c.empresa ?? '').toLowerCase().includes(q) ||
+      (c.telefono ?? '').includes(q)              ||
+      (c.correo ?? '').toLowerCase().includes(q)
     )
   }, [clientes])
 
   // ── Clientes con balance pendiente ─────────────────
-  const clientesConDeuda = clientes.filter(c => c.balance_pendiente > 0)
+  const clientesConDeuda = clientes.filter(c => c.estado !== 'inactivo' && Number(c.balance_pendiente) > 0)
 
   useEffect(() => { fetchClientes() }, [fetchClientes])
 
