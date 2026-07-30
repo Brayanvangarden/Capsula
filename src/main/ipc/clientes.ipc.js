@@ -1,7 +1,7 @@
 const { ipcMain }  = require('electron')
 const clientesRepo = require('../database/repositories/clientes.repository')
 const clientesPreciosRepo = require('../database/repositories/clientes_precios.repository')
-const { validarCliente } = require('../shared/validators/cliente.validator') 
+const { validarCliente, validarClienteImport } = require('../shared/validators/cliente.validator')
 
 function registerClientesIpc() {
 
@@ -109,6 +109,29 @@ function registerClientesIpc() {
     } catch (error) {
       return { ok: false, message: error.message }
     }
+  })
+
+  // ── Importar en lote (restaurar respaldo) ──────────
+  ipcMain.handle('clientes:importBulk', async (_, filas) => {
+    const resultado = { creados: 0, fallidos: 0, errores: [] }
+
+    for (let i = 0; i < filas.length; i++) {
+      const validacion = validarClienteImport(filas[i])
+      if (!validacion.ok) {
+        resultado.fallidos++
+        resultado.errores.push(`Fila ${i + 2}: ${validacion.message}`)
+        continue
+      }
+      try {
+        clientesRepo.create(validacion.data)
+        resultado.creados++
+      } catch (error) {
+        resultado.fallidos++
+        resultado.errores.push(`Fila ${i + 2}: ${error.message}`)
+      }
+    }
+
+    return { ok: true, data: resultado }
   })
 
   // ── Eliminar lógico ────────────────────────────────

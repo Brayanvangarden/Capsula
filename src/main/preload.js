@@ -62,6 +62,7 @@ contextBridge.exposeInMainWorld('api', {
     createPrecioEspecial: (data)        => ipcRenderer.invoke('clientes:precios:create', data),
     updatePrecioEspecial: (data)        => ipcRenderer.invoke('clientes:precios:update', data),
     deletePrecioEspecial: (id)          => ipcRenderer.invoke('clientes:precios:delete', id),
+    importBulk: (filas) => ipcRenderer.invoke('clientes:importBulk', filas),
   },
 
   // ══════════════════════════════════════

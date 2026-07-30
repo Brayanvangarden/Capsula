@@ -1,41 +1,47 @@
-const { getDb } = require('../db')
+const { getDb } = require("../db");
 
 function getAll(includeInactive = false) {
   if (includeInactive) {
-    return getDb()
-      .prepare(`SELECT * FROM clientes ORDER BY nombre ASC`)
-      .all()
+    return getDb().prepare(`SELECT * FROM clientes ORDER BY nombre ASC`).all();
   }
   return getDb()
-    .prepare(`SELECT * FROM clientes WHERE estado = 'activo' ORDER BY nombre ASC`)
-    .all()
+    .prepare(
+      `SELECT * FROM clientes WHERE estado = 'activo' ORDER BY nombre ASC`,
+    )
+    .all();
 }
 
 function getById(id) {
-  return getDb()
-    .prepare('SELECT * FROM clientes WHERE id = ?')
-    .get(id)
+  return getDb().prepare("SELECT * FROM clientes WHERE id = ?").get(id);
 }
 
 function create(data) {
-  const result = getDb().prepare(`
-    INSERT INTO clientes (empresa, nombre, apellido, cedula, telefono, correo, direccion, notas)
-    VALUES (@empresa, @nombre, @apellido, @cedula, @telefono, @correo, @direccion, @notas)
-  `).run({
-    empresa: data.empresa ?? null,
-    nombre: data.nombre,
-    apellido: data.apellido ?? null,
-    cedula: data.cedula ?? null,
-    telefono: data.telefono ?? null,
-    correo: data.correo ?? null,
-    direccion: data.direccion ?? null,
-    notas: data.notas ?? null,
-  })
-  return getById(result.lastInsertRowid)
+  const result = getDb()
+    .prepare(
+      `
+    INSERT INTO clientes (empresa, nombre, apellido, cedula, telefono, correo, direccion, notas, balance_pendiente, estado)
+    VALUES (@empresa, @nombre, @apellido, @cedula, @telefono, @correo, @direccion, @notas, @balance_pendiente, @estado)
+  `,
+    )
+    .run({
+      empresa: data.empresa ?? null,
+      nombre: data.nombre,
+      apellido: data.apellido ?? null,
+      cedula: data.cedula ?? null,
+      telefono: data.telefono ?? null,
+      correo: data.correo ?? null,
+      direccion: data.direccion ?? null,
+      notas: data.notas ?? null,
+      balance_pendiente: Number(data.balance_pendiente ?? 0),
+      estado: data.estado ?? "activo",
+    });
+  return getById(result.lastInsertRowid);
 }
 
 function update(id, data) {
-  getDb().prepare(`
+  getDb()
+    .prepare(
+      `
     UPDATE clientes SET
       empresa    = @empresa,
       nombre     = @nombre,
@@ -47,50 +53,58 @@ function update(id, data) {
       notas      = @notas,
       actualizado = datetime('now')
     WHERE id = @id
-  `).run({
-    empresa: data.empresa ?? null,
-    nombre: data.nombre,
-    apellido: data.apellido ?? null,
-    cedula: data.cedula ?? null,
-    telefono: data.telefono ?? null,
-    correo: data.correo ?? null,
-    direccion: data.direccion ?? null,
-    notas: data.notas ?? null,
-    id,
-  })
-  return getById(id)
+  `,
+    )
+    .run({
+      empresa: data.empresa ?? null,
+      nombre: data.nombre,
+      apellido: data.apellido ?? null,
+      cedula: data.cedula ?? null,
+      telefono: data.telefono ?? null,
+      correo: data.correo ?? null,
+      direccion: data.direccion ?? null,
+      notas: data.notas ?? null,
+      id,
+    });
+  return getById(id);
 }
 
 function remove(id) {
-  const db = getDb()
-  const cliente = db.prepare('SELECT id, estado FROM clientes WHERE id = ?').get(id)
+  const db = getDb();
+  const cliente = db
+    .prepare("SELECT id, estado FROM clientes WHERE id = ?")
+    .get(id);
 
   if (!cliente) {
-    return null
+    return null;
   }
 
-  if (cliente.estado === 'inactivo') {
-    return cliente
+  if (cliente.estado === "inactivo") {
+    return cliente;
   }
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE clientes
     SET estado = 'inactivo', actualizado = datetime('now')
     WHERE id = ?
-  `).run(id)
+  `,
+  ).run(id);
 
-  return db.prepare('SELECT * FROM clientes WHERE id = ?').get(id)
+  return db.prepare("SELECT * FROM clientes WHERE id = ?").get(id);
 }
 
 function updateBalance(id, monto) {
   return getDb()
-    .prepare(`
+    .prepare(
+      `
       UPDATE clientes
       SET balance_pendiente = balance_pendiente + ?,
           actualizado = datetime('now')
       WHERE id = ?
-    `)
-    .run(monto, id)
+    `,
+    )
+    .run(monto, id);
 }
 
-module.exports = { getAll, getById, create, update, remove, updateBalance }
+module.exports = { getAll, getById, create, update, remove, updateBalance };

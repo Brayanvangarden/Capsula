@@ -28,6 +28,12 @@ const normalizePayload = (data = {}) => ({
 
 export const clientesService = {
 
+importBulk: async (filas) => {
+    const res = await window.api.clientes.importBulk(filas)
+    if (!res.ok) throw new Error(res.message)
+    return res.data
+  },
+
   getAll: async (includeInactive = false) => {
     const res = await window.api.clientes.getAll(includeInactive)
     if (!res.ok) throw new Error(res.message)

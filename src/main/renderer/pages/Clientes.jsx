@@ -1,5 +1,6 @@
 import { useClientes } from "../hooks/useClientes";
 import { useState, useEffect } from "react";
+import { useRef } from "react";
 
 function PencilIcon(props) {
   return (
@@ -20,6 +21,24 @@ function PencilIcon(props) {
   );
 }
 
+function EyeIcon(props) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
 function TrashIcon(props) {
   return (
     <svg
@@ -38,6 +57,44 @@ function TrashIcon(props) {
       <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
       <line x1="10" x2="10" y1="11" y2="17" />
       <line x1="14" x2="14" y1="11" y2="17" />
+    </svg>
+  );
+}
+function UploadIcon(props) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" y1="3" x2="12" y2="15" />
+    </svg>
+  );
+}
+function DownloadIcon(props) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
     </svg>
   );
 }
@@ -69,9 +126,8 @@ function Clientes() {
   const [loadingOp, setLoadingOp] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [clienteToDelete, setClienteToDelete] = useState(null);
-
+  const [clienteDetalle, setClienteDetalle] = useState(null);
   const clientesFiltrados = buscarClientes(busqueda);
-
   const abrirNuevo = () => {
     setClienteEdit(null);
     setForm(EMPTY_FORM);
@@ -155,6 +211,154 @@ function Clientes() {
 
     setMensaje("Cliente eliminado correctamente.");
     setClienteToDelete(null);
+  };
+
+  const exportarCSV = () => {
+    const columnas = [
+      "Nombre",
+      "Apellido",
+      "Empresa",
+      "Cédula",
+      "Teléfono",
+      "Correo",
+      "Dirección",
+      "Balance pendiente",
+      "Estado",
+      "Notas",
+    ];
+
+    const escapar = (valor) => {
+      const texto = String(valor ?? "");
+      if (/[";\n]/.test(texto)) {
+        return `"${texto.replace(/"/g, '""')}"`;
+      }
+      return texto;
+    };
+
+    const filas = clientesFiltrados.map((c) =>
+      [
+        c.nombre,
+        c.apellido,
+        c.empresa,
+        c.cedula,
+        c.telefono,
+        c.correo,
+        c.direccion,
+        c.balance_pendiente,
+        c.estado,
+        c.notas,
+      ]
+        .map(escapar)
+        .join(";"),
+    );
+
+    // \uFEFF (BOM) para que Excel muestre bien tildes y ñ
+    const contenido = "\uFEFF" + [columnas.join(";"), ...filas].join("\r\n");
+
+    const blob = new Blob([contenido], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const fecha = new Date().toISOString().slice(0, 10);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `clientes_${fecha}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const inputImportRef = useRef(null);
+
+  const parsearCSV = (texto) => {
+    const limpio = texto.replace(/^\uFEFF/, "");
+    const lineas = limpio.split(/\r\n|\n/).filter((l) => l.trim() !== "");
+    if (lineas.length < 2) return [];
+
+    const parsearLinea = (linea) => {
+      const campos = [];
+      let actual = "";
+      let entreComillas = false;
+      for (let i = 0; i < linea.length; i++) {
+        const char = linea[i];
+        if (char === '"') {
+          if (entreComillas && linea[i + 1] === '"') {
+            actual += '"';
+            i++;
+          } else {
+            entreComillas = !entreComillas;
+          }
+        } else if (char === ";" && !entreComillas) {
+          campos.push(actual);
+          actual = "";
+        } else {
+          actual += char;
+        }
+      }
+      campos.push(actual);
+      return campos;
+    };
+
+    const filas = lineas.slice(1).map((linea) => {
+      const [
+        nombre,
+        apellido,
+        empresa,
+        cedula,
+        telefono,
+        correo,
+        direccion,
+        balance_pendiente,
+        estado,
+        notas,
+      ] = parsearLinea(linea);
+      return {
+        nombre,
+        apellido,
+        empresa,
+        cedula,
+        telefono,
+        correo,
+        direccion,
+        balance_pendiente,
+        estado,
+        notas,
+      };
+    });
+
+    return filas;
+  };
+
+  const handleImportarCSV = async (event) => {
+    const archivo = event.target.files?.[0];
+    if (!archivo) return;
+
+    setLoadingOp(true);
+    setMensaje("");
+    try {
+      const texto = await archivo.text();
+      const filas = parsearCSV(texto);
+
+      if (filas.length === 0) {
+        setMensaje("El archivo no tiene datos para importar.");
+        return;
+      }
+
+      const resultado = await clientesService.importBulk(filas);
+      setMensaje(
+        `Importación completa: ${resultado.creados} creados, ${resultado.fallidos} fallidos.` +
+          (resultado.errores.length ? ` Ver consola para detalles.` : ""),
+      );
+      if (resultado.errores.length) console.warn(resultado.errores);
+
+      // refresca la lista
+      window.location.reload(); // opción simple; ver nota abajo
+    } catch (err) {
+      setMensaje(err.message || "No se pudo importar el archivo.");
+    } finally {
+      setLoadingOp(false);
+      event.target.value = "";
+    }
   };
 
   const renderFormulario = (onSubmit) => (
@@ -262,9 +466,27 @@ function Clientes() {
         <h1>👥 Gestión de Clientes</h1>
         <div className="header-actions">
           {tab === "lista" && (
-            <button className="btn-primary" onClick={abrirNuevo}>
-              ➕ Nuevo Cliente
-            </button>
+            <>
+              <input
+                ref={inputImportRef}
+                type="file"
+                accept=".csv"
+                onChange={handleImportarCSV}
+                style={{ display: "none" }}
+              />
+              <button
+                className="btn-secondary"
+                onClick={() => inputImportRef.current?.click()}
+              >
+                <UploadIcon /> Importar CSV
+              </button>
+              <button className="btn-secondary" onClick={exportarCSV}>
+                <DownloadIcon /> Exportar CSV
+              </button>
+              <button className="btn-primary" onClick={abrirNuevo}>
+                ➕ Nuevo Cliente
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -324,6 +546,13 @@ function Clientes() {
                     <td>{cliente.correo || "—"}</td>
                     <td className="action-buttons">
                       <button
+                        className="btn-view"
+                        onClick={() => setClienteDetalle(cliente)}
+                        aria-label="Ver detalles"
+                      >
+                        <EyeIcon />
+                      </button>
+                      <button
                         className="btn-edit"
                         onClick={() => abrirEditar(cliente)}
                         aria-label="Editar cliente"
@@ -345,36 +574,130 @@ function Clientes() {
           )}
         </div>
       )}
+      {clienteDetalle && (
+        <div className="modal-overlay" onClick={() => setClienteDetalle(null)}>
+          <div
+            className="modal-card modal-detalle"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h2>
+                {clienteDetalle.nombre} {clienteDetalle.apellido}
+              </h2>
+              <button
+                className="modal-close"
+                onClick={() => setClienteDetalle(null)}
+                aria-label="Cerrar"
+              >
+                ✕
+              </button>
+            </div>
 
+            <div className="detail-grid">
+              <div className="detail-row">
+                <span className="detail-label">Empresa</span>
+                <span className="detail-value">
+                  {clienteDetalle.empresa || "—"}
+                </span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Cédula / ID</span>
+                <span className="detail-value">
+                  {clienteDetalle.cedula || "—"}
+                </span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Teléfono</span>
+                <span className="detail-value">
+                  {clienteDetalle.telefono || "—"}
+                </span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Correo</span>
+                <span className="detail-value">
+                  {clienteDetalle.correo || "—"}
+                </span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Dirección</span>
+                <span className="detail-value">
+                  {clienteDetalle.direccion || "—"}
+                </span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Balance pendiente</span>
+                <span className="detail-value">
+                  ₡
+                  {Number(clienteDetalle.balance_pendiente ?? 0).toLocaleString(
+                    "es-CR",
+                  )}
+                </span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Estado</span>
+                <span className={`badge badge-${clienteDetalle.estado}`}>
+                  {clienteDetalle.estado}
+                </span>
+              </div>
+              {clienteDetalle.notas && (
+                <div className="detail-row detail-row-full">
+                  <span className="detail-label">Notas</span>
+                  <span className="detail-value">{clienteDetalle.notas}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className="btn-secondary"
+                onClick={() => setClienteDetalle(null)}
+              >
+                Cerrar
+              </button>
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  setClienteDetalle(null);
+                  abrirEditar(clienteDetalle);
+                }}
+              >
+                ✏️ Editar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {clienteToDelete && (
         <div className="modal-overlay" onClick={() => setClienteToDelete(null)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-icon">⚠️</div>
+          <div className="modal-confirm" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-confirm-icon">
+              <TrashIcon width={26} height={26} />
+            </div>
+
             <h3>¿Eliminar cliente?</h3>
             <p>
               Estás a punto de desactivar a{" "}
-              <strong>
+              <span className="modal-confirm-name">
                 {clienteToDelete.nombre} {clienteToDelete.apellido}
-              </strong>
-              .
-              <br />
-              Esta acción no se puede deshacer.
+              </span>
+              . Esta acción no se puede deshacer.
             </p>
-            <div className="modal-actions">
+
+            <div className="modal-confirm-actions">
               <button
                 className="btn-secondary"
                 onClick={() => setClienteToDelete(null)}
               >
                 Cancelar
               </button>
-              <button className="btn-danger" onClick={handleEliminar}>
+              <button className="btn-confirm-danger" onClick={handleEliminar}>
+                <TrashIcon width={15} height={15} />
                 Sí, eliminar
               </button>
             </div>
           </div>
         </div>
       )}
-
       {tab === "nuevo" && (
         <div className="form-section scrollable-form">
           <h2>➕ Registrar Nuevo Cliente</h2>
