@@ -1457,3 +1457,222 @@ h6 {
     align-items: start;
   }
 }
+
+.action-buttons {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.btn-view,
+.btn-edit,
+.btn-danger {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, transform 0.15s ease;
+}
+
+.btn-view:hover {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.2);
+  color: var(--color-text);
+  transform: translateY(-1px);
+}
+
+.btn-edit:hover {
+  background: rgba(79, 70, 229, 0.08);
+  border-color: rgba(79, 70, 229, 0.35);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.btn-danger:hover {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.35);
+  color: var(--color-danger);
+  transform: translateY(-1px);
+}
+
+.btn-view:active,
+.btn-edit:active,
+.btn-danger:active {
+  transform: translateY(0);
+}
+.modal-detalle {
+  text-align: left;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 0.85rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-md);
+  background: rgba(241, 245, 249, 0.6);
+}
+
+.detail-row-full {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.detail-label {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.detail-value {
+  color: var(--color-text);
+  font-weight: 600;
+  text-align: right;
+}
+
+.detail-row-full .detail-value {
+  text-align: left;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+@keyframes modalConfirmIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-confirm {
+  width: min(400px, 100%);
+  background: #ffffff;
+  border-radius: 1.4rem;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.3);
+  padding: 2rem 1.8rem 1.8rem;
+  text-align: center;
+  animation: modalConfirmIn 0.18s ease-out;
+}
+
+.modal-confirm-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1.2rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(
+    145deg,
+    rgba(220, 38, 38, 0.14),
+    rgba(220, 38, 38, 0.05)
+  );
+  color: var(--color-danger);
+  box-shadow: 0 0 0 6px rgba(220, 38, 38, 0.06);
+}
+
+.modal-confirm h3 {
+  margin: 0 0 0.6rem;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.modal-confirm p {
+  margin: 0 0 1.6rem;
+  color: var(--color-text-muted);
+  line-height: 1.65;
+  font-size: 0.95rem;
+}
+
+.modal-confirm-name {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.modal-confirm-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.modal-confirm-actions .btn-secondary {
+  flex: 1;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+}
+
+.btn-confirm-danger {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(90deg, #dc2626 0%, #b91c1c 100%);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-confirm-danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(220, 38, 38, 0.28);
+}
+
+.btn-confirm-danger:active {
+  transform: translateY(0);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-actions .btn-primary,
+.header-actions .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 44px;
+  padding: 0 1.25rem;
+  border-radius: var(--radius-md);
+  font-size: 0.92rem;
+  white-space: nowrap;
+}
+
+.header-actions .btn-secondary {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.header-actions .btn-secondary:hover {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.18);
+}
+
+.header-actions .btn-secondary svg {
+  color: var(--color-text-muted);
+}

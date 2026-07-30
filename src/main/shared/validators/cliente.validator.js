@@ -29,6 +29,20 @@ const clienteSchema = z.object({
   notas: z.string().trim().optional().default(''),
 })
 
+const clienteImportSchema = clienteSchema.extend({
+  balance_pendiente: z.coerce.number().optional().default(0),
+  estado: z.enum(['activo', 'inactivo']).optional().default('activo'),
+})
+
+function validarClienteImport(data) {
+  const resultado = clienteImportSchema.safeParse(data)
+  if (!resultado.success) {
+    const primerError = resultado.error.issues[0]
+    return { ok: false, message: primerError?.message ?? 'Datos inválidos' }
+  }
+  return { ok: true, data: resultado.data }
+}
+
 function validarCliente(data) {
   const resultado = clienteSchema.safeParse(data)
 
@@ -40,4 +54,4 @@ function validarCliente(data) {
   return { ok: true, data: resultado.data }
 }
 
-module.exports = { clienteSchema, validarCliente }
+module.exports = { clienteSchema, validarCliente, clienteImportSchema, validarClienteImport }
