@@ -1,7 +1,6 @@
 const normalizeProductoFromDb = (producto) => ({
   ...producto,
   precio: producto.precio_unitario,
-  costo: producto.costo ?? '',
   stock: producto.cantidad,
   stockMinimo: producto.stock_minimo,
   categoriaId: producto.categoria_id,
