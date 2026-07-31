@@ -1676,3 +1676,65 @@ h6 {
 .header-actions .btn-secondary svg {
   color: var(--color-text-muted);
 }
+
+.checkbox-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.badge-descuento {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.descuento-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 0.95rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-inline input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.pill-si {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+
+.pill-no {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+}
