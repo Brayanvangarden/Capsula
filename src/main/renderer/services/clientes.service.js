@@ -9,6 +9,8 @@ const normalizeCliente = (cliente = {}) => ({
   direccion: cliente.direccion ?? '',
   notas: cliente.notas ?? '',
   balance_pendiente: Number(cliente.balance_pendiente ?? 0),
+  tiene_descuento: Boolean(cliente.tiene_descuento),
+  descuento_porcentaje: Number(cliente.descuento_porcentaje ?? 0),
   estado: cliente.estado ?? 'activo',
 })
 
@@ -23,9 +25,10 @@ const normalizePayload = (data = {}) => ({
   direccion: data.direccion ?? '',
   notas: data.notas ?? '',
   balance_pendiente: Number(data.balance_pendiente ?? 0),
+  tiene_descuento: Boolean(data.tiene_descuento),
+  descuento_porcentaje: Number(data.descuento_porcentaje ?? 0),
   estado: data.estado ?? 'activo',
 })
-
 export const clientesService = {
 
 importBulk: async (filas) => {

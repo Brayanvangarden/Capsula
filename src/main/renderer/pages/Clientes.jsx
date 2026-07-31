@@ -1,6 +1,6 @@
 import { useClientes } from "../hooks/useClientes";
-import { useState, useEffect } from "react";
-import { useRef } from "react";
+import { clientesService } from "../services/clientes.service";
+import { useState, useEffect, useRef } from "react";
 
 function PencilIcon(props) {
   return (
@@ -106,6 +106,8 @@ const EMPTY_FORM = {
   correo: "",
   direccion: "",
   notas: "",
+  tiene_descuento: false,
+  descuento_porcentaje: 0,
 };
 
 function Clientes() {
@@ -127,7 +129,12 @@ function Clientes() {
   const [mensaje, setMensaje] = useState("");
   const [clienteToDelete, setClienteToDelete] = useState(null);
   const [clienteDetalle, setClienteDetalle] = useState(null);
-  const clientesFiltrados = buscarClientes(busqueda);
+  const [filtroDescuento, setFiltroDescuento] = useState("todos");
+  const clientesFiltrados = buscarClientes(busqueda).filter((c) => {
+    if (filtroDescuento === "con") return c.tiene_descuento;
+    if (filtroDescuento === "sin") return !c.tiene_descuento;
+    return true;
+  });
   const abrirNuevo = () => {
     setClienteEdit(null);
     setForm(EMPTY_FORM);
@@ -145,6 +152,8 @@ function Clientes() {
       correo: cliente.correo || "",
       direccion: cliente.direccion || "",
       notas: cliente.notas || "",
+      tiene_descuento: cliente.tiene_descuento || false,
+      descuento_porcentaje: cliente.descuento_porcentaje ?? 0,
     });
     setMensaje("");
     setTab("editar");
@@ -223,6 +232,8 @@ function Clientes() {
       "Correo",
       "Dirección",
       "Balance pendiente",
+      "Tiene descuento",
+      "Descuento porcentaje",
       "Estado",
       "Notas",
     ];
@@ -245,6 +256,8 @@ function Clientes() {
         c.correo,
         c.direccion,
         c.balance_pendiente,
+        c.tiene_descuento ? "true" : "false",
+        c.descuento_porcentaje,
         c.estado,
         c.notas,
       ]
@@ -252,7 +265,6 @@ function Clientes() {
         .join(";"),
     );
 
-    // \uFEFF (BOM) para que Excel muestre bien tildes y ñ
     const contenido = "\uFEFF" + [columnas.join(";"), ...filas].join("\r\n");
 
     const blob = new Blob([contenido], { type: "text/csv;charset=utf-8;" });
@@ -309,6 +321,8 @@ function Clientes() {
         correo,
         direccion,
         balance_pendiente,
+        tiene_descuento,
+        descuento_porcentaje,
         estado,
         notas,
       ] = parsearLinea(linea);
@@ -321,6 +335,8 @@ function Clientes() {
         correo,
         direccion,
         balance_pendiente,
+        tiene_descuento: tiene_descuento === "true",
+        descuento_porcentaje,
         estado,
         notas,
       };
@@ -435,6 +451,37 @@ function Clientes() {
             placeholder="Observaciones o información adicional..."
           />
         </div>
+
+        <div className="form-group full-width descuento-toggle">
+          <label className="checkbox-inline" htmlFor="tiene_descuento">
+            <input
+              id="tiene_descuento"
+              type="checkbox"
+              checked={form.tiene_descuento}
+              onChange={(e) =>
+                setForm({ ...form, tiene_descuento: e.target.checked })
+              }
+            />
+            <span>Aplica descuento</span>
+          </label>
+        </div>
+
+        {form.tiene_descuento && (
+          <div className="form-group">
+            <label>Porcentaje de descuento (%)</label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.5"
+              value={form.descuento_porcentaje}
+              onChange={(e) =>
+                setForm({ ...form, descuento_porcentaje: e.target.value })
+              }
+              placeholder="Ej: 5"
+            />
+          </div>
+        )}
       </div>
 
       <div className="form-actions">
@@ -518,6 +565,29 @@ function Clientes() {
             )}
           </div>
 
+          <div className="filtros">
+            <button
+              type="button"
+              className={`btn-filtro ${filtroDescuento === "todos" ? "active" : ""}`}
+              onClick={() => setFiltroDescuento("todos")}
+            >
+              Todos
+            </button>
+            <button
+              type="button"
+              className={`btn-filtro ${filtroDescuento === "con" ? "active" : ""}`}
+              onClick={() => setFiltroDescuento("con")}
+            >
+              Con descuento
+            </button>
+            <button
+              type="button"
+              className={`btn-filtro ${filtroDescuento === "sin" ? "active" : ""}`}
+              onClick={() => setFiltroDescuento("sin")}
+            >
+              Sin descuento
+            </button>
+          </div>
           {clientesFiltrados.length === 0 ? (
             <p className="empty-state">
               No se encontraron clientes registrados.
@@ -531,6 +601,7 @@ function Clientes() {
                   <th>Cédula</th>
                   <th>Teléfono</th>
                   <th>Correo</th>
+                  <th>Descuento</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -544,6 +615,15 @@ function Clientes() {
                     <td>{(cliente.cedula ?? "").toString().trim() || "—"}</td>
                     <td>{cliente.telefono || "—"}</td>
                     <td>{cliente.correo || "—"}</td>
+                    <td>
+                      {cliente.tiene_descuento ? (
+                        <span className="pill pill-si">
+                          Sí · {cliente.descuento_porcentaje}%
+                        </span>
+                      ) : (
+                        <span className="pill pill-no">No</span>
+                      )}
+                    </td>
                     <td className="action-buttons">
                       <button
                         className="btn-view"
@@ -634,6 +714,14 @@ function Clientes() {
                 </span>
               </div>
               <div className="detail-row">
+                <span className="detail-label">Descuento</span>
+                <span className="detail-value">
+                  {clienteDetalle.tiene_descuento
+                    ? `${clienteDetalle.descuento_porcentaje}%`
+                    : "Sin descuento"}
+                </span>
+              </div>
+              <div className="detail-row">
                 <span className="detail-label">Estado</span>
                 <span className={`badge badge-${clienteDetalle.estado}`}>
                   {clienteDetalle.estado}
@@ -661,7 +749,7 @@ function Clientes() {
                   abrirEditar(clienteDetalle);
                 }}
               >
-                ✏️ Editar
+                Editar
               </button>
             </div>
           </div>

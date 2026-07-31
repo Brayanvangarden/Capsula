@@ -16,26 +16,22 @@ function getById(id) {
 }
 
 function create(data) {
-  const result = getDb()
-    .prepare(
-      `
-    INSERT INTO clientes (empresa, nombre, apellido, cedula, telefono, correo, direccion, notas, balance_pendiente, estado)
-    VALUES (@empresa, @nombre, @apellido, @cedula, @telefono, @correo, @direccion, @notas, @balance_pendiente, @estado)
-  `,
-    )
-    .run({
-      empresa: data.empresa ?? null,
-      nombre: data.nombre,
-      apellido: data.apellido ?? null,
-      cedula: data.cedula ?? null,
-      telefono: data.telefono ?? null,
-      correo: data.correo ?? null,
-      direccion: data.direccion ?? null,
-      notas: data.notas ?? null,
-      balance_pendiente: Number(data.balance_pendiente ?? 0),
-      estado: data.estado ?? "activo",
-    });
-  return getById(result.lastInsertRowid);
+  const result = getDb().prepare(`
+    INSERT INTO clientes (empresa, nombre, apellido, cedula, telefono, correo, direccion, notas, tiene_descuento, descuento_porcentaje)
+    VALUES (@empresa, @nombre, @apellido, @cedula, @telefono, @correo, @direccion, @notas, @tiene_descuento, @descuento_porcentaje)
+  `).run({
+    empresa: data.empresa ?? '',
+    nombre: data.nombre,
+    apellido: data.apellido ?? '',
+    cedula: data.cedula ?? '',
+    telefono: data.telefono ?? '',
+    correo: data.correo ?? '',
+    direccion: data.direccion ?? '',
+    notas: data.notas ?? null,
+    tiene_descuento: data.tiene_descuento ? 1 : 0,
+    descuento_porcentaje: Number(data.descuento_porcentaje ?? 0),
+  })
+  return getById(result.lastInsertRowid)
 }
 
 function update(id, data) {
@@ -51,19 +47,23 @@ function update(id, data) {
       correo     = @correo,
       direccion  = @direccion,
       notas      = @notas,
+      tiene_descuento = @tiene_descuento,
+      descuento_porcentaje = @descuento_porcentaje,
       actualizado = datetime('now')
     WHERE id = @id
   `,
     )
     .run({
-      empresa: data.empresa ?? null,
+      empresa: data.empresa ?? '',
       nombre: data.nombre,
-      apellido: data.apellido ?? null,
-      cedula: data.cedula ?? null,
-      telefono: data.telefono ?? null,
-      correo: data.correo ?? null,
-      direccion: data.direccion ?? null,
+      apellido: data.apellido ?? '',
+      cedula: data.cedula ?? '',
+      telefono: data.telefono ?? '',
+      correo: data.correo ?? '',
+      direccion: data.direccion ?? '',
       notas: data.notas ?? null,
+      tiene_descuento: data.tiene_descuento ? 1 : 0,
+      descuento_porcentaje: Number(data.descuento_porcentaje ?? 0),
       id,
     });
   return getById(id);
