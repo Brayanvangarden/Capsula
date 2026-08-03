@@ -45,14 +45,14 @@ function TrashIcon(props) {
 
 const EMPTY = {
   nombre: '', descripcion: '', precio: '',
-  stock: '', stockMinimo: '', categoriaId: '', fechaVencimiento: ''
+  stock: '', stockMinimo: '', categoriaId: '', fechaVencimiento: '', material: ''
 }
 
 function Productos() {
   const {
     productos, productosActivos, stockBajo, proximosVencer,
     loading, crearProducto, actualizarProducto,
-    eliminarProducto, buscarProductos
+    eliminarProducto, obtenerProducto, buscarProductos
   } = useProductos()
 
   const { categorias } = useCategorias()
@@ -68,6 +68,7 @@ function Productos() {
   const [mensaje, setMensaje]     = useState('')
   const [mensajeTipo, setMensajeTipo] = useState('success')
   const [loadingOp, setLoadingOp] = useState(false)
+  const [detalleLoading, setDetalleLoading] = useState(false)
 
   // ── Filtros ──────────────────────────────────────────
   const listaFiltrada = (() => {
@@ -87,13 +88,19 @@ function Productos() {
       precio: p.precio,
       stock: p.stock, stockMinimo: p.stockMinimo ?? '',
       categoriaId: p.categoriaId ?? '',
-      fechaVencimiento: p.fechaVencimiento?.slice(0, 10) ?? ''
+      fechaVencimiento: p.fechaVencimiento?.slice(0, 10) ?? '',
+      material: p.material ?? ''
     })
     setEditando(p.id)
     setTab('editar')
   }
 
-  const cerrarFormulario = () => { setEditando(null); setForm(EMPTY); setTab('lista'); setMensaje('') }
+  const cerrarFormulario = (clearMessage = true) => {
+    setEditando(null)
+    setForm(EMPTY)
+    setTab('lista')
+    if (clearMessage) setMensaje('')
+  }
 
   // Auto-limpia mensaje
   useEffect(() => {
@@ -113,7 +120,8 @@ function Productos() {
       stock:  parseInt(form.stock),
       stockMinimo: parseInt(form.stockMinimo || 0),
       categoriaId: form.categoriaId ? parseInt(form.categoriaId) : null,
-      fechaVencimiento: form.fechaVencimiento || null
+      fechaVencimiento: form.fechaVencimiento || null,
+      material: form.material || null
     }
 
     try {
@@ -129,7 +137,7 @@ function Productos() {
 
       setMensajeTipo('success')
       setMensaje(editando ? 'Producto actualizado correctamente.' : 'Producto creado correctamente.')
-      cerrarFormulario()
+      cerrarFormulario(false)
     } finally {
       setLoadingOp(false)
     }
@@ -152,6 +160,13 @@ function Productos() {
             <option value="">Sin categoría</option>
             {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
           </select>
+        </div>
+
+        <div className="form-group">
+          <label>Material</label>
+          <input type="text" value={form.material}
+            onChange={e => setForm({...form, material: e.target.value})}
+            placeholder="Material del producto" />
         </div>
 
         <div className="form-group">
@@ -316,7 +331,13 @@ function Productos() {
                         className="btn-icon"
                         title="Ver detalle"
                         aria-label="Ver detalle"
-                        onClick={() => { setDetalleProducto(p); setDetalleModal(true) }}
+                        onClick={async () => {
+                          setDetalleLoading(true)
+                          const resultado = await obtenerProducto(p.id)
+                          setDetalleLoading(false)
+                          setDetalleProducto(resultado.ok ? resultado.data : p)
+                          setDetalleModal(true)
+                        }}
                       >
                         👁️
                       </button>
@@ -354,12 +375,15 @@ function Productos() {
       )}
 
       {/* Modal Detalle (solo lectura) - modal-card compacto */}
-      {detalleModal && detalleProducto && (
+      {detalleModal && (
         <div className="modal-overlay" onClick={() => setDetalleModal(false)}>
           <div className="modal-card" onClick={e => e.stopPropagation()}>
             <div className="modal-icon">ℹ️</div>
             <h3>Detalle del producto</h3>
-            <div className="modal-detail-grid">
+            {detalleLoading ? (
+              <p className="message-success">Cargando detalle...</p>
+            ) : detalleProducto ? (
+              <div className="modal-detail-grid">
               <div className="form-group">
                 <label>Nombre</label>
                 <div className="readonly-field">{detalleProducto.nombre}</div>
@@ -371,7 +395,7 @@ function Productos() {
               <div className="form-group">
                 <label>Categoría</label>
                 <div className="readonly-field">
-                  {categorias.find(c => c.id == detalleProducto.categoriaId)?.nombre ?? detalleProducto.categoria_nombre ?? '—'}
+                  {detalleProducto.categoria_nombre ?? categorias.find(c => c.id == detalleProducto.categoriaId)?.nombre ?? '—'}
                 </div>
               </div>
               <div className="form-group">
@@ -394,7 +418,10 @@ function Productos() {
                 <label>Descripción</label>
                 <div className="readonly-field description-field">{detalleProducto.descripcion || '—'}</div>
               </div>
-            </div>
+              </div>
+            ) : (
+              <p className="message-error">No se pudo cargar el detalle del producto.</p>
+            )}
             <div className="modal-actions modal-actions-small">
               <button className="btn-secondary" onClick={() => setDetalleModal(false)}>Cerrar</button>
             </div>

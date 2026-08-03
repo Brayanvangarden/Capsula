@@ -73,6 +73,15 @@ export function useProductos() {
     }
   }, [])
 
+  const obtenerProducto = useCallback(async (id) => {
+    try {
+      const producto = await productosService.getById(id)
+      return { ok: true, data: producto }
+    } catch (err) {
+      return { ok: false, message: err.message }
+    }
+  }, [])
+
   useEffect(() => {
     fetchProductos()
     fetchAlertas()
@@ -104,6 +113,7 @@ export function useProductos() {
     crearProducto,
     actualizarProducto,
     eliminarProducto,
+    obtenerProducto,
     buscarProductos,
   }
 }
