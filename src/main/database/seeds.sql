@@ -72,20 +72,20 @@ VALUES
 --  CLIENTES
 -- ══════════════════════════════════════════════
 INSERT OR IGNORE INTO clientes
-  (empresa, nombre, telefono, correo, direccion, balance_pendiente, estado)
+  (empresa, nombre, apellido, cedula, telefono, correo, direccion, balance_pendiente, estado)
 VALUES
-  ('Farmacia Santa Lucía',     'Luis Mora Jiménez',       '8801-1234', 'lmora@fsantalucia.cr',      'San José, Desamparados',      0,       'activo'),
-  ('NutriMax CR',              'Andrea Solís Vargas',     '8712-5678', 'asolisv@nutrimax.cr',       'Heredia, San Pablo',          15000,   'activo'),
-  ('Suplementos ProFit',       'Rodrigo Campos Blanco',   '6623-9012', 'rcampos@suplementosprofit.com','Alajuela, Centro',          0,       'activo'),
-  ('Laboratorio BioSalud',     'Valeria Torres Núñez',    '7734-3456', 'vtorres@biosalud.cr',       'Cartago, Tres Ríos',          42500,   'activo'),
-  ('NaturVita Suplementos',    'Fabián Gutiérrez Arias',  '8845-7890', 'fgutierrez@naturvita.cr',   'San José, Curridabat',        0,       'activo'),
-  ('Droguería Central',        'Sofía Ramírez Mora',      '8956-2345', 'sramirez@drogueriacentral.com','Puntarenas, Centro',        8750,    'activo'),
-  ('FarmaPlus Liberia',        'Diego Hernández Castro',  '7867-6789', 'dhernandez@farmaplus.cr',   'Guanacaste, Liberia',         0,       'activo'),
-  ('Salud Natural Pérez Z.',   'Alejandra Méndez Rojas',  '6978-1234', 'amendez@saludnatural.cr',   'San José, Pérez Zeledón',     21000,   'activo'),
-  ('Cápsulas & Más',           'Mauricio Vega Quesada',   '8089-5678', 'mvega@capsulasymas.com',    'Heredia, Barva',              0,       'activo'),
-  ('Distribuidora MedVida',    'Daniela Fallas Chinchilla','7190-9012','dfallas@medvida.cr',        'Alajuela, San Ramón',         33600,   'activo'),
-  ('GreenCaps Import',         'Jonathan Salas Brenes',   '8201-3456', 'jsalas@greencaps.com',      'San José, Escazú',            0,       'activo'),
-  ('Farmacias del Norte',      'Tatiana Ulate Jiménez',   '6312-7890', 'tulate@farmasnorte.cr',     'Alajuela, Ciudad Quesada',    0,       'activo');
+  ('Farmacia Santa Lucía',     'Luis Mora Jiménez',       '', '', '8801-1234', 'lmora@fsantalucia.cr',      'San José, Desamparados',      0,       'activo'),
+  ('NutriMax CR',              'Andrea Solís Vargas',     '', '', '8712-5678', 'asolisv@nutrimax.cr',       'Heredia, San Pablo',          15000,   'activo'),
+  ('Suplementos ProFit',       'Rodrigo Campos Blanco',   '', '', '6623-9012', 'rcampos@suplementosprofit.com','Alajuela, Centro',          0,       'activo'),
+  ('Laboratorio BioSalud',     'Valeria Torres Núñez',    '', '', '7734-3456', 'vtorres@biosalud.cr',       'Cartago, Tres Ríos',          42500,   'activo'),
+  ('NaturVita Suplementos',    'Fabián Gutiérrez Arias',  '', '', '8845-7890', 'fgutierrez@naturvita.cr',   'San José, Curridabat',        0,       'activo'),
+  ('Droguería Central',        'Sofía Ramírez Mora',      '', '', '8956-2345', 'sramirez@drogueriacentral.com','Puntarenas, Centro',        8750,    'activo'),
+  ('FarmaPlus Liberia',        'Diego Hernández Castro',  '', '', '7867-6789', 'dhernandez@farmaplus.cr',   'Guanacaste, Liberia',         0,       'activo'),
+  ('Salud Natural Pérez Z.',   'Alejandra Méndez Rojas',  '', '', '6978-1234', 'amendez@saludnatural.cr',   'San José, Pérez Zeledón',     21000,   'activo'),
+  ('Cápsulas & Más',           'Mauricio Vega Quesada',   '', '', '8089-5678', 'mvega@capsulasymas.com',    'Heredia, Barva',              0,       'activo'),
+  ('Distribuidora MedVida',    'Daniela Fallas Chinchilla','', '','7190-9012','dfallas@medvida.cr',        'Alajuela, San Ramón',         33600,   'activo'),
+  ('GreenCaps Import',         'Jonathan Salas Brenes',   '', '', '8201-3456', 'jsalas@greencaps.com',      'San José, Escazú',            0,       'activo'),
+  ('Farmacias del Norte',      'Tatiana Ulate Jiménez',   '', '', '6312-7890', 'tulate@farmasnorte.cr',     'Alajuela, Ciudad Quesada',    0,       'activo');
 
 
 -- ══════════════════════════════════════════════

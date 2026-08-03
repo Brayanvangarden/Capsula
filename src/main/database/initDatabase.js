@@ -13,12 +13,16 @@ function initDatabase() {
     ensureClientesColumns(db)
     console.log('✅ Esquema de base de datos creado')
 
-    // 2️⃣ Verificar si necesita seeds (primera vez)
+    // 2️⃣ Verificar si necesita seeds (primera vez o si faltan datos)
     const userCount = db
       .prepare('SELECT COUNT(*) as total FROM usuarios')
       .get()
 
-    if (userCount.total === 0) {
+    const clienteCount = db
+      .prepare('SELECT COUNT(*) as total FROM clientes')
+      .get()
+
+    if (userCount.total === 0 || clienteCount.total === 0) {
       const seedsPath = path.join(__dirname, 'seeds.sql')
       const seeds     = fs.readFileSync(seedsPath, 'utf-8')
       db.exec(seeds)
