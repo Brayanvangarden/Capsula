@@ -1,85 +1,236 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useProductos }  from '../hooks/useProductos'
 import { useCategorias } from '../hooks/useCategorias'
 
+function PencilIcon(props) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .622.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+      <path d="m15 5 4 4" />
+    </svg>
+  )
+}
+
+function TrashIcon(props) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M3 6h18" />
+      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+      <line x1="10" x2="10" y1="11" y2="17" />
+      <line x1="14" x2="14" y1="11" y2="17" />
+    </svg>
+  )
+}
+
 const EMPTY = {
-  nombre: '', descripcion: '', precio: '', costo: '',
-  stock: '', stockMinimo: '', categoriaId: '', fechaVencimiento: ''
+  nombre: '', descripcion: '', precio: '',
+  stock: '', stockMinimo: '', categoriaId: '', fechaVencimiento: '', material: ''
 }
 
 function Productos() {
   const {
-    productos, stockBajo, proximosVencer,
+    productos, productosActivos, stockBajo, proximosVencer,
     loading, crearProducto, actualizarProducto,
-    eliminarProducto, buscarProductos
+    eliminarProducto, obtenerProducto, buscarProductos
   } = useProductos()
 
   const { categorias } = useCategorias()
 
   const [busqueda, setBusqueda]   = useState('')
-  const [modal, setModal]         = useState(false)
+  const [tab, setTab]             = useState('lista')
   const [editando, setEditando]   = useState(null)
   const [form, setForm]           = useState(EMPTY)
+  const [detalleModal, setDetalleModal] = useState(false)
+  const [detalleProducto, setDetalleProducto] = useState(null)
   const [filtro, setFiltro]       = useState('todos')
   const [confirmId, setConfirmId] = useState(null)
   const [mensaje, setMensaje]     = useState('')
   const [mensajeTipo, setMensajeTipo] = useState('success')
+  const [loadingOp, setLoadingOp] = useState(false)
+  const [detalleLoading, setDetalleLoading] = useState(false)
 
   // ── Filtros ──────────────────────────────────────────
   const listaFiltrada = (() => {
-    let lista = busqueda ? buscarProductos(busqueda) : productos
+    let lista = busqueda ? buscarProductos(busqueda) : productosActivos
     if (filtro === 'stockBajo')       lista = lista.filter(p => stockBajo.find(s => s.id === p.id))
     if (filtro === 'proximosVencer')  lista = lista.filter(p => proximosVencer.find(v => v.id === p.id))
     return lista
   })()
 
   // ── Handlers ─────────────────────────────────────────
-  const abrirCrear = () => { setForm(EMPTY); setEditando(null); setMensaje(''); setModal(true) }
+  const abrirCrear = () => { setForm(EMPTY); setEditando(null); setMensaje(''); setTab('nuevo') }
 
   const abrirEditar = (p) => {
     setMensaje('')
     setForm({
       nombre: p.nombre, descripcion: p.descripcion ?? '',
-      precio: p.precio, costo: p.costo ?? '',
+      precio: p.precio,
       stock: p.stock, stockMinimo: p.stockMinimo ?? '',
       categoriaId: p.categoriaId ?? '',
-      fechaVencimiento: p.fechaVencimiento?.slice(0, 10) ?? ''
+      fechaVencimiento: p.fechaVencimiento?.slice(0, 10) ?? '',
+      material: p.material ?? ''
     })
     setEditando(p.id)
-    setModal(true)
+    setTab('editar')
   }
+
+  const cerrarFormulario = (clearMessage = true) => {
+    setEditando(null)
+    setForm(EMPTY)
+    setTab('lista')
+    if (clearMessage) setMensaje('')
+  }
+
+  // Auto-limpia mensaje
+  useEffect(() => {
+    if (!mensaje) return
+    const t = setTimeout(() => setMensaje(''), 3000)
+    return () => clearTimeout(t)
+  }, [mensaje])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setMensaje('')
+    setLoadingOp(true)
 
     const data = {
       ...form,
       precio: parseFloat(form.precio),
-      costo:  parseFloat(form.costo  || 0),
       stock:  parseInt(form.stock),
       stockMinimo: parseInt(form.stockMinimo || 0),
       categoriaId: form.categoriaId ? parseInt(form.categoriaId) : null,
-      fechaVencimiento: form.fechaVencimiento || null
+      fechaVencimiento: form.fechaVencimiento || null,
+      material: form.material || null
     }
 
-    const resultado = editando
-      ? await actualizarProducto({ id: editando, ...data })
-      : await crearProducto(data)
+    try {
+      const resultado = editando
+        ? await actualizarProducto({ id: editando, ...data })
+        : await crearProducto(data)
 
-    if (!resultado.ok) {
-      setMensajeTipo('error')
-      setMensaje(resultado.message || 'No se pudo guardar el producto.')
-      return
+      if (!resultado.ok) {
+        setMensajeTipo('error')
+        setMensaje(resultado.message || 'No se pudo guardar el producto.')
+        return
+      }
+
+      setMensajeTipo('success')
+      setMensaje(editando ? 'Producto actualizado correctamente.' : 'Producto creado correctamente.')
+      cerrarFormulario(false)
+    } finally {
+      setLoadingOp(false)
     }
-
-    setMensajeTipo('success')
-    setMensaje(editando ? 'Producto actualizado correctamente.' : 'Producto guardado correctamente.')
-    setModal(false)
   }
 
+  const renderFormulario = (onSubmit) => (
+    <form onSubmit={onSubmit} className="form-container">
+      <div className="form-grid">
+        <div className="form-group">
+          <label>Nombre *</label>
+          <input required value={form.nombre}
+            onChange={e => setForm({...form, nombre: e.target.value})}
+            placeholder="Nombre del producto" />
+        </div>
+
+        <div className="form-group">
+          <label>Categoría</label>
+          <select value={form.categoriaId}
+            onChange={e => setForm({...form, categoriaId: e.target.value})}>
+            <option value="">Sin categoría</option>
+            {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Material</label>
+          <input type="text" value={form.material}
+            onChange={e => setForm({...form, material: e.target.value})}
+            placeholder="Material del producto" />
+        </div>
+
+        <div className="form-group">
+          <label>Precio *</label>
+          <input required type="number" step="0.01" min="0"
+            value={form.precio}
+            onChange={e => setForm({...form, precio: e.target.value})}
+            placeholder="0.00" />
+        </div>
+
+        
+
+        <div className="form-group">
+          <label>Stock actual *</label>
+          <input required type="number" min="0"
+            value={form.stock}
+            onChange={e => setForm({...form, stock: e.target.value})}
+            placeholder="0" />
+        </div>
+
+        <div className="form-group">
+          <label>Stock mínimo</label>
+          <input type="number" min="0"
+            value={form.stockMinimo}
+            onChange={e => setForm({...form, stockMinimo: e.target.value})}
+            placeholder="0" />
+        </div>
+
+        <div className="form-group">
+          <label>Fecha de vencimiento</label>
+          <input type="date" value={form.fechaVencimiento}
+            onChange={e => setForm({...form, fechaVencimiento: e.target.value})} />
+        </div>
+
+        <div className="form-group full-width">
+          <label>Descripción</label>
+          <textarea rows={3} value={form.descripcion}
+            onChange={e => setForm({...form, descripcion: e.target.value})}
+            placeholder="Descripción del producto..." />
+        </div>
+      </div>
+
+      <div className="form-actions">
+        <button type="button" className="btn-secondary" onClick={cerrarFormulario}>✖ Cancelar</button>
+        <button type="submit" className="btn-primary" disabled={loadingOp}>
+          {loadingOp ? 'Guardando...' : editando ? '✏️ Actualizar producto' : '✅ Registrar producto'}
+        </button>
+      </div>
+
+      {mensaje && (
+        <p className={mensajeTipo === 'success' ? 'message-success' : 'message-error'}>{mensaje}</p>
+      )}
+    </form>
+  )
+
   const handleEliminar = async (id) => {
-    await eliminarProducto(id)
+    if (!id) return
+    const resultado = await eliminarProducto(id)
+    if (!resultado.ok) {
+      setMensaje(resultado.message || 'No se pudo eliminar el producto.')
+      setConfirmId(null)
+      return
+    }
+    setMensaje('Producto eliminado correctamente.')
     setConfirmId(null)
   }
 
@@ -94,13 +245,11 @@ function Productos() {
           <h1>📦 Productos</h1>
           <p>{productos.length} productos registrados</p>
         </div>
-        <button className="btn-primary" onClick={abrirCrear}>+ Nuevo producto</button>
+        <button className="btn-primary" onClick={abrirCrear}>➕ Nuevo producto</button>
       </div>
 
-      {mensaje && (
-        <p className={mensajeTipo === 'success' ? 'message-success' : 'message-error'}>
-          {mensaje}
-        </p>
+      {mensaje && !['nuevo','editar'].includes(tab) && (
+        <div className="message-success-banner">✅ {mensaje}</div>
       )}
 
       {/* Alertas rápidas */}
@@ -142,8 +291,9 @@ function Productos() {
         </div>
       </div>
 
-      {/* Tabla */}
-      {listaFiltrada.length === 0
+      {/* Tabla (solo en vista lista) */}
+      {tab === 'lista' && (
+        listaFiltrada.length === 0
         ? <p className="empty-msg">No se encontraron productos.</p>
         : (
           <div className="table-wrapper">
@@ -153,7 +303,7 @@ function Productos() {
                   <th>Nombre</th>
                   <th>Categoría</th>
                   <th>Precio</th>
-                  <th>Costo</th>
+                  
                   <th>Stock</th>
                   <th>Vence</th>
                   <th>Acciones</th>
@@ -163,9 +313,9 @@ function Productos() {
                 {listaFiltrada.map(p => (
                   <tr key={p.id} className={stockBajo.find(s=>s.id===p.id) ? 'row-warning' : ''}>
                     <td><strong>{p.nombre}</strong><br/><small>{p.descripcion}</small></td>
-                    <td>{categorias.find(c=>c.id===p.categoriaId)?.nombre ?? '—'}</td>
+                    <td>{categorias.find(c => c.id === p.categoriaId)?.nombre ?? p.categoria_nombre ?? '—'}</td>
                     <td>₡{parseFloat(p.precio).toLocaleString('es-CR')}</td>
-                    <td>{p.costo ? `₡${parseFloat(p.costo).toLocaleString('es-CR')}` : '—'}</td>
+                    
                     <td>
                       <span className={`badge ${p.stock <= (p.stockMinimo||0) ? 'badge-danger' : 'badge-success'}`}>
                         {p.stock}
@@ -176,9 +326,37 @@ function Productos() {
                         ? new Date(p.fechaVencimiento).toLocaleDateString('es-CR')
                         : '—'}
                     </td>
-                    <td className="actions">
-                      <button className="btn-icon" onClick={() => abrirEditar(p)}>✏️</button>
-                      <button className="btn-icon btn-danger" onClick={() => setConfirmId(p.id)}>🗑️</button>
+                    <td className="action-buttons">
+                      <button
+                        className="btn-icon"
+                        title="Ver detalle"
+                        aria-label="Ver detalle"
+                        onClick={async () => {
+                          setDetalleLoading(true)
+                          const resultado = await obtenerProducto(p.id)
+                          setDetalleLoading(false)
+                          setDetalleProducto(resultado.ok ? resultado.data : p)
+                          setDetalleModal(true)
+                        }}
+                      >
+                        👁️
+                      </button>
+                      <button
+                        className="btn-edit"
+                        title="Editar producto"
+                        aria-label="Editar producto"
+                        onClick={() => abrirEditar(p)}
+                      >
+                        <PencilIcon />
+                      </button>
+                      <button
+                        className="btn-edit btn-danger"
+                        title="Eliminar producto"
+                        aria-label="Eliminar producto"
+                        onClick={() => setConfirmId(p.id)}
+                      >
+                        <TrashIcon />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -186,92 +364,91 @@ function Productos() {
             </table>
           </div>
         )
-      }
+      )}
 
-      {/* Modal Crear / Editar */}
-      {modal && (
-        <div className="modal-overlay" onClick={() => setModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{editando ? 'Editar producto' : 'Nuevo producto'}</h2>
-              <button className="modal-close" onClick={() => setModal(false)}>✕</button>
-            </div>
-            <form onSubmit={handleSubmit} className="modal-form">
-              <div className="form-grid-2">
-                <div className="form-group">
-                  <label>Nombre *</label>
-                  <input required value={form.nombre}
-                    onChange={e => setForm({...form, nombre: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label>Categoría</label>
-                  <select value={form.categoriaId}
-                    onChange={e => setForm({...form, categoriaId: e.target.value})}>
-                    <option value="">Sin categoría</option>
-                    {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Precio *</label>
-                  <input required type="number" step="0.01" min="0"
-                    value={form.precio}
-                    onChange={e => setForm({...form, precio: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label>Costo</label>
-                  <input type="number" step="0.01" min="0"
-                    value={form.costo}
-                    onChange={e => setForm({...form, costo: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label>Stock actual *</label>
-                  <input required type="number" min="0"
-                    value={form.stock}
-                    onChange={e => setForm({...form, stock: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label>Stock mínimo</label>
-                  <input type="number" min="0"
-                    value={form.stockMinimo}
-                    onChange={e => setForm({...form, stockMinimo: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label>Fecha de vencimiento</label>
-                  <input type="date" value={form.fechaVencimiento}
-                    onChange={e => setForm({...form, fechaVencimiento: e.target.value})} />
-                </div>
-                <div className="form-group form-full">
-                  <label>Descripción</label>
-                  <textarea rows={2} value={form.descripcion}
-                    onChange={e => setForm({...form, descripcion: e.target.value})} />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setModal(false)}>
-                  Cancelar
-                </button>
-                <button type="submit" className="btn-primary">
-                  {editando ? 'Guardar cambios' : 'Crear producto'}
-                </button>
-              </div>
-            </form>
-          </div>
+      {/* Formulario Crear / Editar (igual que Clientes) */}
+      {tab !== 'lista' && (
+        <div className="form-section scrollable-form">
+          <h2>{editando ? `✏️ Editar Producto — ${form.nombre || ''}` : '➕ Registrar Nuevo Producto'}</h2>
+          {renderFormulario(handleSubmit)}
         </div>
       )}
 
-      {/* Confirmar eliminar */}
-      {confirmId && (
-        <div className="modal-overlay" onClick={() => setConfirmId(null)}>
-          <div className="modal modal-sm" onClick={e => e.stopPropagation()}>
-            <h3>¿Eliminar producto?</h3>
-            <p>Esta acción no se puede deshacer.</p>
-            <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setConfirmId(null)}>Cancelar</button>
-              <button className="btn-danger" onClick={() => handleEliminar(confirmId)}>Eliminar</button>
+      {/* Modal Detalle (solo lectura) - modal-card compacto */}
+      {detalleModal && (
+        <div className="modal-overlay" onClick={() => setDetalleModal(false)}>
+          <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <div className="modal-icon">ℹ️</div>
+            <h3>Detalle del producto</h3>
+            {detalleLoading ? (
+              <p className="message-success">Cargando detalle...</p>
+            ) : detalleProducto ? (
+              <div className="modal-detail-grid">
+              <div className="form-group">
+                <label>Nombre</label>
+                <div className="readonly-field">{detalleProducto.nombre}</div>
+              </div>
+              <div className="form-group">
+                <label>Precio</label>
+                <div className="readonly-field">₡{parseFloat(detalleProducto.precio).toLocaleString('es-CR')}</div>
+              </div>
+              <div className="form-group">
+                <label>Categoría</label>
+                <div className="readonly-field">
+                  {detalleProducto.categoria_nombre ?? categorias.find(c => c.id == detalleProducto.categoriaId)?.nombre ?? '—'}
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Stock</label>
+                <div className="readonly-field">{detalleProducto.stock}</div>
+              </div>
+              <div className="form-group">
+                <label>Fecha de vencimiento</label>
+                <div className="readonly-field">
+                  {detalleProducto.fechaVencimiento
+                    ? new Date(detalleProducto.fechaVencimiento).toLocaleDateString('es-CR')
+                    : '—'}
+                </div>
+              </div>
+              <div className="form-group full-width">
+                <label>Material</label>
+                <div className="readonly-field">{detalleProducto.material ?? '—'}</div>
+              </div>
+              <div className="form-group full-width">
+                <label>Descripción</label>
+                <div className="readonly-field description-field">{detalleProducto.descripcion || '—'}</div>
+              </div>
+              </div>
+            ) : (
+              <p className="message-error">No se pudo cargar el detalle del producto.</p>
+            )}
+            <div className="modal-actions modal-actions-small">
+              <button className="btn-secondary" onClick={() => setDetalleModal(false)}>Cerrar</button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Confirmar eliminar (igual que Clientes) */}
+      {confirmId && (() => {
+        const producto = productos.find(p => p.id === confirmId)
+        return (
+          <div className="modal-overlay" onClick={() => setConfirmId(null)}>
+            <div className="modal-card" onClick={e => e.stopPropagation()}>
+              <div className="modal-icon">⚠️</div>
+              <h3>¿Eliminar producto?</h3>
+              <p>
+                Estás a punto de desactivar a <strong>{producto ? producto.nombre : ''}</strong>.
+                <br />Esta acción no se puede deshacer.
+              </p>
+              <div className="modal-actions">
+                <button className="btn-secondary" onClick={() => setConfirmId(null)}>Cancelar</button>
+                <button className="btn-danger" onClick={() => handleEliminar(confirmId)}>Sí, eliminar</button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
