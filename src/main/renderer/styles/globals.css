@@ -1918,3 +1918,52 @@ h6 {
   border-color: rgba(220, 38, 38, 0.4);
   color: #b91c1c;
 }
+
+.filtro-select {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: #ffffff;
+  color: var(--color-text);
+}
+
+.form-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.form-section h2 {
+  margin: 0 0 1.25rem;
+  font-size: 1.15rem;
+}
+
+.stock-bajo-alerta {
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  background: rgba(220, 38, 38, 0.06);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.stock-bajo-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: #b91c1c;
+  font-size: 0.9rem;
+}
+
+.stock-bajo-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.pill svg {
+  margin-right: 0.15rem;
+}

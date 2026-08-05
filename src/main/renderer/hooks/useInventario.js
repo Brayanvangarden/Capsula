@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { inventarioService } from '../services/inventario.service'
 
 export function useInventario() {
@@ -7,7 +7,6 @@ export function useInventario() {
   const [loading,     setLoading]     = useState(false)
   const [error,       setError]       = useState(null)
 
-  // ── Cargar movimientos con filtros ──────────────────
   const fetchMovimientos = useCallback(async (filtros = {}) => {
     setLoading(true)
     setError(null)
@@ -21,7 +20,6 @@ export function useInventario() {
     }
   }, [])
 
-  // ── Resumen por producto ────────────────────────────
   const fetchResumenProducto = useCallback(async (producto_id) => {
     try {
       const data = await inventarioService.getResumenProducto(producto_id)
@@ -32,7 +30,6 @@ export function useInventario() {
     }
   }, [])
 
-  // ── Registrar entrada ───────────────────────────────
   const registrarEntrada = useCallback(async (data) => {
     try {
       const mov = await inventarioService.registrarEntrada(data)
@@ -43,7 +40,6 @@ export function useInventario() {
     }
   }, [])
 
-  // ── Registrar salida ────────────────────────────────
   const registrarSalida = useCallback(async (data) => {
     try {
       const mov = await inventarioService.registrarSalida(data)
@@ -53,6 +49,11 @@ export function useInventario() {
       return { ok: false, message: err.message }
     }
   }, [])
+
+  // Carga inicial — sin esto la tabla arrancaba vacía siempre
+  useEffect(() => {
+    fetchMovimientos()
+  }, [fetchMovimientos])
 
   return {
     movimientos,
