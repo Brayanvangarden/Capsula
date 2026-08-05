@@ -1,4 +1,9 @@
+const bcrypt = require('bcryptjs')
 const { getDb } = require('../db')
+
+function hashPassword(password) {
+  return bcrypt.hashSync(password, 10)
+}
 
 function getAll() {
   return getDb()
@@ -28,7 +33,7 @@ function create(data) {
     .run({
       nombre:   data.nombre,
       usuario:  data.usuario,
-      password: data.password,
+      password: hashPassword(data.password),
       rol:      data.rol    ?? 'vendedor',
       estado:   data.estado ?? 'activo'
     })
@@ -51,6 +56,7 @@ function update(id, data) {
 }
 
 function updatePassword(id, newPassword) {
+  const hash = hashPassword(newPassword)
   return getDb()
     .prepare(`
       UPDATE usuarios
@@ -58,7 +64,7 @@ function updatePassword(id, newPassword) {
           actualizado = datetime('now')
       WHERE id = ?
     `)
-    .run(newPassword, id)
+    .run(hash, id)
 }
 
 function toggleEstado(id) {

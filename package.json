@@ -43,9 +43,11 @@
     ]
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "better-sqlite3": "^12.10.0",
     "dayjs": "^1.11.20",
     "jspdf": "^4.2.1",
+    "nodemailer": "^6.9.4",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-hook-form": "^7.75.0",

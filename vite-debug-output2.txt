@@ -1,0 +1,1122 @@
+﻿2026-08-05T03:11:02.030Z vite:config config file loaded in 63.10ms
+2026-08-05T03:11:02.037Z vite:env loading env files: [
+  'C:/Users/david/Desktop/Capsulas/Capsula/src/main/renderer/.env',
+  'C:/Users/david/Desktop/Capsulas/Capsula/src/main/renderer/.env.local',
+  'C:/Users/david/Desktop/Capsulas/Capsula/src/main/renderer/.env.production',
+  'C:/Users/david/Desktop/Capsulas/Capsula/src/main/renderer/.env.production.local'
+]
+2026-08-05T03:11:02.038Z vite:env env files loaded in 1.03ms
+2026-08-05T03:11:02.038Z vite:env using resolved env: {}
+2026-08-05T03:11:02.059Z vite:config using resolved config: {
+  plugins: [
+    'vite:optimized-deps',
+    'vite:watch-package-data',
+    'vite:pre-alias',
+    'alias',
+    'vite:react-babel',
+    'vite:react-refresh-fbm',
+    'vite:react-refresh',
+    'vite:modulepreload-polyfill',
+    'vite:resolve-builtin:get-environment',
+    'vite:resolve-builtin',
+    'vite:html-inline-proxy',
+    'vite:css',
+    'builtin:oxc-runtime',
+    'vite:oxc',
+    'builtin:vite-json',
+    'vite:wasm-helper',
+    'vite:worker',
+    'vite:asset',
+    'vite:forward-console',
+    'vite:react-virtual-preamble',
+    'builtin:vite-wasm-fallback',
+    'vite:define',
+    'vite:css-post',
+    'vite:build-html',
+    'vite:worker-import-meta-url',
+    'vite:asset-import-meta-url',
+    'vite:prepare-out-dir',
+    'vite:rollup-options-plugins',
+    'vite:dynamic-import-vars',
+    'vite:import-glob',
+    'vite:react:config-post',
+    'vite:build-import-analysis',
+    'native:import-analysis-build',
+    'vite:terser',
+    'vite:license',
+    'native:manifest',
+    'vite:ssr-manifest',
+    'native:reporter',
+    'builtin:vite-load-fallback',
+    'vite:client-inject',
+    'vite:css-analysis',
+    'vite:import-analysis'
+  ],
+  root: 'C:/Users/david/Desktop/Capsulas/Capsula/src/main/renderer',
+  base: './',
+  build: {
+    target: [ 'chrome111', 'edge111', 'firefox114', 'safari16.4', 'ios16.4' ],
+    polyfillModulePreload: true,
+    modulePreload: { polyfill: true },
+    outDir: 'C:\\Users\\david\\Desktop\\Capsulas\\Capsula\\dist',
+    assetsDir: 'assets',
+    assetsInlineLimit: 4096,
+    sourcemap: false,
+    terserOptions: {},
+    rolldownOptions: {
+      platform: 'browser',
+      input: 'C:\\Users\\david\\Desktop\\Capsulas\\Capsula\\src\\main\\renderer\\index.html',
+      onwarn: [Function: onwarn]
+    },
+    commonjsOptions: { include: [ /node_modules/ ], extensions: [ '.js', '.cjs' ] },
+    dynamicImportVarsOptions: { exclude: [ /node_modules/ ] },
+    write: true,
+    emptyOutDir: true,
+    copyPublicDir: true,
+    license: false,
+    manifest: false,
+    lib: false,
+    ssrManifest: false,
+    ssrEmitAssets: false,
+    reportCompressedSize: true,
+    chunkSizeWarningLimit: 500,
+    watch: null,
+    cssCodeSplit: true,
+    minify: 'oxc',
+    rollupOptions: {
+      platform: 'browser',
+      input: 'C:\\Users\\david\\Desktop\\Capsulas\\Capsula\\src\\main\\renderer\\index.html',
+      onwarn: [Function: onwarn]
+    },
+    ssr: false,
+    emitAssets: true,
+    createEnvironment: [Function: createEnvironment],
+    cssTarget: [ 'chrome111', 'edge111', 'firefox114', 'safari16.4', 'ios16.4' ],
+    cssMinify: true
+  },
+  resolve: {
+    externalConditions: [ 'node', 'module-sync' ],
+    extensions: [
+      '.mjs',  '.js',
+      '.mts',  '.ts',
+      '.jsx',  '.tsx',
+      '.json'
+    ],
+    dedupe: [],
+    noExternal: [],
+    external: [],
+    preserveSymlinks: false,
+    tsconfigPaths: false,
+    alias: [
+      {
+        find: '@',
+        replacement: 'C:\\Users\\david\\Desktop\\Capsulas\\Capsula\\src\\main\\renderer'
+      },
+      {
+        find: '@shared',
+        replacement: 'C:\\Users\\david\\Desktop\\Capsulas\\Capsula\\src\\shared'
+      },
+      {
+        find: '@assets',
+        replacement: 'C:\\Users\\david\\Desktop\\Capsulas\\Capsula\\assets'
+      },
+      {
+        find: /^\/?@vite\/env/,
+        replacement: '/@fs/C:/Users/david/Desktop/Capsulas/Capsula/node_modules/.pnpm/vite@8.0.13_@types+node@25.8.0_jiti@2.7.0/node_modules/vite/dist/client/env.mjs'
+      },
+      {
+        find: /^\/?@vite\/client/,
+        replacement: '/@fs/C:/Users/david/Desktop/Capsulas/Capsula/node_modules/.pnpm/vite@8.0.13_@types+node@25.8.0_jiti@2.7.0/node_modules/vite/dist/client/client.mjs'
+      }
+    ],
+    mainFields: [ 'browser', 'module', 'jsnext:main', 'jsnext' ],
+    conditions: [ 'module', 'browser', 'development|production' ],
+    builtins: []
+  },
+  server: {
+    port: 5173,
+    strictPort: true,
+    host: undefined,
+    allowedHosts: [],
+    https: undefined,
+    open: false,
+    proxy: undefined,
+    cors: {
+      origin: /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/
+    },
+    headers: {},
+    warmup: { clientFiles: [], ssrFiles: [] },
+    middlewareMode: false,
+    fs: {
+      strict: true,
+      deny: [ '.env', '.env.*', '*.{crt,pem}', '**/.git/**' ],
+      allow: [ 'C:/Users/david/Desktop/Capsulas/Capsula' ]
+    },
+    preTransformRequests: true,
+    perEnvironmentStartEndDuringDev: false,
+    perEnvironmentWatchChangeDuringDev: false,
+    forwardConsole: {
+      enabled: true,
+      unhandledErrors: true,
+      logLevels: [ 'error', 'warn' ]
+    },
+    sourcemapIgnoreList: [Function: isInNodeModules]
+  },
+  worker: {
+    format: 'iife',
+    plugins: '() => plugins',
+    rollupOptions: {},
+    rolldownOptions: {}
+  },
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react/jsx-dev-runtime',
+      'react/jsx-runtime'
+    ],
+    exclude: [],
+    needsInterop: [],
+    rolldownOptions: {
+      transform: { jsx: { runtime: 'automatic' } },
+      resolve: { symlinks: true },
+      output: { topLevelVar: true }
+    },
+    extensions: [],
+    disabled: undefined,
+    holdUntilCrawlEnd: true,
+    force: false,
+    ignoreOutdatedRequests: false,
+    noDiscovery: false,
+    rollupOptions: [Getter/Setter],
+    esbuildOptions: { preserveSymlinks: false }
+  },
+  oxc: {
+    jsx: {
+      development: false,
+      runtime: 'automatic',
+      importSource: undefined,
+      refresh: false
+    },
+    jsxRefreshInclude: /\.[tj]sx?(?:\?.*)?$/,
+    jsxRefreshExclude: /\/node_modules\//
+  },
+  environments: {
+    client: {
+      define: undefined,
+      resolve: {
+        externalConditions: [ 'node', 'module-sync' ],
+        extensions: [
+          '.mjs',  '.js',
+          '.mts',  '.ts',
+          '.jsx',  '.tsx',
+          '.json'
+        ],
+        dedupe: [],
+        noExternal: [],
+        external: [],
+        preserveSymlinks: false,
+        tsconfigPaths: false,
+        alias: [
+          {
+            find: '@',
+            replacement: 'C:\\Users\\david\\Desktop\\Capsulas\\Capsula\\src\\main\\renderer'
+          },
+          {
+            find: '@shared',
+            replacement: 'C:\\Users\\david\\Desktop\\Capsulas\\Capsula\\src\\shared'
+          },
+          {
+            find: '@assets',
+            replacement: 'C:\\Users\\david\\Desktop\\Capsulas\\Capsula\\assets'
+          },
+          {
+            find: /^\/?@vite\/env/,
+            replacement: '/@fs/C:/Users/david/Desktop/Capsulas/Capsula/node_modules/.pnpm/vite@8.0.13_@types+node@25.8.0_jiti@2.7.0/node_modules/vite/dist/client/env.mjs'
+          },
+          {
+            find: /^\/?@vite\/client/,
+            replacement: '/@fs/C:/Users/david/Desktop/Capsulas/Capsula/node_modules/.pnpm/vite@8.0.13_@types+node@25.8.0_jiti@2.7.0/node_modules/vite/dist/client/client.mjs'
+          }
+        ],
+        mainFields: [ 'browser', 'module', 'jsnext:main', 'jsnext' ],
+        conditions: [ 'module', 'browser', 'development|production' ],
+        builtins: []
+      },
+      keepProcessEnv: false,
+      consumer: 'client',
+      optimizeDeps: {
+        include: [
+          'react',
+          'react-dom',
+          'react/jsx-dev-runtime',
+          'react/jsx-runtime'
+        ],
+        exclude: [],
+        needsInterop: [],
+        rolldownOptions: {
+          transform: { jsx: { runtime: 'automatic' } },
+          resolve: { symlinks: true },
+          output: { topLevelVar: true }
+        },
+        extensions: [],
+        disabled: undefined,
+        holdUntilCrawlEnd: true,
+        force: false,
+        ignoreOutdatedRequests: false,
+        noDiscovery: false,
+        rollupOptions: [Getter/Setter],
+        esbuildOptions: { preserveSymlinks: false }
+      },
+      dev: {
+        warmup: [],
+        sourcemap: { js: true },
+        sourcemapIgnoreList: [Function: isInNodeModules],
+        preTransformRequests: true,
+        createEnvironment: [Function: defaultCreateClientDevEnvironment],
+        recoverable: true,
+        moduleRunnerTransform: false
+      },
+      build: {
+        target: [
+          'chrome111',
+          'edge111',
+          'firefox114',
+          'safari16.4',
+          'ios16.4'
+        ],
+        polyfillModulePreload: true,
+        modulePreload: { polyfill: true },
+        outDir: 'C:\\Users\\david\\Desktop\\Capsulas\\Capsula\\dist',
+        assetsDir: 'assets',
+        assetsInlineLimit: 4096,
+        sourcemap: false,
+        terserOptions: {},
+        rolldownOptions: {
+          platform: 'browser',
+          input: 'C:\\Users\\david\\Desktop\\Capsulas\\Capsula\\src\\main\\renderer\\index.html',
+          onwarn: [Function: onwarn]
+        },
+        commonjsOptions: { include: [ /node_modules/ ], extensions: [ '.js', '.cjs' ] },
+        dynamicImportVarsOptions: { exclude: [ /node_modules/ ] },
+        write: true,
+        emptyOutDir: true,
+        copyPublicDir: true,
+        license: false,
+        manifest: false,
+        lib: false,
+        ssrManifest: false,
+        ssrEmitAssets: false,
+        reportCompressedSize: true,
+        chunkSizeWarningLimit: 500,
+        watch: null,
+        cssCodeSplit: true,
+        minify: 'oxc',
+        rollupOptions: {
+          platform: 'browser',
+          input: 'C:\\Users\\david\\Desktop\\Capsulas\\Capsula\\src\\main\\renderer\\index.html',
+          onwarn: [Function: onwarn]
+        },
+        ssr: false,
+        emitAssets: true,
+        createEnvironment: [Function: createEnvironment],
+        cssTarget: [
+          'chrome111',
+          'edge111',
+          'firefox114',
+          'safari16.4',
+          'ios16.4'
+        ],
+        cssMinify: true
+      },
+      isBundled: true,
+      plugins: [
+        {
+          name: 'vite:watch-package-data',
+          buildStart: [Function: buildStart],
+          buildEnd: [Function: buildEnd],
+          watchChange: [Function: watchChange]
+        },
+        BuiltinPlugin {
+          name: 'builtin:vite-alias',
+          _options: {
+            entries: [
+              {
+                find: '@',
+                replacement: 'C:\\Users\\david\\Desktop\\Capsulas\\Capsula\\src\\main\\renderer'
+              },
+              {
+                find: '@shared',
+                replacement: 'C:\\Users\\david\\Desktop\\Capsulas\\Capsula\\src\\shared'
+              },
+              {
+                find: '@assets',
+                replacement: 'C:\\Users\\david\\Desktop\\Capsulas\\Capsula\\assets'
+              },
+              {
+                find: /^\/?@vite\/env/,
+                replacement: '/@fs/C:/Users/david/Desktop/Capsulas/Capsula/node_modules/.pnpm/vite@8.0.13_@types+node@25.8.0_jiti@2.7.0/node_modules/vite/dist/client/env.mjs'
+              },
+              {
+                find: /^\/?@vite\/client/,
+                replacement: '/@fs/C:/Users/david/Desktop/Capsulas/Capsula/node_modules/.pnpm/vite@8.0.13_@types+node@25.8.0_jiti@2.7.0/node_modules/vite/dist/client/client.mjs'
+              }
+            ]
+          },
+          enforce: undefined
+        },
+        {
+          name: 'vite:react-babel',
+          enforce: 'pre',
+          config: [Function: config],
+          configResolved: [Function: configResolved],
+          options: [Function: options]
+        },
+        {
+          name: 'vite:react-refresh-fbm',
+          enforce: 'pre',
+          transformIndexHtml: { handler: [Function: handler], order: 'pre' }
+        },
+        {
+          name: 'vite:react-refresh',
+          enforce: 'pre',
+          config: [Function: config],
+          resolveId: {
+            filter: { id: /^\/@react\-refresh$/ },
+            handler: [Function: handler]
+          },
+          load: {
+            filter: { id: /^\/@react\-refresh$/ },
+            handler: [Function: handler]
+          },
+          transformIndexHtml: [Function: transformIndexHtml]
+        },
+        BuiltinPlugin {
+          name: 'builtin:vite-module-preload-polyfill',
+          _options: { isServer: false },
+          enforce: undefined
+        },
+        {
+          name: 'vite:resolve-builtin:get-environment',
+          buildStart: [Function: buildStart],
+          perEnvironmentStartEndDuringDev: true
+        },
+        BuiltinPlugin {
+          name: 'builtin:vite-resolve',
+          _options: {
+            resolveOptions: {
+              isBuild: true,
+              isProduction: true,
+              asSrc: true,
+              preferRelative: false,
+              isRequire: undefined,
+              root: 'C:/Users/david/Desktop/Capsulas/Capsula/src/main/renderer',
+              scan: false,
+              mainFields: [ 'browser', 'module', 'jsnext:main', 'jsnext', 'main' ],
+              conditions: [ 'module', 'browser', 'development|production' ],
+              externalConditions: [ 'node', 'module-sync' ],
+              extensions: [
+                '.mjs',  '.js',
+                '.mts',  '.ts',
+                '.jsx',  '.tsx',
+                '.json'
+              ],
+              tryIndex: true,
+              tryPrefix: undefined,
+              preserveSymlinks: false,
+              tsconfigPaths: false
+            },
+            environmentConsumer: 'client',
+            environmentName: 'client',
+            builtins: [],
+            external: [],
+            noExternal: [],
+            dedupe: [],
+            disableCache: false,
+            legacyInconsistentCjsInterop: undefined,
+            finalizeBareSpecifier: undefined,
+            finalizeOtherSpecifiers: undefined,
+            resolveSubpathImports: [AsyncFunction: resolveSubpathImports],
+            yarnPnp: false
+          },
+          enforce: undefined,
+          getOrder: [AsyncFunction: wrappedHook],
+          load: [AsyncFunction: wrappedHook],
+          resolveId: [AsyncFunction: wrappedHook],
+          transform: [AsyncFunction: wrappedHook],
+          watchChange: [AsyncFunction: wrappedHook],
+          perEnvironmentWatchChangeDuringDev: true
+        },
+        {
+          name: 'vite:html-inline-proxy',
+          resolveId: {
+            filter: { id: /[?&]html-proxy\b/ },
+            handler: [Function: handler]
+          },
+          load: {
+            filter: { id: /[?&]html-proxy\b/ },
+            handler: [Function: handler]
+          }
+        },
+        {
+          name: 'vite:css',
+          buildStart: [Function: buildStart],
+          buildEnd: [AsyncFunction: buildEnd],
+          load: {
+            filter: {
+              id: /\.(css|less|sass|scss|styl|stylus|pcss|postcss|sss)(?:$|\?)/
+            },
+            handler: [Function: handler]
+          },
+          transform: {
+            filter: {
+              id: {
+                include: /\.(css|less|sass|scss|styl|stylus|pcss|postcss|sss)(?:$|\?)/,
+                exclude: [
+                  /[?&]commonjs-proxy/,
+                  /[?&](?:worker|sharedworker|raw|url)\b/
+                ]
+              }
+            },
+            handler: [AsyncFunction: handler]
+          }
+        },
+        BuiltinPlugin {
+          name: 'builtin:vite-transform',
+          _options: {
+            root: 'C:/Users/david/Desktop/Capsulas/Capsula/src/main/renderer',
+            include: [ /\.(m?ts|[jt]sx)$/ ],
+            exclude: [ /\.js$/ ],
+            jsxRefreshInclude: [ /\.[tj]sx?(?:\?.*)?$/ ],
+            jsxRefreshExclude: [ /\/node_modules\// ],
+            isServerConsumer: false,
+            jsxInject: undefined,
+            transformOptions: {
+              jsx: {
+                development: false,
+                runtime: 'automatic',
+                importSource: undefined,
+                refresh: false
+              },
+              sourcemap: true
+            },
+            yarnPnp: false
+          },
+          enforce: undefined
+        },
+        BuiltinPlugin {
+          name: 'builtin:vite-json',
+          _options: { namedExports: true, stringify: 'auto', minify: true },
+          enforce: undefined,
+          getOrder: [AsyncFunction: wrappedHook],
+          load: [AsyncFunction: wrappedHook],
+          resolveId: [AsyncFunction: wrappedHook],
+          transform: [AsyncFunction: wrappedHook],
+          watchChange: [AsyncFunction: wrappedHook]
+        },
+        {
+          name: 'vite:wasm-helper',
+          resolveId: {
+            filter: { id: /^ vite\/wasm\-helper\.js$/ },
+            handler: [Function: handler]
+          },
+          load: {
+            filter: {
+              id: [
+                /^ vite\/wasm\-helper\.js$/,
+                /(?<![?#].*)\.wasm\?init/
+              ]
+            },
+            handler: [AsyncFunction: handler]
+          },
+          renderChunk: undefined
+        },
+        {
+          name: 'vite:worker',
+          buildStart: [Function: buildStart],
+          load: {
+            filter: { id: /(?:\?|&)(worker|sharedworker)(?:&|$)/ },
+            handler: [AsyncFunction: handler]
+          },
+          transform: {
+            filter: { id: /(?:\?|&)worker_file&type=(\w+)(?:&|$)/ },
+            handler: [Function: handler]
+          },
+          renderChunk: [Function: renderChunk],
+          generateBundle: [Function: generateBundle],
+          watchChange: [Function: watchChange]
+        },
+        {
+          name: 'vite:asset',
+          perEnvironmentStartEndDuringDev: true,
+          buildStart: [Function: buildStart],
+          resolveId: {
+            filter: {
+              id: [
+                /(\?|&)url(?:&|$)/,
+                /\.(apng|bmp|png|jpe?g|jfif|pjpeg|pjp|gif|svg|ico|webp|avif|cur|jxl|mp4|webm|ogg|mp3|wav|flac|aac|opus|mov|m4a|vtt|woff2?|eot|ttf|otf|webmanifest|pdf|txt)(\?.*)?$/i
+              ]
+            },
+            handler: [Function: handler]
+          },
+          load: {
+            filter: {
+              id: {
+                include: [
+                  /(\?|&)raw(?:&|$)/,
+                  /(\?|&)url(?:&|$)/,
+                  /\.(apng|bmp|png|jpe?g|jfif|pjpeg|pjp|gif|svg|ico|webp|avif|cur|jxl|mp4|webm|ogg|mp3|wav|flac|aac|opus|mov|m4a|vtt|woff2?|eot|ttf|otf|webmanifest|pdf|txt)(\?.*)?$/i
+                ],
+                exclude: /^\0/
+              }
+            },
+            handler: [AsyncFunction: handler]
+          },
+          renderChunk: [Function: renderChunk],
+          generateBundle: [Function: generateBundle],
+          watchChange: [Function: watchChange]
+        },
+        {
+          name: 'vite:forward-console',
+          apply: 'serve',
+          configureServer: [Function: configureServer]
+        },
+        {
+          name: 'vite:react-virtual-preamble',
+          resolveId: {
+            order: 'pre',
+            filter: { id: /^@vitejs\/plugin\-react\/preamble$/ },
+            handler: [Function: handler]
+          },
+          load: {
+            filter: { id: /^ @vitejs\/plugin\-react\/preamble$/ },
+            handler: [Function: handler]
+          }
+        },
+        BuiltinPlugin {
+          name: 'builtin:vite-wasm-fallback',
+          _options: undefined,
+          enforce: undefined,
+          getOrder: [AsyncFunction: wrappedHook],
+          load: [AsyncFunction: wrappedHook],
+          resolveId: [AsyncFunction: wrappedHook],
+          transform: [AsyncFunction: wrappedHook],
+          watchChange: [AsyncFunction: wrappedHook]
+        },
+        { name: 'vite:define', options: [Function: options] },
+        {
+          name: 'vite:css-post',
+          renderStart: [Function: renderStart],
+          transform: {
+            filter: {
+              id: {
+                include: /\.(css|less|sass|scss|styl|stylus|pcss|postcss|sss)(?:$|\?)/,
+                exclude: [
+                  /[?&]commonjs-proxy/,
+                  /[?&](?:worker|sharedworker|raw|url)\b/
+                ]
+              }
+            },
+            handler: [AsyncFunction: handler]
+          },
+          renderChunk: [AsyncFunction: renderChunk],
+          augmentChunkHash: [Function: augmentChunkHash],
+          generateBundle: [AsyncFunction: generateBundle]
+        },
+        {
+          name: 'vite:build-html',
+          applyToEnvironment: [Function: applyToEnvironment],
+          transform: {
+            filter: { id: /\.html$/ },
+            handler: [AsyncFunction: handler]
+          },
+          generateBundle: [AsyncFunction: generateBundle]
+        },
+        {
+          name: 'vite:worker-import-meta-url',
+          applyToEnvironment: [Function: applyToEnvironment],
+          transform: {
+            filter: {
+              code: /\bnew\s+(?:Worker|SharedWorker)\s*\(\s*(new\s+URL\s*\(\s*('[^']+'|"[^"]+"|`[^`]+`)\s*,\s*import\.meta\.url\s*(?:,\s*)?\))/dg
+            },
+            handler: [AsyncFunction: handler]
+          }
+        },
+        {
+          name: 'vite:asset-import-meta-url',
+          applyToEnvironment: [Function: applyToEnvironment],
+          transform: {
+            filter: {
+              id: {
+                exclude: [
+                  /^ vite\/preload\-helper\.js$/,
+                  /^C:\\Users\\david\\Desktop\\Capsulas\\Capsula\\node_modules\\\.pnpm\\vite@8\.0\.13_@types\+node@25\.8\.0_jiti@2\.7\.0\\node_modules\\vite\\dist\\client\\client\.mjs$/
+                ]
+              },
+              code: /\bnew\s+URL\s*\(\s*('[^']+'|"[^"]+"|`[^`]+`)\s*,\s*import\.meta\.url\s*(?:,\s*)?\)/dg
+            },
+            handler: [AsyncFunction: handler]
+          }
+        },
+        {
+          name: 'vite:prepare-out-dir',
+          watchChange: [Function: watchChange],
+          renderStart: { order: 'pre', handler: [Function: handler] }
+        },
+        BuiltinPlugin {
+          name: 'builtin:vite-dynamic-import-vars',
+          _options: {
+            include: undefined,
+            exclude: [ /node_modules/ ],
+            resolver: [Function: resolver],
+            sourcemap: false
+          },
+          enforce: undefined
+        },
+        BuiltinPlugin {
+          name: 'builtin:vite-import-glob',
+          _options: {
+            root: 'C:/Users/david/Desktop/Capsulas/Capsula/src/main/renderer',
+            sourcemap: false,
+            restoreQueryExtension: false
+          },
+          enforce: undefined
+        },
+        {
+          name: 'vite:react:config-post',
+          enforce: 'post',
+          config: [Function: config]
+        },
+        {
+          name: 'vite:build-import-analysis',
+          renderChunk: [Function: renderChunk],
+          generateBundle: [AsyncFunction: generateBundle]
+        },
+        BuiltinPlugin {
+          name: 'builtin:vite-build-import-analysis',
+          _options: {
+            preloadCode: "const scriptRel = 'modulepreload';const assetsURL = function(dep, importerUrl) { return new URL(dep, importerUrl).href };const seen = {};export const __vitePreload = function preload(baseModule, deps, importerUrl) {\n" +
+              '\tlet promise = Promise.resolve();\n' +
+              '\tif (__VITE_IS_MODERN__ && deps && deps.length > 0) {\n' +
+              '\t\tconst links = document.getElementsByTagName("link");\n' +
+              '\t\tconst cspNonceMeta = document.querySelector("meta[property=csp-nonce]");\n' +
+              '\t\tconst cspNonce = cspNonceMeta?.nonce || cspNonceMeta?.getAttribute("nonce");\n' +
+              '\t\tfunction allSettled(promises) {\n' +
+              '\t\t\treturn Promise.all(promises.map((p) => Promise.resolve(p).then((value) => ({\n' +
+              '\t\t\t\tstatus: "fulfilled",\n' +
+              '\t\t\t\tvalue\n' +
+              '\t\t\t}), (reason) => ({\n' +
+              '\t\t\t\tstatus: "rejected",\n' +
+              '\t\t\t\treason\n' +
+              '\t\t\t}))));\n' +
+              '\t\t}\n' +
+              '\t\tpromise = allSettled(deps.map((dep) => {\n' +
+              '\t\t\tdep = assetsURL(dep, importerUrl);\n' +
+              '\t\t\tif (dep in seen) return;\n' +
+              '\t\t\tseen[dep] = true;\n' +
+              '\t\t\tconst isCss = dep.endsWith(".css");\n' +
+              '\t\t\tconst cssSelector = isCss ? "[rel=\\"stylesheet\\"]" : "";\n' +
+              '\t\t\tif (!!importerUrl) for (let i = links.length - 1; i >= 0; i--) {\n' +
+              '\t\t\t\tconst link = links[i];\n' +
+              '\t\t\t\tif (link.href === dep && (!isCss || link.rel === "stylesheet")) return;\n' +
+              '\t\t\t}\n' +
+              '\t\t\telse if (document.querySelector(`link[href="${dep}"]${cssSelector}`)) return;\n' +
+              '\t\t\tconst link = document.createElement("link");\n' +
+              '\t\t\tlink.rel = isCss ? "stylesheet" : scriptRel;\n' +
+              '\t\t\tif (!isCss) link.as = "script";\n' +
+              '\t\t\tlink.crossOrigin = "";\n' +
+              '\t\t\tlink.href = dep;\n' +
+              '\t\t\tif (cspNonce) link.setAttribute("nonce", cspNonce);\n' +
+              '\t\t\tdocument.head.appendChild(link);\n' +
+              '\t\t\tif (isCss) return new Promise((res, rej) => {\n' +
+              '\t\t\t\tlink.addEventListener("load", res);\n' +
+              '\t\t\t\tlink.addEventListener("error", () => rej(/* @__PURE__ */ new Error(`Unable to preload CSS for ${dep}`)));\n' +
+              '\t\t\t});\n' +
+              '\t\t}));\n' +
+              '\t}\n' +
+              '\tfunction handlePreloadError(err) {\n' +
+              '\t\tconst e = new Event("vite:preloadError", { cancelable: true });\n' +
+              '\t\te.payload = err;\n' +
+              '\t\twindow.dispatchEvent(e);\n' +
+              '\t\tif (!e.defaultPrevented) throw err;\n' +
+              '\t}\n' +
+              '\treturn promise.then((res) => {\n' +
+              '\t\tfor (const item of res || []) {\n' +
+              '\t\t\tif (item.status !== "rejected") continue;\n' +
+              '\t\t\thandlePreloadError(item.reason);\n' +
+              '\t\t}\n' +
+              '\t\treturn baseModule().catch(handlePreloadError);\n' +
+              '\t});\n' +
+              '}',
+            insertPreload: true,
+            optimizeModulePreloadRelativePaths: false,
+            renderBuiltUrl: false,
+            isRelativeBase: true
+          },
+          enforce: undefined
+        },
+        {
+          name: 'vite:terser',
+          applyToEnvironment: [Function: applyToEnvironment],
+          renderChunk: [AsyncFunction: renderChunk],
+          closeBundle: [Function: closeBundle]
+        },
+        {
+          name: 'vite:license',
+          generateBundle: [Function: generateBundle]
+        },
+        BuiltinPlugin {
+          name: 'builtin:vite-reporter',
+          _options: {
+            root: 'C:/Users/david/Desktop/Capsulas/Capsula/src/main/renderer',
+            isTty: false,
+            isLib: false,
+            assetsDir: 'assets\\',
+            chunkLimit: 500,
+            logInfo: [Function (anonymous)],
+            reportCompressedSize: true,
+            warnLargeChunks: true
+          },
+          enforce: undefined
+        },
+        BuiltinPlugin {
+          name: 'builtin:vite-load-fallback',
+          _options: undefined,
+          enforce: undefined
+        }
+      ],
+      optimizeDepsPluginNames: []
+    }
+  },
+  configFile: 'C:/Users/david/Desktop/Capsulas/Capsula/vite.config.js',
+  configFileDependencies: [ 'C:/Users/david/Desktop/Capsulas/Capsula/vite.config.js' ],
+  inlineConfig: {
+    root: undefined,
+    base: undefined,
+    mode: undefined,
+    configFile: undefined,
+    configLoader: undefined,
+    logLevel: undefined,
+    clearScreen: undefined,
+    build: { rolldownOptions: undefined, rollupOptions: [Getter/Setter] },
+    worker: { rolldownOptions: undefined, rollupOptions: [Getter/Setter] },
+    optimizeDeps: { rolldownOptions: undefined, rollupOptions: [Getter/Setter] }
+  },
+  decodedBase: './',
+  rawBase: './',
+  publicDir: 'C:/Users/david/Desktop/Capsulas/Capsula/src/main/renderer/public',
+  cacheDir: 'C:/Users/david/Desktop/Capsulas/Capsula/node_modules/.vite',
+  command: 'build',
+  mode: 'production',
+  isWorker: false,
+  mainConfig: null,
+  bundleChain: [],
+  isProduction: true,
+  css: {
+    transformer: 'postcss',
+    preprocessorMaxWorkers: true,
+    devSourcemap: false
+  },
+  json: { namedExports: true, stringify: 'auto' },
+  esbuild: { jsxDev: false, charset: 'utf8', legalComments: 'none' },
+  builder: undefined,
+  preview: {
+    port: 4173,
+    strictPort: true,
+    host: undefined,
+    allowedHosts: [],
+    https: undefined,
+    open: false,
+    proxy: undefined,
+    cors: {
+      origin: /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/
+    },
+    headers: {}
+  },
+  envDir: 'C:/Users/david/Desktop/Capsulas/Capsula/src/main/renderer',
+  env: { BASE_URL: './', MODE: 'production', DEV: false, PROD: true },
+  assetsInclude: [Function: assetsInclude],
+  rawAssetsInclude: [],
+  logger: {
+    hasWarned: false,
+    info: [Function: info],
+    warn: [Function: warn],
+    warnOnce: [Function: warnOnce],
+    error: [Function: error],
+    clearScreen: [Function: clearScreen],
+    hasErrorLogged: [Function: hasErrorLogged]
+  },
+  packageCache: Map(4) {
+    'fnpd_C:/Users/david/Desktop/Capsulas/Capsula' => {
+      dir: 'C:/Users/david/Desktop/Capsulas/Capsula',
+      data: {
+        name: 'capsulas',
+        version: '1.0.0',
+        description: 'Sistema de Inventario - Escritorio',
+        main: 'src/main/main.js',
+        scripts: {
+          dev: 'concurrently "vite" "wait-on http://localhost:5173 && electron ."',
+          build: 'vite build && electron-builder',
+          start: 'electron .',
+          preview: 'vite preview',
+          rebuild: 'electron-rebuild'
+        },
+        keywords: [],
+        author: 'Brayan Aguirre - David Soto',
+        license: 'ISC',
+        devEngines: {
+          packageManager: { name: 'pnpm', version: '^11.1.2', onFail: 'download' }
+        },
+        build: {
+          appId: 'com.capsulas.inventario',
+          productName: 'Capsulas Inventario',
+          directories: { output: 'release' },
+          win: { target: 'nsis', icon: 'assets/icon.ico' },
+          files: [ 'dist/**/*', 'src/main/**/*', 'assets/**/*' ],
+          extraResources: [ { from: 'src/main/database/', to: 'database/' } ]
+        },
+        dependencies: {
+          bcryptjs: '^2.4.3',
+          'better-sqlite3': '^12.10.0',
+          dayjs: '^1.11.20',
+          jspdf: '^4.2.1',
+          nodemailer: '^6.9.4',
+          react: '^19.2.6',
+          'react-dom': '^19.2.6',
+          'react-hook-form': '^7.75.0',
+          'react-router-dom': '^7.15.1',
+          zod: '^4.4.3',
+          zustand: '^5.0.13'
+        },
+        devDependencies: {
+          '@electron/rebuild': '^4.0.4',
+          '@vitejs/plugin-react': '^6.0.2',
+          concurrently: '^9.2.1',
+          'cross-env': '^10.1.0',
+          electron: '^35.7.5',
+          'electron-builder': '^26.8.1',
+          'electron-is-dev': '^3.0.1',
+          vite: '^8.0.13',
+          'wait-on': '^9.0.10'
+        }
+      },
+      hasSideEffects: [Function: hasSideEffects],
+      setResolvedCache: [Function: setResolvedCache],
+      getResolvedCache: [Function: getResolvedCache]
+    },
+    'fnpd_C:/Users/david/Desktop/Capsulas/Capsula/src/main/renderer' => {
+      dir: 'C:/Users/david/Desktop/Capsulas/Capsula',
+      data: {
+        name: 'capsulas',
+        version: '1.0.0',
+        description: 'Sistema de Inventario - Escritorio',
+        main: 'src/main/main.js',
+        scripts: {
+          dev: 'concurrently "vite" "wait-on http://localhost:5173 && electron ."',
+          build: 'vite build && electron-builder',
+          start: 'electron .',
+          preview: 'vite preview',
+          rebuild: 'electron-rebuild'
+        },
+        keywords: [],
+        author: 'Brayan Aguirre - David Soto',
+        license: 'ISC',
+        devEngines: {
+          packageManager: { name: 'pnpm', version: '^11.1.2', onFail: 'download' }
+        },
+        build: {
+          appId: 'com.capsulas.inventario',
+          productName: 'Capsulas Inventario',
+          directories: { output: 'release' },
+          win: { target: 'nsis', icon: 'assets/icon.ico' },
+          files: [ 'dist/**/*', 'src/main/**/*', 'assets/**/*' ],
+          extraResources: [ { from: 'src/main/database/', to: 'database/' } ]
+        },
+        dependencies: {
+          bcryptjs: '^2.4.3',
+          'better-sqlite3': '^12.10.0',
+          dayjs: '^1.11.20',
+          jspdf: '^4.2.1',
+          nodemailer: '^6.9.4',
+          react: '^19.2.6',
+          'react-dom': '^19.2.6',
+          'react-hook-form': '^7.75.0',
+          'react-router-dom': '^7.15.1',
+          zod: '^4.4.3',
+          zustand: '^5.0.13'
+        },
+        devDependencies: {
+          '@electron/rebuild': '^4.0.4',
+          '@vitejs/plugin-react': '^6.0.2',
+          concurrently: '^9.2.1',
+          'cross-env': '^10.1.0',
+          electron: '^35.7.5',
+          'electron-builder': '^26.8.1',
+          'electron-is-dev': '^3.0.1',
+          vite: '^8.0.13',
+          'wait-on': '^9.0.10'
+        }
+      },
+      hasSideEffects: [Function: hasSideEffects],
+      setResolvedCache: [Function: setResolvedCache],
+      getResolvedCache: [Function: getResolvedCache]
+    },
+    'fnpd_C:/Users/david/Desktop/Capsulas/Capsula/src/main' => {
+      dir: 'C:/Users/david/Desktop/Capsulas/Capsula',
+      data: {
+        name: 'capsulas',
+        version: '1.0.0',
+        description: 'Sistema de Inventario - Escritorio',
+        main: 'src/main/main.js',
+        scripts: {
+          dev: 'concurrently "vite" "wait-on http://localhost:5173 && electron ."',
+          build: 'vite build && electron-builder',
+          start: 'electron .',
+          preview: 'vite preview',
+          rebuild: 'electron-rebuild'
+        },
+        keywords: [],
+        author: 'Brayan Aguirre - David Soto',
+        license: 'ISC',
+        devEngines: {
+          packageManager: { name: 'pnpm', version: '^11.1.2', onFail: 'download' }
+        },
+        build: {
+          appId: 'com.capsulas.inventario',
+          productName: 'Capsulas Inventario',
+          directories: { output: 'release' },
+          win: { target: 'nsis', icon: 'assets/icon.ico' },
+          files: [ 'dist/**/*', 'src/main/**/*', 'assets/**/*' ],
+          extraResources: [ { from: 'src/main/database/', to: 'database/' } ]
+        },
+        dependencies: {
+          bcryptjs: '^2.4.3',
+          'better-sqlite3': '^12.10.0',
+          dayjs: '^1.11.20',
+          jspdf: '^4.2.1',
+          nodemailer: '^6.9.4',
+          react: '^19.2.6',
+          'react-dom': '^19.2.6',
+          'react-hook-form': '^7.75.0',
+          'react-router-dom': '^7.15.1',
+          zod: '^4.4.3',
+          zustand: '^5.0.13'
+        },
+        devDependencies: {
+          '@electron/rebuild': '^4.0.4',
+          '@vitejs/plugin-react': '^6.0.2',
+          concurrently: '^9.2.1',
+          'cross-env': '^10.1.0',
+          electron: '^35.7.5',
+          'electron-builder': '^26.8.1',
+          'electron-is-dev': '^3.0.1',
+          vite: '^8.0.13',
+          'wait-on': '^9.0.10'
+        }
+      },
+      hasSideEffects: [Function: hasSideEffects],
+      setResolvedCache: [Function: setResolvedCache],
+      getResolvedCache: [Function: getResolvedCache]
+    },
+    'fnpd_C:/Users/david/Desktop/Capsulas/Capsula/src' => {
+      dir: 'C:/Users/david/Desktop/Capsulas/Capsula',
+      data: {
+        name: 'capsulas',
+        version: '1.0.0',
+        description: 'Sistema de Inventario - Escritorio',
+        main: 'src/main/main.js',
+        scripts: {
+          dev: 'concurrently "vite" "wait-on http://localhost:5173 && electron ."',
+          build: 'vite build && electron-builder',
+          start: 'electron .',
+          preview: 'vite preview',
+          rebuild: 'electron-rebuild'
+[36mvite v8.0.13 [32mbuilding client environment for production...[36m[39m
+        },
+        keywords: [],
+        author: 'Brayan Aguirre - David Soto',
+        license: 'ISC',
+        devEngines: {
+          packageManager: { name: 'pnpm', version: '^11.1.2', onFail: 'download' }
+        },
+        build: {
+          appId: 'com.capsulas.inventario',
+          productName: 'Capsulas Inventario',
+          directories: { output: 'release' },
+          win: { target: 'nsis', icon: 'assets/icon.ico' },
+          files: [ 'dist/**/*', 'src/main/**/*', 'assets/**/*' ],
+          extraResources: [ { from: 'src/main/database/', to: 'database/' } ]
+        },
+        dependencies: {
+          bcryptjs: '^2.4.3',
+          'better-sqlite3': '^12.10.0',
+          dayjs: '^1.11.20',
+          jspdf: '^4.2.1',
+          nodemailer: '^6.9.4',
+          react: '^19.2.6',
+          'react-dom': '^19.2.6',
+          'react-hook-form': '^7.75.0',
+          'react-router-dom': '^7.15.1',
+          zod: '^4.4.3',
+          zustand: '^5.0.13'
+        },
+        devDependencies: {
+          '@electron/rebuild': '^4.0.4',
+          '@vitejs/plugin-react': '^6.0.2',
+          concurrently: '^9.2.1',
+          'cross-env': '^10.1.0',
+          electron: '^35.7.5',
+          'electron-builder': '^26.8.1',
+          'electron-is-dev': '^3.0.1',
+          vite: '^8.0.13',
+          'wait-on': '^9.0.10'
+        }
+      },
+      hasSideEffects: [Function: hasSideEffects],
+      setResolvedCache: [Function: setResolvedCache],
+      getResolvedCache: [Function: getResolvedCache]
+    },
+    set: [Function (anonymous)]
+  },
+  appType: 'spa',
+  experimental: {
+    importGlobRestoreExtension: false,
+    renderBuiltUrl: undefined,
+    hmrPartialAccept: false,
+    bundledDev: false
+  },
+  future: undefined,
+  ssr: {
+    target: 'node',
+    optimizeDeps: { esbuildOptions: { preserveSymlinks: false } },
+    resolve: { conditions: undefined, externalConditions: undefined }
+  },
+  dev: {
+    warmup: [],
+    sourcemap: { js: true },
+    sourcemapIgnoreList: [Function: isInNodeModules],
+    preTransformRequests: false,
+    createEnvironment: [Function: defaultCreateDevEnvironment],
+    recoverable: false,
+    moduleRunnerTransform: false
+  },
+  devtools: { config: { host: 'localhost' }, enabled: false },
+  webSocketToken: 'bYtPFNg_4Fqr',
+  getSortedPlugins: [Function: getSortedPlugins],
+  getSortedPluginHooks: [Function: getSortedPluginHooks],
+  createResolver: [Function: createResolver],
+  fsDenyGlob: [Function: arrayMatcher],
+  safeModulePaths: Set(0) {},
+  Symbol(vite:resolved-config): true
+}
+[2K
+2026-08-05T03:11:02.268Z vite:resolve [32m1.79ms[39m [36m./variables.css[39m -> [2mC:/Users/david/Desktop/Capsulas/Capsula/src/main/renderer/styles/variables.css[22m
+2026-08-05T03:11:02.271Z vite:resolve [32m0.50ms[39m [36m./theme.css[39m -> [2mC:/Users/david/Desktop/Capsulas/Capsula/src/main/renderer/styles/theme.css[22m
+transforming...Ô£ô 61 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.43 kB Ôöé gzip:  0.30 kB
+dist/assets/index-DgsuWeB-.css   34.00 kB Ôöé gzip:  6.93 kB
+dist/assets/index-Bv6rDZY1.js   341.89 kB Ôöé gzip: 95.34 kB
+
+[32mÔ£ô built in 342ms[39m
