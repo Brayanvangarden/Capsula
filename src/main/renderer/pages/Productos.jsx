@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useProductos }  from '../hooks/useProductos'
 import { useCategorias } from '../hooks/useCategorias'
 
@@ -69,6 +69,7 @@ function Productos() {
   const [mensajeTipo, setMensajeTipo] = useState('success')
   const [loadingOp, setLoadingOp] = useState(false)
   const [detalleLoading, setDetalleLoading] = useState(false)
+  const inputImportRef = useRef(null)
 
   // ── Filtros ──────────────────────────────────────────
   const listaFiltrada = (() => {
@@ -100,6 +101,176 @@ function Productos() {
     setForm(EMPTY)
     setTab('lista')
     if (clearMessage) setMensaje('')
+  }
+
+  const exportarCSV = () => {
+    const columnas = [
+      'Nombre',
+      'Descripción',
+      'Categoría',
+      'Precio',
+      'Stock',
+      'Stock mínimo',
+      'Fecha de vencimiento',
+      'Material',
+    ]
+
+    const escapar = (valor) => {
+      const texto = String(valor ?? '')
+      if (/['";\n]/.test(texto)) {
+        return `"${texto.replace(/"/g, '""')}"`
+      }
+      return texto
+    }
+
+    const filas = listaFiltrada.map((p) =>
+      [
+        p.nombre,
+        p.descripcion,
+        categorias.find(c => c.id === p.categoriaId)?.nombre ?? p.categoria_nombre ?? 'Sin categoría',
+        p.precio,
+        p.stock,
+        p.stockMinimo ?? 0,
+        p.fechaVencimiento ? new Date(p.fechaVencimiento).toLocaleDateString('es-CR') : '—',
+        p.material ?? '',
+      ]
+        .map(escapar)
+        .join(';'),
+    )
+
+    const contenido = '\uFEFF' + [columnas.join(';'), ...filas].join('\r\n')
+    const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const fecha = new Date().toISOString().slice(0, 10)
+
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `productos_${fecha}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
+  const parsearCSV = (texto) => {
+    const limpio = texto.replace(/^\uFEFF/, '')
+    const lineas = limpio.split(/\r\n|\n/).filter((l) => l.trim() !== '')
+    if (lineas.length < 2) return []
+
+    const parsearLinea = (linea) => {
+      const campos = []
+      let actual = ''
+      let entreComillas = false
+      for (let i = 0; i < linea.length; i++) {
+        const char = linea[i]
+        if (char === '"') {
+          if (entreComillas && linea[i + 1] === '"') {
+            actual += '"'
+            i++
+          } else {
+            entreComillas = !entreComillas
+          }
+        } else if (char === ';' && !entreComillas) {
+          campos.push(actual)
+          actual = ''
+        } else {
+          actual += char
+        }
+      }
+      campos.push(actual)
+      return campos
+    }
+
+    const parseFecha = (valor) => {
+      const texto = String(valor || '').trim()
+      if (!texto || texto === '—') return null
+      const iso = new Date(texto)
+      if (!Number.isNaN(iso.getTime())) {
+        return iso.toISOString().slice(0, 10)
+      }
+      const partes = texto.split(/[\/\-]/).map((item) => item.trim())
+      if (partes.length === 3) {
+        const [dia, mes, anio] = partes
+        const y = anio.length === 2 ? `20${anio}` : anio
+        return `${y.padStart(4, '0')}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`
+      }
+      return null
+    }
+
+    return lineas.slice(1).map((linea) => {
+      const [
+        nombre,
+        descripcion,
+        categoria,
+        precio,
+        stock,
+        stockMinimo,
+        fechaVencimiento,
+        material,
+      ] = parsearLinea(linea)
+
+      const categoriaEncontrada = categorias.find(
+        (c) => c.nombre?.toLowerCase() === (categoria ?? '').toLowerCase(),
+      )
+
+      return {
+        nombre,
+        descripcion,
+        categoriaId: categoriaEncontrada ? categoriaEncontrada.id : null,
+        precio: parseFloat(precio) || 0,
+        stock: parseInt(stock, 10) || 0,
+        stockMinimo: parseInt(stockMinimo, 10) || 0,
+        fechaVencimiento: parseFecha(fechaVencimiento),
+        material,
+      }
+    })
+  }
+
+  const handleImportarCSV = async (event) => {
+    const archivo = event.target.files?.[0]
+    if (!archivo) return
+
+    setLoadingOp(true)
+    setMensaje('')
+    try {
+      const texto = await archivo.text()
+      const filas = parsearCSV(texto)
+      if (filas.length === 0) {
+        setMensaje('El archivo no tiene datos para importar.')
+        return
+      }
+
+      const resultado = { creados: 0, fallidos: 0, errores: [] }
+      for (let i = 0; i < filas.length; i++) {
+        const fila = filas[i]
+        if (!fila.nombre) {
+          resultado.fallidos++
+          resultado.errores.push(`Fila ${i + 2}: el nombre es obligatorio.`)
+          continue
+        }
+
+        const creado = await crearProducto(fila)
+        if (!creado.ok) {
+          resultado.fallidos++
+          resultado.errores.push(`Fila ${i + 2}: ${creado.message || 'Error al crear producto.'}`)
+          continue
+        }
+
+        resultado.creados++
+      }
+
+      setMensaje(
+        `Importación completa: ${resultado.creados} creados, ${resultado.fallidos} fallidos.` +
+          (resultado.errores.length ? ' Ver consola para detalles.' : ''),
+      )
+      if (resultado.errores.length) console.warn(resultado.errores)
+      window.location.reload()
+    } catch (err) {
+      setMensaje(err.message || 'No se pudo importar el archivo.')
+    } finally {
+      setLoadingOp(false)
+      if (event.target) event.target.value = ''
+    }
   }
 
   // Auto-limpia mensaje
@@ -276,6 +447,21 @@ function Productos() {
           onChange={e => { setBusqueda(e.target.value); setFiltro('todos') }}
           className="search-input"
         />
+        <div className="toolbar-actions">
+          <button className="btn-secondary" onClick={() => inputImportRef.current?.click()}>
+            📤 Importar CSV
+          </button>
+          <button className="btn-secondary" onClick={exportarCSV}>
+            📥 Exportar CSV
+          </button>
+          <input
+            ref={inputImportRef}
+            type="file"
+            accept=".csv"
+            style={{ display: 'none' }}
+            onChange={handleImportarCSV}
+          />
+        </div>
         <div className="filtros">
           {['todos','stockBajo','proximosVencer'].map(f => (
             <button
