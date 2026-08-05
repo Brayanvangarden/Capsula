@@ -5,8 +5,10 @@ contextBridge.exposeInMainWorld("api", {
   //  AUTH
   // ══════════════════════════════════════
   auth: {
-    login: (credentials) => ipcRenderer.invoke("auth:login", credentials),
-    getById: (id) => ipcRenderer.invoke("auth:getById", id),
+    login: (credentials) => ipcRenderer.invoke('auth:login', credentials),
+    getById: (id) => ipcRenderer.invoke('auth:getById', id),
+    requestPasswordReset: (payload) => ipcRenderer.invoke('auth:requestPasswordReset', payload),
+    resetPassword: (payload) => ipcRenderer.invoke('auth:resetPassword', payload),
   },
 
   // ══════════════════════════════════════

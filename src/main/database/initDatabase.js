@@ -1,5 +1,6 @@
-const fs   = require('fs')
-const path = require('path')
+const bcrypt = require('bcryptjs')
+const fs     = require('fs')
+const path   = require('path')
 const { getDb } = require('./db')
 
 function initDatabase() {
@@ -11,6 +12,7 @@ function initDatabase() {
     const schema     = fs.readFileSync(schemaPath, 'utf-8')
     db.exec(schema)
     ensureClientesColumns(db)
+    ensureUsuariosColumns(db)
     console.log('✅ Esquema de base de datos creado')
 
     // 2️⃣ Verificar si necesita seeds (primera vez o si faltan datos)
@@ -29,7 +31,10 @@ function initDatabase() {
       console.log('✅ Datos iniciales cargados (seeds)')
     }
 
-    // 3️⃣ Ejecutar migraciones
+    // 3️⃣ Re-hash passwords no almacenadas con bcrypt
+    hashLegacyPasswords(db)
+
+    // 4️⃣ Ejecutar migraciones
     runMigrations(db)
 
     console.log('✅ Base de datos lista')
@@ -37,6 +42,46 @@ function initDatabase() {
     console.error('❌ Error al inicializar la base de datos:', error)
     throw error
   }
+}
+
+function ensureUsuariosColumns(db) {
+  const table = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'usuarios'").get()
+  if (!table) return
+
+  const columns = db.prepare('PRAGMA table_info(usuarios)').all()
+  const existing = new Set(columns.map(column => column.name))
+
+  const additions = [
+    ['correo', 'TEXT NOT NULL DEFAULT ""'],
+    ['failed_attempts', 'INTEGER NOT NULL DEFAULT 0'],
+    ['locked_until', 'TEXT'],
+    ['reset_code', 'TEXT'],
+    ['reset_expires', 'TEXT'],
+  ]
+
+  for (const [name, type] of additions) {
+    if (!existing.has(name)) {
+      db.exec(`ALTER TABLE usuarios ADD COLUMN ${name} ${type}`)
+      console.log(`✅ Columna agregada a usuarios: ${name}`)
+    }
+  }
+}
+
+function hashLegacyPasswords(db) {
+  const users = db.prepare('SELECT id, password FROM usuarios').all()
+  const needUpdate = users.filter((user) => !user.password?.startsWith('$2'))
+  if (!needUpdate.length) return
+
+  const update = db.prepare('UPDATE usuarios SET password = ? WHERE id = ?')
+  const transaction = db.transaction((items) => {
+    for (const item of items) {
+      const hash = bcrypt.hashSync(item.password, 10)
+      update.run(hash, item.id)
+    }
+  })
+
+  transaction(needUpdate)
+  console.log(`✅ Re-hashed ${needUpdate.length} contraseñas heredadas con bcrypt`)
 }
 
 function ensureClientesColumns(db) {

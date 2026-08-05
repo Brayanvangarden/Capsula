@@ -5,14 +5,19 @@ PRAGMA journal_mode = WAL;
 --  USUARIOS Y ROLES
 -- ════════════════════════════════════════
 CREATE TABLE IF NOT EXISTS usuarios (
-  id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  nombre      TEXT    NOT NULL,
-  usuario     TEXT    NOT NULL UNIQUE,
-  password    TEXT    NOT NULL,
-  rol         TEXT    NOT NULL CHECK(rol IN ('admin', 'vendedor')),
-  estado      TEXT    NOT NULL DEFAULT 'activo' CHECK(estado IN ('activo', 'inactivo')),
-  creado_en   TEXT    NOT NULL DEFAULT (datetime('now')),
-  actualizado TEXT    NOT NULL DEFAULT (datetime('now'))
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  nombre        TEXT    NOT NULL,
+  usuario       TEXT    NOT NULL UNIQUE,
+  correo        TEXT    NOT NULL DEFAULT '',
+  password      TEXT    NOT NULL,
+  rol           TEXT    NOT NULL CHECK(rol IN ('admin', 'vendedor')),
+  estado        TEXT    NOT NULL DEFAULT 'activo' CHECK(estado IN ('activo', 'inactivo')),
+  failed_attempts INTEGER NOT NULL DEFAULT 0,
+  locked_until  TEXT,
+  reset_code    TEXT,
+  reset_expires TEXT,
+  creado_en     TEXT    NOT NULL DEFAULT (datetime('now')),
+  actualizado   TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
 -- ════════════════════════════════════════
