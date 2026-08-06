@@ -1055,6 +1055,13 @@ h6 {
   font-weight: 600;
 }
 
+.field-help,
+.form-note {
+  margin-top: 0.75rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
 .message-success-banner {
   margin: 0 0 1rem;
   padding: 0.95rem 1rem;
