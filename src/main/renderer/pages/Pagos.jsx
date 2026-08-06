@@ -1,58 +1,101 @@
-import { useMemo, useState } from 'react'
-import { useAuth } from '../hooks/useAuth'
-import { usePagos } from '../hooks/usePagos'
-import { useClientes } from '../hooks/useClientes'
-import { useOrdenes } from '../hooks/useOrdenes'
+import { useMemo, useState } from "react";
+import { useAuth } from "../hooks/useAuth";
+import { usePagos } from "../hooks/usePagos";
+import { useClientes } from "../hooks/useClientes";
+import { useOrdenes } from "../hooks/useOrdenes";
 
 const METODOS_PAGO = [
-  { value: 'efectivo', label: 'Efectivo' },
-  { value: 'transferencia', label: 'Transferencia' },
-  { value: 'sinpe', label: 'Sinpe' },
-  { value: 'otro', label: 'Otro' },
-]
+  { value: "efectivo", label: "Efectivo" },
+  { value: "transferencia", label: "Transferencia" },
+  { value: "sinpe", label: "Sinpe" },
+  { value: "otro", label: "Otro" },
+];
 
 function Pagos() {
-  const { user } = useAuth()
-  const { pagos, resumen, loading, error, registrarPago } = usePagos()
-  const { clientes } = useClientes()
-  const { ordenes } = useOrdenes()
+  const { user } = useAuth();
+  const { pagos, resumen, loading, error, registrarPago } = usePagos();
+  const { clientes } = useClientes();
+  const { ordenes } = useOrdenes();
 
   const [form, setForm] = useState({
-    clienteId: '',
-    ordenId: '',
-    monto: '',
-    metodoPago: 'efectivo',
-    notas: '',
-  })
-  const [mensaje, setMensaje] = useState('')
-  const [busqueda, setBusqueda] = useState('')
+    clienteId: "",
+    ordenId: "",
+    monto: "",
+    metodoPago: "efectivo",
+    notas: "",
+  });
+  const [mensaje, setMensaje] = useState("");
+  const [mensajeTipo, setMensajeTipo] = useState("success");
+  const [busqueda, setBusqueda] = useState("");
+
+  const clienteSeleccionado = useMemo(
+    () =>
+      clientes.find((cliente) => String(cliente.id) === String(form.clienteId)),
+    [clientes, form.clienteId],
+  );
 
   const ordenesCliente = useMemo(() => {
-    if (!form.clienteId) return []
+    if (!form.clienteId) return [];
     return ordenes.filter(
-      (orden) => String(orden.cliente_id) === String(form.clienteId) && orden.estado_pago !== 'pagado'
-    )
-  }, [form.clienteId, ordenes])
+      (orden) =>
+        String(orden.cliente_id) === String(form.clienteId) &&
+        orden.estado_pago !== "pagado",
+    );
+  }, [form.clienteId, ordenes]);
+
+  const ordenSeleccionada = useMemo(
+    () =>
+      ordenesCliente.find((orden) => String(orden.id) === String(form.ordenId)),
+    [ordenesCliente, form.ordenId],
+  );
+
+  const pagosOrdenSeleccionada = useMemo(() => {
+    if (!ordenSeleccionada) return [];
+    return pagos.filter(
+      (pago) => String(pago.orden_id) === String(ordenSeleccionada.id),
+    );
+  }, [pagos, ordenSeleccionada]);
+
+  const saldoOrdenRestante = useMemo(() => {
+    if (!ordenSeleccionada) return null;
+    const totalPagado = pagosOrdenSeleccionada.reduce(
+      (acc, pago) => acc + Number(pago.monto),
+      0,
+    );
+    return Number(ordenSeleccionada.total) - totalPagado;
+  }, [ordenSeleccionada, pagosOrdenSeleccionada]);
 
   const pagosFiltrados = useMemo(() => {
-    if (!busqueda) return pagos
-    const q = busqueda.toLowerCase()
-    return pagos.filter((pago) =>
-      String(pago.id).includes(q) ||
-      pago.cliente_nombre?.toLowerCase().includes(q) ||
-      pago.metodo_pago?.toLowerCase().includes(q) ||
-      String(pago.orden_id).includes(q)
-    )
-  }, [pagos, busqueda])
+    if (!busqueda) return pagos;
+    const q = busqueda.toLowerCase();
+    return pagos.filter(
+      (pago) =>
+        String(pago.id).includes(q) ||
+        pago.cliente_nombre?.toLowerCase().includes(q) ||
+        pago.metodo_pago?.toLowerCase().includes(q) ||
+        String(pago.orden_id).includes(q),
+    );
+  }, [pagos, busqueda]);
 
   const handleSubmit = async (event) => {
-    event.preventDefault()
-    setMensaje('')
+    event.preventDefault();
+    setMensaje("");
 
-    const monto = Number(form.monto)
+    const monto = Number(form.monto);
     if (!form.clienteId || !monto || monto <= 0) {
-      setMensaje('Selecciona un cliente y escribe un monto válido.')
-      return
+      setMensajeTipo("error");
+      setMensaje("Selecciona un cliente y escribe un monto válido.");
+      return;
+    }
+
+    if (ordenSeleccionada && monto > saldoOrdenRestante) {
+      setMensajeTipo("error");
+      setMensaje(
+        `El monto no puede ser mayor al saldo pendiente de la orden (₡${Number(
+          saldoOrdenRestante,
+        ).toLocaleString("es-CR")}).`,
+      );
+      return;
     }
 
     const resultado = await registrarPago({
@@ -62,19 +105,27 @@ function Pagos() {
       metodo_pago: form.metodoPago,
       notas: form.notas,
       usuario_id: user?.id,
-    })
+    });
 
     if (!resultado.ok) {
-      setMensaje(resultado.message || 'No se pudo registrar el pago.')
-      return
+      setMensajeTipo("error");
+      setMensaje(resultado.message || "No se pudo registrar el pago.");
+      return;
     }
 
-    setMensaje('Pago registrado correctamente.')
-    setForm({ clienteId: '', ordenId: '', monto: '', metodoPago: 'efectivo', notas: '' })
-  }
+    setMensajeTipo("success");
+    setMensaje("Pago registrado correctamente.");
+    setForm({
+      clienteId: "",
+      ordenId: "",
+      monto: "",
+      metodoPago: "efectivo",
+      notas: "",
+    });
+  };
 
   if (loading) {
-    return <div className="page-loading">Cargando pagos…</div>
+    return <div className="page-loading">Cargando pagos…</div>;
   }
 
   return (
@@ -97,14 +148,16 @@ function Pagos() {
         <div className="stat-card">
           <div className="stat-icon">📈</div>
           <div>
-            <h3>₡{Number(resumen?.total_recaudado ?? 0).toLocaleString('es-CR')}</h3>
+            <h3>
+              ₡{Number(resumen?.total_recaudado ?? 0).toLocaleString("es-CR")}
+            </h3>
             <p>Total recaudado</p>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon">🏦</div>
           <div>
-            <h3>₡{Number(resumen?.efectivo ?? 0).toLocaleString('es-CR')}</h3>
+            <h3>₡{Number(resumen?.efectivo ?? 0).toLocaleString("es-CR")}</h3>
             <p>Efectivo</p>
           </div>
         </div>
@@ -118,13 +171,16 @@ function Pagos() {
             <label>Cliente *</label>
             <select
               value={form.clienteId}
-              onChange={(e) => setForm({ ...form, clienteId: e.target.value, ordenId: '' })}
+              onChange={(e) =>
+                setForm({ ...form, clienteId: e.target.value, ordenId: "" })
+              }
               required
             >
               <option value="">Selecciona un cliente</option>
               {clientes.map((cliente) => (
                 <option key={cliente.id} value={cliente.id}>
-                  {cliente.nombre} {cliente.empresa ? `- ${cliente.empresa}` : ''}
+                  {cliente.nombre}{" "}
+                  {cliente.empresa ? `- ${cliente.empresa}` : ""}
                 </option>
               ))}
             </select>
@@ -139,10 +195,17 @@ function Pagos() {
               <option value="">Sin orden</option>
               {ordenesCliente.map((orden) => (
                 <option key={orden.id} value={orden.id}>
-                  #{orden.id} — ₡{Number(orden.total).toLocaleString('es-CR')} — {orden.estado_pago}
+                  #{orden.id} — ₡{Number(orden.total).toLocaleString("es-CR")} —{" "}
+                  {orden.estado_pago}
                 </option>
               ))}
             </select>
+            {ordenSeleccionada && (
+              <p className="field-help">
+                Saldo pendiente: ₡
+                {Number(saldoOrdenRestante).toLocaleString("es-CR")}
+              </p>
+            )}
           </div>
 
           <div className="form-group">
@@ -171,6 +234,15 @@ function Pagos() {
             </select>
           </div>
 
+          {clienteSeleccionado?.balance_pendiente != null && (
+            <div className="form-note">
+              Balance pendiente del cliente: ₡
+              {Number(clienteSeleccionado.balance_pendiente).toLocaleString(
+                "es-CR",
+              )}
+            </div>
+          )}
+
           <div className="form-group">
             <label>Notas</label>
             <textarea
@@ -180,7 +252,15 @@ function Pagos() {
             />
           </div>
 
-          {mensaje && <p className="message-success">{mensaje}</p>}
+          {mensaje && (
+            <p
+              className={
+                mensajeTipo === "error" ? "message-error" : "message-success"
+              }
+            >
+              {mensaje}
+            </p>
+          )}
 
           <button className="btn-primary" type="submit">
             Registrar pago
@@ -218,10 +298,16 @@ function Pagos() {
                     <tr key={pago.id}>
                       <td>{pago.id}</td>
                       <td>{pago.cliente_nombre}</td>
-                      <td>{pago.orden_id ?? '—'}</td>
-                      <td>₡{Number(pago.monto).toLocaleString('es-CR')}</td>
+                      <td>{pago.orden_id ?? "—"}</td>
+                      <td>₡{Number(pago.monto).toLocaleString("es-CR")}</td>
                       <td>{pago.metodo_pago}</td>
-                      <td>{pago.fecha_pago ? new Date(pago.fecha_pago).toLocaleDateString('es-CR') : '—'}</td>
+                      <td>
+                        {pago.fecha_pago
+                          ? new Date(pago.fecha_pago).toLocaleDateString(
+                              "es-CR",
+                            )
+                          : "—"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -233,7 +319,7 @@ function Pagos() {
 
       {error && <p className="message-error">{error}</p>}
     </div>
-  )
+  );
 }
 
-export default Pagos
+export default Pagos;
