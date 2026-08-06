@@ -111,15 +111,19 @@ function Login() {
   return (
     <div style={styles.root}>
       {/* Left panel — decorative */}
-      <div style={styles.panel}>
+      <div className="login-panel" style={styles.panel}>
         <div style={styles.panelInner}>
-          <div style={styles.logo}>
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-              <rect width="36" height="36" rx="10" fill="rgba(255,255,255,0.15)" />
-              <path d="M10 18 L18 10 L26 18 L18 26 Z" stroke="white" strokeWidth="2" fill="none" strokeLinejoin="round" />
-              <circle cx="18" cy="18" r="3" fill="white" />
-            </svg>
-            <span style={styles.logoText}>MiApp</span>
+          <div className="capsule-hero-wrap">
+            <div className="capsule-hero" title="Pásame el mouse por encima ✨">
+              <div className="capsule-top" />
+              <div className="capsule-bottom" />
+              <div className="capsule-seam" />
+              <div className="capsule-particle p1" />
+              <div className="capsule-particle p2" />
+              <div className="capsule-particle p3" />
+              <div className="capsule-particle p4" />
+            </div>
+            <span style={styles.logoText}>Cápsulas</span>
           </div>
 
           <div style={styles.panelContent}>
@@ -140,12 +144,12 @@ function Login() {
       </div>
 
       {/* Right panel — form */}
-      <div style={styles.formSide}>
+      <div className="login-form-side" style={styles.formSide}>
         <div style={styles.formCard}>
           {/* Mobile logo */}
           <div style={styles.mobileLogo}>
             <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
-              <rect width="36" height="36" rx="10" fill="#1a1a2e" />
+              <rect width="36" height="36" rx="10" fill="#0f766e" />
               <path d="M10 18 L18 10 L26 18 L18 26 Z" stroke="white" strokeWidth="2" fill="none" strokeLinejoin="round" />
               <circle cx="18" cy="18" r="3" fill="white" />
             </svg>
@@ -322,8 +326,10 @@ function Login() {
             {feedback && (
               <div style={styles.feedbackBox} role="status">
                 {feedback}
-                {debugCode && (
-                  <div style={styles.debugInfo}>Código temporal: {debugCode}</div>
+                {debugCode && import.meta.env.DEV && (
+                  <div style={styles.debugInfo}>
+                    🛠️ Solo desarrollo — Código temporal: {debugCode}
+                  </div>
                 )}
               </div>
             )}
@@ -369,6 +375,119 @@ function Login() {
           .login-panel { display: none !important; }
           .login-form-side { width: 100% !important; }
         }
+
+        /* ── Cápsula animada ─────────────────────────── */
+        .capsule-hero-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 22px;
+        }
+
+        @keyframes capsuleFloat {
+          0%, 100% { transform: rotate(-14deg) translateY(0); }
+          50%      { transform: rotate(-14deg) translateY(-10px); }
+        }
+
+        .capsule-hero {
+          position: relative;
+          width: 108px;
+          height: 270px;
+          transform: rotate(-14deg);
+          filter: drop-shadow(0 22px 28px rgba(3, 20, 18, 0.45));
+          animation: capsuleFloat 4.5s ease-in-out infinite;
+          cursor: pointer;
+        }
+
+        .capsule-hero:hover {
+          animation-play-state: paused;
+        }
+
+        .capsule-top,
+        .capsule-bottom {
+          position: absolute;
+          left: 0;
+          width: 100%;
+          height: 50%;
+          transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .capsule-top {
+          top: 0;
+          border-radius: 54px 54px 6px 6px;
+          background: linear-gradient(160deg, #5eead4 0%, #0f766e 75%);
+          box-shadow:
+            inset -10px -10px 18px rgba(0, 0, 0, 0.18),
+            inset 8px 8px 14px rgba(255, 255, 255, 0.28);
+        }
+
+        .capsule-bottom {
+          bottom: 0;
+          border-radius: 6px 6px 54px 54px;
+          background: linear-gradient(160deg, #fda4af 0%, #fb7185 75%);
+          box-shadow:
+            inset -10px -10px 18px rgba(0, 0, 0, 0.18),
+            inset 8px 8px 14px rgba(255, 255, 255, 0.28);
+        }
+
+        .capsule-seam {
+          position: absolute;
+          top: 50%;
+          left: -6%;
+          width: 112%;
+          height: 4px;
+          background: rgba(0, 0, 0, 0.22);
+          transform: translateY(-50%);
+          border-radius: 999px;
+          transition: opacity 0.3s ease;
+        }
+
+        .capsule-particle {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          width: 13px;
+          height: 13px;
+          border-radius: 50%;
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.3);
+          transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .capsule-particle.p1 { background: #fde68a; }
+        .capsule-particle.p2 { background: #fca5a5; }
+        .capsule-particle.p3 { background: #99f6e4; }
+        .capsule-particle.p4 { background: #c4b5fd; }
+
+        .capsule-hero:hover .capsule-top {
+          transform: translateY(-36px) rotate(-3deg);
+        }
+        .capsule-hero:hover .capsule-bottom {
+          transform: translateY(36px) rotate(3deg);
+        }
+        .capsule-hero:hover .capsule-seam {
+          opacity: 0;
+        }
+        .capsule-hero:hover .capsule-particle {
+          opacity: 1;
+        }
+        .capsule-hero:hover .capsule-particle.p1 {
+          transform: translate(-160%, -20%) scale(1);
+          transition-delay: 0.04s;
+        }
+        .capsule-hero:hover .capsule-particle.p2 {
+          transform: translate(60%, 10%) scale(1);
+          transition-delay: 0.1s;
+        }
+        .capsule-hero:hover .capsule-particle.p3 {
+          transform: translate(-40%, 90%) scale(1);
+          transition-delay: 0.16s;
+        }
+        .capsule-hero:hover .capsule-particle.p4 {
+          transform: translate(80%, 70%) scale(1);
+          transition-delay: 0.22s;
+        }
       `}</style>
     </div>
   )
@@ -378,14 +497,14 @@ const styles = {
   root: {
     display: 'flex',
     minHeight: '100vh',
-    backgroundColor: '#f5f4f0',
+    backgroundColor: '#f4faf9',
     fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
   },
 
   // Left decorative panel
   panel: {
     width: '45%',
-    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+    background: 'linear-gradient(135deg, #0f766e 0%, #0e7490 55%, #075985 100%)',
     display: 'flex',
     alignItems: 'stretch',
     position: 'relative',
@@ -394,7 +513,8 @@ const styles = {
   panelInner: {
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    gap: '56px',
     padding: '40px',
     width: '100%',
     position: 'relative',
@@ -412,7 +532,7 @@ const styles = {
     letterSpacing: '-0.3px',
   },
   panelContent: {
-    marginBottom: '60px',
+    marginBottom: '0',
   },
   quote: {
     color: 'rgba(255,255,255,0.85)',
@@ -431,15 +551,15 @@ const styles = {
     width: '8px',
     height: '8px',
     borderRadius: '50%',
-    background: 'white',
-    opacity: 0.3,
+    background: '#fb7185',
+    opacity: 0.35,
   },
   circle1: {
     position: 'absolute',
     width: '300px',
     height: '300px',
     borderRadius: '50%',
-    border: '1px solid rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.1)',
     top: '-80px',
     right: '-80px',
   },
@@ -448,7 +568,7 @@ const styles = {
     width: '200px',
     height: '200px',
     borderRadius: '50%',
-    border: '1px solid rgba(255,255,255,0.06)',
+    border: '1px solid rgba(251,113,133,0.18)',
     bottom: '60px',
     right: '-40px',
   },
@@ -474,7 +594,7 @@ const styles = {
   mobileLogoText: {
     fontSize: '17px',
     fontWeight: '600',
-    color: '#1a1a2e',
+    color: '#0f766e',
   },
   header: {
     marginBottom: '32px',
@@ -482,7 +602,7 @@ const styles = {
   title: {
     fontSize: '26px',
     fontWeight: '700',
-    color: '#0d0d1a',
+    color: '#0c2a27',
     margin: '0 0 8px 0',
     letterSpacing: '-0.5px',
   },
@@ -528,7 +648,7 @@ const styles = {
     width: '100%',
     padding: '11px 40px 11px 38px',
     fontSize: '14px',
-    color: '#0d0d1a',
+    color: '#0c2a27',
     background: 'white',
     border: '1.5px solid #e5e7eb',
     borderRadius: '10px',
@@ -540,13 +660,13 @@ const styles = {
     width: '100%',
     padding: '11px 40px 11px 38px',
     fontSize: '14px',
-    color: '#0d0d1a',
+    color: '#0c2a27',
     background: 'white',
-    border: '1.5px solid #0f3460',
+    border: '1.5px solid #0f766e',
     borderRadius: '10px',
     outline: 'none',
     boxSizing: 'border-box',
-    boxShadow: '0 0 0 3px rgba(15,52,96,0.1)',
+    boxShadow: '0 0 0 3px rgba(15,118,110,0.12)',
     transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
   },
   eyeBtn: {
@@ -584,7 +704,7 @@ const styles = {
     fontSize: '14px',
     fontWeight: '600',
     color: 'white',
-    background: 'linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)',
+    background: 'linear-gradient(135deg, #0f766e 0%, #0e7490 100%)',
     border: 'none',
     borderRadius: '10px',
     cursor: 'pointer',
@@ -608,24 +728,24 @@ const styles = {
     color: '#6b7280',
   },
   link: {
-    color: '#0f3460',
+    color: '#0f766e',
     fontWeight: '500',
     textDecoration: 'none',
   },
   linkButton: {
     background: 'none',
     border: 'none',
-    color: '#0f3460',
+    color: '#0f766e',
     fontWeight: '600',
     cursor: 'pointer',
     padding: 0,
   },
   feedbackBox: {
     padding: '12px 14px',
-    background: '#eef2ff',
-    border: '1px solid #c7d2fe',
+    background: '#ecfdf5',
+    border: '1px solid #a7f3d0',
     borderRadius: '8px',
-    color: '#1e293b',
+    color: '#0c2a27',
     fontSize: '13px',
   },
   debugInfo: {
