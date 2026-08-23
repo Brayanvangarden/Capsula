@@ -1,30 +1,29 @@
-import { NavLink, Outlet } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
+import { NavLink, Outlet } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 const navLinks = [
-  { label: 'Inicio', path: '/', icon: '🏠' },
-  { label: 'Productos', path: '/productos', icon: '📦' },
-  { label: 'Clientes', path: '/clientes', icon: '👥' },
-  { label: 'Pagos', path: '/pagos', icon: '💳' },
-  { label: 'Reportes', path: '/reportes', icon: '📊' },
-  { label: 'Usuarios', path: '/usuarios', icon: '🧑‍💼' },
-  { label: 'Órdenes', path: '/ordenes', icon: '📝' },
-  { label: 'Inventario', path: '/inventario', icon: '📋' },
-  { label: 'Categorías', path: '/categorias', icon: '🏷️' },
-  { label: 'Configuración', path: '/configuracion', icon: '⚙️' },
-]
+  { label: "Inicio", path: "/", icon: "🏠" },
+  { label: "Productos", path: "/productos", icon: "📦" },
+  { label: "Clientes", path: "/clientes", icon: "👥" },
+  { label: "Pagos", path: "/pagos", icon: "💳" },
+  { label: "Reportes", path: "/reportes", icon: "📊" },
+  { label: "Usuarios", path: "/usuarios", icon: "🧑‍💼" },
+  { label: "Órdenes", path: "/ordenes", icon: "📝" },
+  { label: "Inventario", path: "/inventario", icon: "📋" },
+  { label: "Categorías", path: "/categorias", icon: "🏷️" },
+  { label: "Configuración", path: "/configuracion", icon: "⚙️" },
+];
 
 function DashboardLayout() {
-  const { user, logout } = useAuth()
+  const { user, logout } = useAuth();
 
   return (
     <div className="dashboard-layout">
-
       <aside className="sidebar">
         <div className="sidebar-brand">
           <span className="sidebar-logo">💊</span>
           <div>
-            <h2>Cápsula</h2>
+            <h2>Logicaps</h2>
             <p>Panel administrativo</p>
           </div>
         </div>
@@ -35,7 +34,7 @@ function DashboardLayout() {
               key={path}
               to={path}
               className={({ isActive }) =>
-                `sidebar-link ${isActive ? 'active' : ''}`
+                `sidebar-link ${isActive ? "active" : ""}`
               }
             >
               <span className="sidebar-icon">{icon}</span>
@@ -47,11 +46,11 @@ function DashboardLayout() {
         <div className="sidebar-footer">
           <div className="sidebar-user">
             <span className="user-avatar">
-              {user?.nombre?.charAt(0) || 'U'}
+              {user?.nombre?.charAt(0) || "U"}
             </span>
             <div>
-              <p>{user?.nombre || 'Usuario'}</p>
-              <small>{user?.rol || 'Sin rol'}</small>
+              <p>{user?.nombre || "Usuario"}</p>
+              <small>{user?.rol || "Sin rol"}</small>
             </div>
           </div>
           <button className="sidebar-logout" onClick={logout}>
@@ -63,7 +62,7 @@ function DashboardLayout() {
       <main className="main-content">
         <header className="navbar">
           <div>
-            <p className="navbar-path">Dashboard</p>
+            <p className="navbar-path">Logicaps / Dashboard</p>
             <h1 className="navbar-title">Panel administrativo</h1>
           </div>
           <div className="navbar-user-info">
@@ -77,7 +76,7 @@ function DashboardLayout() {
         </section>
       </main>
     </div>
-  )
+  );
 }
 
-export default DashboardLayout
+export default DashboardLayout;
