@@ -3,6 +3,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useOrdenes } from "../hooks/useOrdenes";
 import { useClientes } from "../hooks/useClientes";
 import { useProductos } from "../hooks/useProductos";
+import { usePagos } from "../hooks/usePagos";
 import { clientesService } from "../services/clientes.service";
 import { ordenesService } from "../services/ordenes.service";
 
@@ -21,11 +22,11 @@ function Ordenes() {
     crearOrden,
     actualizarOrden,
     cambiarEstado,
-    cambiarEstadoPago,
   } = useOrdenes();
 
   const { clientes } = useClientes();
   const { productosActivos } = useProductos();
+  const { pagos } = usePagos();
 
   const [modal, setModal] = useState(false);
   const [editandoId, setEditandoId] = useState(null);
@@ -35,7 +36,7 @@ function Ordenes() {
     notas: "",
   });
   const [lineas, setLineas] = useState([NUEVA_LINEA]);
-  const [filtro, setFiltro] = useState("todos");
+  const [filtroPago, setFiltroPago] = useState("todos");
   const [busqueda, setBusqueda] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [guardando, setGuardando] = useState(false);
@@ -56,15 +57,28 @@ function Ordenes() {
     ? Number(clienteSeleccionado.descuento_porcentaje ?? 0)
     : 0;
 
+  // Calcula, por orden, cuánto se ha pagado y cuánto falta —
+  // usando el historial real de pagos, no un simple flag.
+  const saldoPorOrden = useMemo(() => {
+    const mapa = new Map();
+    for (const orden of ordenes) {
+      const totalPagado = pagos
+        .filter((pago) => String(pago.orden_id) === String(orden.id))
+        .reduce((total, pago) => total + Number(pago.monto), 0);
+      mapa.set(orden.id, {
+        totalPagado,
+        saldoPendiente: Math.max(0, Number(orden.total) - totalPagado),
+      });
+    }
+    return mapa;
+  }, [ordenes, pagos]);
+
   const ordenarVisible = useMemo(() => {
     let lista = ordenes;
 
-    if (filtro === "pendiente")
-      lista = lista.filter((o) => o.estado === "pendiente");
-    if (filtro === "en_proceso")
-      lista = lista.filter((o) => o.estado === "en_proceso");
-    if (filtro === "pagado")
-      lista = lista.filter((o) => o.estado_pago === "pagado");
+    if (filtroPago !== "todos") {
+      lista = lista.filter((o) => o.estado_pago === filtroPago);
+    }
 
     if (!busqueda) return lista;
 
@@ -77,7 +91,7 @@ function Ordenes() {
         o.estado?.toLowerCase().includes(q) ||
         o.estado_pago?.toLowerCase().includes(q),
     );
-  }, [ordenes, filtro, busqueda]);
+  }, [ordenes, filtroPago, busqueda]);
 
   const actualizarLinea = (index, cambios) => {
     setLineas((prev) =>
@@ -273,19 +287,6 @@ function Ordenes() {
     }
   };
 
-  const actualizarEstadoPago = async (orden) => {
-    const siguientePago =
-      orden.estado_pago === "pagado" ? "pendiente" : "pagado";
-    await cambiarEstadoPago(orden.id, siguientePago);
-  };
-
-  const pillEstado = (estado) => {
-    if (estado === "completada") return "pill-si";
-    if (estado === "cancelada") return "pill-no";
-    if (estado === "en_proceso") return "pill-info";
-    return "pill-warn"; // pendiente
-  };
-
   const pillPago = (estadoPago) => {
     if (estadoPago === "pagado") return "pill-si";
     if (estadoPago === "parcial") return "pill-warn";
@@ -354,23 +355,20 @@ function Ordenes() {
           )}
         </div>
 
-        <div className="filtros">
-          {["todos", "pendiente", "en_proceso", "pagado"].map((item) => (
-            <button
-              key={item}
-              type="button"
-              className={`btn-filtro ${filtro === item ? "active" : ""}`}
-              onClick={() => setFiltro(item)}
-            >
-              {item === "todos"
-                ? "Todos"
-                : item === "pendiente"
-                  ? "Pendiente"
-                  : item === "en_proceso"
-                    ? "En proceso"
-                    : "Pagado"}
-            </button>
-          ))}
+        <div className="filtros-grupo">
+          <span className="filtros-label">Estado de pago:</span>
+          <div className="filtros">
+            {["todos", "pendiente", "parcial", "pagado"].map((item) => (
+              <button
+                key={item}
+                type="button"
+                className={`btn-filtro ${filtroPago === item ? "active" : ""}`}
+                onClick={() => setFiltroPago(item)}
+              >
+                {item === "todos" ? "Todos" : item}
+              </button>
+            ))}
+          </div>
         </div>
 
         {ordenarVisible.length === 0 ? (
@@ -384,75 +382,72 @@ function Ordenes() {
                 <th>#</th>
                 <th>Cliente</th>
                 <th>Total</th>
-                <th>Estado</th>
                 <th>Pago</th>
                 <th>Creado</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {ordenarVisible.map((orden) => (
-                <tr key={orden.id}>
-                  <td>#{orden.id}</td>
-                  <td>
-                    <strong>{orden.cliente_nombre ?? "Sin cliente"}</strong>
-                    {orden.cliente_empresa && (
-                      <>
-                        <br />
-                        <small className="text-muted">
-                          {orden.cliente_empresa}
-                        </small>
-                      </>
-                    )}
-                  </td>
-                  <td>₡{Number(orden.total ?? 0).toLocaleString("es-CR")}</td>
-                  <td>
-                    <span className={`pill ${pillEstado(orden.estado)}`}>
-                      {orden.estado}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`pill ${pillPago(orden.estado_pago)}`}>
-                      {orden.estado_pago}
-                    </span>
-                  </td>
-                  <td>
-                    {orden.fecha_creacion
-                      ? new Date(orden.fecha_creacion).toLocaleDateString(
-                          "es-CR",
-                        )
-                      : "—"}
-                  </td>
-                  <td className="action-buttons">
-                    <button
-                      className="btn-action-outline"
-                      type="button"
-                      onClick={() => abrirEditar(orden)}
-                    >
-                      ✏️ Editar
-                    </button>
-                    {(orden.estado === "pendiente" ||
-                      orden.estado === "en_proceso") && (
+              {ordenarVisible.map((orden) => {
+                const saldo = saldoPorOrden.get(orden.id);
+                return (
+                  <tr key={orden.id}>
+                    <td>#{orden.id}</td>
+                    <td>
+                      <strong>{orden.cliente_nombre ?? "Sin cliente"}</strong>
+                      {orden.cliente_empresa && (
+                        <>
+                          <br />
+                          <small className="text-muted">
+                            {orden.cliente_empresa}
+                          </small>
+                        </>
+                      )}
+                    </td>
+                    <td>₡{Number(orden.total ?? 0).toLocaleString("es-CR")}</td>
+                    <td>
+                      <span className={`pill ${pillPago(orden.estado_pago)}`}>
+                        {orden.estado_pago}
+                      </span>
+                      {orden.estado_pago !== "pagado" &&
+                        saldo?.saldoPendiente > 0 && (
+                          <div className="pago-faltante">
+                            Faltan ₡
+                            {saldo.saldoPendiente.toLocaleString("es-CR")}
+                          </div>
+                        )}
+                    </td>
+                    <td>
+                      {orden.fecha_creacion
+                        ? new Date(orden.fecha_creacion).toLocaleDateString(
+                            "es-CR",
+                          )
+                        : "—"}
+                    </td>
+                    <td className="action-buttons">
                       <button
                         className="btn-action-outline"
                         type="button"
-                        onClick={() => actualizarEstadoOrden(orden)}
+                        onClick={() => abrirEditar(orden)}
                       >
-                        {orden.estado === "pendiente" ? "Iniciar" : "Completar"}
+                        ✏️ Editar
                       </button>
-                    )}
-                    <button
-                      className="btn-action-outline"
-                      type="button"
-                      onClick={() => actualizarEstadoPago(orden)}
-                    >
-                      {orden.estado_pago === "pagado"
-                        ? "Marcar pendiente"
-                        : "Marcar pagado"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                      {(orden.estado === "pendiente" ||
+                        orden.estado === "en_proceso") && (
+                        <button
+                          className="btn-action-outline"
+                          type="button"
+                          onClick={() => actualizarEstadoOrden(orden)}
+                        >
+                          {orden.estado === "pendiente"
+                            ? "Iniciar"
+                            : "Completar"}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

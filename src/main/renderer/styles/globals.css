@@ -151,8 +151,6 @@ h6 {
   max-width: 36rem;
 }
 
-
-
 .login-benefits {
   display: grid;
   gap: 0.7rem;
@@ -459,6 +457,21 @@ h6 {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.filtros-grupo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.filtros-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  white-space: nowrap;
 }
 
 .btn-filtro {
@@ -1917,85 +1930,101 @@ h6 {
   position: relative;
   padding-left: 16px;
 }
- 
+
 .page-header h1::before,
 .dashboard-header h1::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   top: 6px;
   bottom: 6px;
   width: 4px;
   border-radius: 999px;
-  background: linear-gradient(180deg, var(--color-primary), var(--color-secondary));
+  background: linear-gradient(
+    180deg,
+    var(--color-primary),
+    var(--color-secondary)
+  );
 }
- 
+
 .page-header p,
 .dashboard-meta {
   font-size: 0.92rem;
   color: var(--color-text-muted);
 }
- 
+
 /* ── Sidebar: usa el navy de marca en vez de gris genérico ─── */
 .sidebar {
   background: var(--color-surface-sidebar, #1a1a2e);
   box-shadow: 4px 0 24px rgba(15, 23, 42, 0.12);
 }
- 
+
 .sidebar-brand {
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   padding-bottom: 1.25rem;
   margin-bottom: 0.5rem;
 }
- 
+
 .sidebar-logo {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-secondary)
+  );
   box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
 }
- 
+
 .sidebar-link {
   font-size: 0.9rem;
   border: 1px solid transparent;
 }
- 
+
 .sidebar-link:hover {
   background: rgba(255, 255, 255, 0.06);
 }
- 
+
 .sidebar-link.active {
-  background: linear-gradient(90deg, rgba(79, 70, 229, 0.35), rgba(124, 58, 237, 0.12));
+  background: linear-gradient(
+    90deg,
+    rgba(79, 70, 229, 0.35),
+    rgba(124, 58, 237, 0.12)
+  );
   border-color: rgba(124, 58, 237, 0.3);
   box-shadow: inset 3px 0 0 var(--color-secondary);
   font-weight: 600;
 }
- 
+
 .user-avatar {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-secondary)
+  );
   box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
 }
- 
+
 /* ── Navbar: más aire, borde sutil ──────────────────────────── */
 .navbar {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--color-border);
 }
- 
+
 /* ── Botones: más profundidad, sin perder el estilo actual ──── */
 .btn-primary {
   box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
   letter-spacing: 0.01em;
 }
- 
+
 .btn-primary:hover {
   box-shadow: 0 6px 16px rgba(79, 70, 229, 0.32);
 }
- 
+
 .btn-secondary {
   border: 1px solid var(--color-border);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
- 
+
 /* ── Cards: bordes más suaves, sombra con más profundidad ──── */
 .stat-card,
 .card-card,
@@ -2004,21 +2033,39 @@ h6 {
 .form-section,
 .settings-card {
   border-color: rgba(15, 23, 42, 0.06);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 20px rgba(15, 23, 42, 0.04);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 20px rgba(15, 23, 42, 0.04);
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
- 
+
 .stat-card:hover {
-  box-shadow: 0 4px 8px rgba(15, 23, 42, 0.05), 0 12px 28px rgba(15, 23, 42, 0.07);
+  box-shadow:
+    0 4px 8px rgba(15, 23, 42, 0.05),
+    0 12px 28px rgba(15, 23, 42, 0.07);
   transform: translateY(-2px);
 }
- 
+
 /* ── Íconos de stat-card con color con propósito ────────────── */
-.stat-icon.success { background: var(--color-success-bg); color: var(--color-success-text); }
-.stat-icon.warning { background: var(--color-warning-bg); color: var(--color-warning-text); }
-.stat-icon.danger  { background: var(--color-danger-bg);  color: var(--color-danger-text); }
-.stat-icon.info    { background: var(--color-info-bg);    color: var(--color-info-text); }
- 
+.stat-icon.success {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+.stat-icon.warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+.stat-icon.danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+.stat-icon.info {
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+}
+
 /* ── Tablas: encabezado con más carácter, filas más legibles ── */
 .data-table th {
   background: var(--color-bg);
@@ -2028,11 +2075,11 @@ h6 {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
- 
+
 .data-table tbody tr {
   transition: background 0.12s ease;
 }
- 
+
 /* Fila de alerta reutilizable — agrega className="fila-alerta"
    a cualquier <tr> que necesite resaltarse (stock bajo, vence
    pronto, pago vencido, etc.) */
@@ -2045,40 +2092,53 @@ h6 {
 .data-table tbody tr.fila-alerta td:first-child {
   box-shadow: inset 3px 0 0 var(--color-warning-text);
 }
- 
+
 /* ── Pills y badges: bordes finos para que no se vean "planos" */
 .pill,
 .badge {
   border: 1px solid transparent;
   letter-spacing: 0.01em;
 }
- 
-.pill-si { border-color: rgba(16, 185, 129, 0.25); }
-.pill-no { border-color: rgba(220, 38, 38, 0.2); }
-.pill-warn { border-color: rgba(245, 158, 11, 0.25); }
-.pill-info { border-color: rgba(59, 130, 246, 0.25); }
- 
+
+.pill-si {
+  border-color: rgba(16, 185, 129, 0.25);
+}
+.pill-no {
+  border-color: rgba(220, 38, 38, 0.2);
+}
+.pill-warn {
+  border-color: rgba(245, 158, 11, 0.25);
+}
+.pill-info {
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
 /* ── Inputs: focus más suave y consistente ──────────────────── */
 .form-group input,
 .form-group select,
 .form-group textarea,
 .search-bar input {
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
 }
- 
+
 .form-group input:hover,
 .form-group select:hover,
 .form-group textarea:hover {
   border-color: var(--border-strong, #d1d5db);
 }
- 
+
 /* ── Modales: entrada más suave, sombra más "premium" ───────── */
 .modal,
 .modal-card {
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 24px 60px rgba(15, 23, 42, 0.18),
+    0 4px 12px rgba(15, 23, 42, 0.08);
   animation: modalConfirmIn 0.18s ease-out;
 }
- 
+
 /* ── Empty states: menos "vacío", más intencional ───────────── */
 .empty-state,
 .empty-msg {
@@ -2089,14 +2149,14 @@ h6 {
   padding: 2.5rem 1.5rem;
   font-size: 0.92rem;
 }
- 
+
 .empty-state::before,
 .empty-msg::before {
-  content: '📭';
+  content: "📭";
   font-size: 1.8rem;
   opacity: 0.5;
 }
- 
+
 /* ── Scrollbar general, más discreto (Chromium/Electron) ────── */
 .page-content::-webkit-scrollbar,
 .sidebar-nav::-webkit-scrollbar {
@@ -2110,7 +2170,7 @@ h6 {
 .page-content::-webkit-scrollbar-track {
   background: transparent;
 }
- 
+
 .pago-buscador {
   display: grid;
   gap: 0.75rem;
@@ -2140,7 +2200,9 @@ h6 {
   background: #ffffff;
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .pago-resultado-item:hover {
@@ -2212,4 +2274,11 @@ h6 {
 
 .row-selected {
   background: rgba(79, 70, 229, 0.08) !important;
+}
+
+.pago-faltante {
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--color-warning-text, #b45309);
+  font-weight: 600;
 }
