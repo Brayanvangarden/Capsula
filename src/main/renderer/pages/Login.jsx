@@ -1,112 +1,117 @@
-import { useState } from 'react'
-import { useAuth } from '../hooks/useAuth'
+import { useState } from "react";
+import { useAuth } from "../hooks/useAuth";
 
 function Login() {
-  const {
-    login,
-    requestPasswordReset,
-    resetPassword,
-    loading,
-    error,
-  } = useAuth()
+  const { login, requestPasswordReset, resetPassword, loading, error } =
+    useAuth();
 
-  const [mode, setMode] = useState('login')
-  const [loginForm, setLoginForm] = useState({ usuario: '', password: '' })
-  const [resetForm, setResetForm] = useState({ usuarioOrCorreo: '', code: '', password: '' })
-  const [showPassword, setShowPassword] = useState(false)
-  const [feedback, setFeedback] = useState('')
-  const [debugCode, setDebugCode] = useState(null)
+  const [mode, setMode] = useState("login");
+  const [loginForm, setLoginForm] = useState({ usuario: "", password: "" });
+  const [resetForm, setResetForm] = useState({
+    usuarioOrCorreo: "",
+    code: "",
+    password: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [debugCode, setDebugCode] = useState(null);
 
   const handleLoginChange = (e) => {
-    setLoginForm({ ...loginForm, [e.target.name]: e.target.value })
-    setFeedback('')
-    setDebugCode(null)
-  }
+    setLoginForm({ ...loginForm, [e.target.name]: e.target.value });
+    setFeedback("");
+    setDebugCode(null);
+  };
 
   const handleResetChange = (e) => {
-    setResetForm({ ...resetForm, [e.target.name]: e.target.value })
-    setFeedback('')
-  }
+    setResetForm({ ...resetForm, [e.target.name]: e.target.value });
+    setFeedback("");
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    await login({ usuario: loginForm.usuario, password: loginForm.password })
-  }
+    e.preventDefault();
+    await login({ usuario: loginForm.usuario, password: loginForm.password });
+  };
 
   const handleShowForgot = (e) => {
-    e.preventDefault()
-    setMode('forgot')
-    setFeedback('')
-    setDebugCode(null)
-  }
+    e.preventDefault();
+    setMode("forgot");
+    setFeedback("");
+    setDebugCode(null);
+  };
 
   const handleCancelRecover = (e) => {
-    e.preventDefault()
-    setMode('login')
-    setFeedback('')
-    setDebugCode(null)
-    setResetForm({ usuarioOrCorreo: '', code: '', password: '' })
-  }
+    e.preventDefault();
+    setMode("login");
+    setFeedback("");
+    setDebugCode(null);
+    setResetForm({ usuarioOrCorreo: "", code: "", password: "" });
+  };
 
   const handleRequestReset = async (e) => {
-    e.preventDefault()
-    setFeedback('')
-    setDebugCode(null)
+    e.preventDefault();
+    setFeedback("");
+    setDebugCode(null);
 
     if (!resetForm.usuarioOrCorreo.trim()) {
-      setFeedback('Ingresa tu usuario o correo para recibir el código.')
-      return
+      setFeedback("Ingresa tu usuario o correo para recibir el código.");
+      return;
     }
 
-    const result = await requestPasswordReset(resetForm.usuarioOrCorreo.trim())
+    const result = await requestPasswordReset(resetForm.usuarioOrCorreo.trim());
     if (!result.ok) {
-      setFeedback(result.message)
-      if (result.debugCode) setDebugCode(result.debugCode)
-      return
+      setFeedback(result.message);
+      if (result.debugCode) setDebugCode(result.debugCode);
+      return;
     }
 
-    setMode('confirm')
-    setFeedback('Código enviado. Revisa tu correo y completa el formulario.')
-    setDebugCode(result.debugCode)
-  }
+    setMode("confirm");
+    setFeedback("Código enviado. Revisa tu correo y completa el formulario.");
+    setDebugCode(result.debugCode);
+  };
 
   const handleResetPassword = async (e) => {
-    e.preventDefault()
-    setFeedback('')
+    e.preventDefault();
+    setFeedback("");
 
-    if (!resetForm.usuarioOrCorreo.trim() || !resetForm.code.trim() || !resetForm.password.trim()) {
-      setFeedback('Completa todos los campos para restablecer la contraseña.')
-      return
+    if (
+      !resetForm.usuarioOrCorreo.trim() ||
+      !resetForm.code.trim() ||
+      !resetForm.password.trim()
+    ) {
+      setFeedback("Completa todos los campos para restablecer la contraseña.");
+      return;
     }
 
     const result = await resetPassword({
       usuarioOrCorreo: resetForm.usuarioOrCorreo.trim(),
       code: resetForm.code.trim(),
       password: resetForm.password.trim(),
-    })
+    });
 
     if (!result.ok) {
-      setFeedback(result.message)
-      return
+      setFeedback(result.message);
+      return;
     }
 
-    setFeedback(result.message)
-    setMode('login')
-    setLoginForm({ usuario: resetForm.usuarioOrCorreo.trim(), password: '' })
-    setResetForm({ usuarioOrCorreo: '', code: '', password: '' })
-  }
+    setFeedback(result.message);
+    setMode("login");
+    setLoginForm({ usuario: resetForm.usuarioOrCorreo.trim(), password: "" });
+    setResetForm({ usuarioOrCorreo: "", code: "", password: "" });
+  };
 
-  const currentTitle = mode === 'login'
-    ? 'Bienvenido de vuelta'
-    : mode === 'forgot'
-      ? 'Recuperar contraseña'
-      : 'Código de recuperación'
+  const currentTitle =
+    mode === "login"
+      ? "Bienvenido de vuelta"
+      : mode === "forgot"
+        ? "Recuperar contraseña"
+        : "Código de recuperación";
 
-  const currentSubtitle = mode === 'login'
-    ? 'Ingresa tus credenciales para continuar'
-    : mode === 'forgot'
-      ? 'Te enviaremos un código seguro a tu correo o usuario registrado'
-      : 'Introduce el código y crea una nueva contraseña'
+  const currentSubtitle =
+    mode === "login"
+      ? "Ingresa tus credenciales para continuar"
+      : mode === "forgot"
+        ? "Te enviaremos un código seguro a tu correo o usuario registrado"
+        : "Introduce el código y crea una nueva contraseña";
 
   return (
     <div style={styles.root}>
@@ -123,7 +128,7 @@ function Login() {
               <div className="capsule-particle p3" />
               <div className="capsule-particle p4" />
             </div>
-            <span style={styles.logoText}>Cápsulas</span>
+            <span style={styles.logoText}>Logicaps</span>
           </div>
 
           <div style={styles.panelContent}>
@@ -150,10 +155,16 @@ function Login() {
           <div style={styles.mobileLogo}>
             <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
               <rect width="36" height="36" rx="10" fill="#0f766e" />
-              <path d="M10 18 L18 10 L26 18 L18 26 Z" stroke="white" strokeWidth="2" fill="none" strokeLinejoin="round" />
+              <path
+                d="M10 18 L18 10 L26 18 L18 26 Z"
+                stroke="white"
+                strokeWidth="2"
+                fill="none"
+                strokeLinejoin="round"
+              />
               <circle cx="18" cy="18" r="3" fill="white" />
             </svg>
-            <span style={styles.mobileLogoText}>MiApp</span>
+            <span style={styles.mobileLogoText}>Logicaps</span>
           </div>
 
           <header style={styles.header}>
@@ -161,14 +172,35 @@ function Login() {
             <p style={styles.subtitle}>{currentSubtitle}</p>
           </header>
 
-          <form onSubmit={mode === 'login' ? handleSubmit : mode === 'forgot' ? handleRequestReset : handleResetPassword} style={styles.form}>
-            {mode === 'login' && (
+          <form
+            onSubmit={
+              mode === "login"
+                ? handleSubmit
+                : mode === "forgot"
+                  ? handleRequestReset
+                  : handleResetPassword
+            }
+            style={styles.form}
+          >
+            {mode === "login" && (
               <>
                 <div style={styles.fieldGroup}>
-                  <label htmlFor="usuario" style={styles.label}>Usuario</label>
+                  <label htmlFor="usuario" style={styles.label}>
+                    Usuario
+                  </label>
                   <div style={styles.inputWrapper}>
-                    <svg style={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM3 18a7 7 0 0114 0" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg
+                      style={styles.inputIcon}
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    >
+                      <path
+                        d="M10 9a3 3 0 100-6 3 3 0 000 6zM3 18a7 7 0 0114 0"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                     <input
                       id="usuario"
@@ -181,22 +213,41 @@ function Login() {
                       autoFocus
                       autoComplete="username"
                       style={styles.input}
-                      onFocus={e => Object.assign(e.target.style, styles.inputFocus)}
-                      onBlur={e => Object.assign(e.target.style, styles.input)}
+                      onFocus={(e) =>
+                        Object.assign(e.target.style, styles.inputFocus)
+                      }
+                      onBlur={(e) =>
+                        Object.assign(e.target.style, styles.input)
+                      }
                     />
                   </div>
                 </div>
 
                 <div style={styles.fieldGroup}>
-                  <label htmlFor="password" style={styles.label}>Contraseña</label>
+                  <label htmlFor="password" style={styles.label}>
+                    Contraseña
+                  </label>
                   <div style={styles.inputWrapper}>
-                    <svg style={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <rect x="3" y="9" width="14" height="10" rx="2" strokeLinejoin="round" />
+                    <svg
+                      style={styles.inputIcon}
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    >
+                      <rect
+                        x="3"
+                        y="9"
+                        width="14"
+                        height="10"
+                        rx="2"
+                        strokeLinejoin="round"
+                      />
                       <path d="M7 9V6a3 3 0 016 0v3" strokeLinecap="round" />
                     </svg>
                     <input
                       id="password"
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       name="password"
                       value={loginForm.password}
                       onChange={handleLoginChange}
@@ -204,23 +255,51 @@ function Login() {
                       required
                       autoComplete="current-password"
                       style={styles.input}
-                      onFocus={e => Object.assign(e.target.style, styles.inputFocus)}
-                      onBlur={e => Object.assign(e.target.style, styles.input)}
+                      onFocus={(e) =>
+                        Object.assign(e.target.style, styles.inputFocus)
+                      }
+                      onBlur={(e) =>
+                        Object.assign(e.target.style, styles.input)
+                      }
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       style={styles.eyeBtn}
-                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      aria-label={
+                        showPassword
+                          ? "Ocultar contraseña"
+                          : "Mostrar contraseña"
+                      }
                     >
                       {showPassword ? (
-                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" width="18" height="18">
-                          <path d="M3 10s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" strokeLinejoin="round" />
+                        <svg
+                          viewBox="0 0 20 20"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          width="18"
+                          height="18"
+                        >
+                          <path
+                            d="M3 10s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"
+                            strokeLinejoin="round"
+                          />
                           <circle cx="10" cy="10" r="2" />
                         </svg>
                       ) : (
-                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" width="18" height="18">
-                          <path d="M2 2l16 16M7.5 7.6A5 5 0 0115 10c0 .5-.07 1-.2 1.4M9.4 14.8A7 7 0 013 10c.6-1.4 1.6-2.7 2.8-3.7" strokeLinecap="round" />
+                        <svg
+                          viewBox="0 0 20 20"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          width="18"
+                          height="18"
+                        >
+                          <path
+                            d="M2 2l16 16M7.5 7.6A5 5 0 0115 10c0 .5-.07 1-.2 1.4M9.4 14.8A7 7 0 013 10c.6-1.4 1.6-2.7 2.8-3.7"
+                            strokeLinecap="round"
+                          />
                         </svg>
                       )}
                     </button>
@@ -229,12 +308,20 @@ function Login() {
               </>
             )}
 
-            {(mode === 'forgot' || mode === 'confirm') && (
+            {(mode === "forgot" || mode === "confirm") && (
               <>
                 <div style={styles.fieldGroup}>
-                  <label htmlFor="usuarioOrCorreo" style={styles.label}>Usuario o correo</label>
+                  <label htmlFor="usuarioOrCorreo" style={styles.label}>
+                    Usuario o correo
+                  </label>
                   <div style={styles.inputWrapper}>
-                    <svg style={styles.inputIcon} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <svg
+                      style={styles.inputIcon}
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    >
                       <path d="M3 8.5C3 6.57 4.57 5 6.5 5h7c1.93 0 3.5 1.57 3.5 3.5v3c0 1.93-1.57 3.5-3.5 3.5h-7C4.57 15 3 13.43 3 11.5v-3z" />
                       <path d="M3 8.5l7 4 7-4" />
                     </svg>
@@ -248,16 +335,22 @@ function Login() {
                       required
                       autoFocus
                       style={styles.input}
-                      onFocus={e => Object.assign(e.target.style, styles.inputFocus)}
-                      onBlur={e => Object.assign(e.target.style, styles.input)}
+                      onFocus={(e) =>
+                        Object.assign(e.target.style, styles.inputFocus)
+                      }
+                      onBlur={(e) =>
+                        Object.assign(e.target.style, styles.input)
+                      }
                     />
                   </div>
                 </div>
 
-                {mode === 'confirm' && (
+                {mode === "confirm" && (
                   <>
                     <div style={styles.fieldGroup}>
-                      <label htmlFor="code" style={styles.label}>Código temporal</label>
+                      <label htmlFor="code" style={styles.label}>
+                        Código temporal
+                      </label>
                       <div style={styles.inputWrapper}>
                         <input
                           id="code"
@@ -268,41 +361,75 @@ function Login() {
                           placeholder="123456"
                           required
                           style={styles.input}
-                          onFocus={e => Object.assign(e.target.style, styles.inputFocus)}
-                          onBlur={e => Object.assign(e.target.style, styles.input)}
+                          onFocus={(e) =>
+                            Object.assign(e.target.style, styles.inputFocus)
+                          }
+                          onBlur={(e) =>
+                            Object.assign(e.target.style, styles.input)
+                          }
                         />
                       </div>
                     </div>
 
                     <div style={styles.fieldGroup}>
-                      <label htmlFor="password" style={styles.label}>Nueva contraseña</label>
+                      <label htmlFor="password" style={styles.label}>
+                        Nueva contraseña
+                      </label>
                       <div style={styles.inputWrapper}>
                         <input
                           id="password"
-                          type={showPassword ? 'text' : 'password'}
+                          type={showPassword ? "text" : "password"}
                           name="password"
                           value={resetForm.password}
                           onChange={handleResetChange}
                           placeholder="••••••••"
                           required
                           style={styles.input}
-                          onFocus={e => Object.assign(e.target.style, styles.inputFocus)}
-                          onBlur={e => Object.assign(e.target.style, styles.input)}
+                          onFocus={(e) =>
+                            Object.assign(e.target.style, styles.inputFocus)
+                          }
+                          onBlur={(e) =>
+                            Object.assign(e.target.style, styles.input)
+                          }
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           style={styles.eyeBtn}
-                          aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                          aria-label={
+                            showPassword
+                              ? "Ocultar contraseña"
+                              : "Mostrar contraseña"
+                          }
                         >
                           {showPassword ? (
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" width="18" height="18">
-                              <path d="M3 10s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" strokeLinejoin="round" />
+                            <svg
+                              viewBox="0 0 20 20"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              width="18"
+                              height="18"
+                            >
+                              <path
+                                d="M3 10s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"
+                                strokeLinejoin="round"
+                              />
                               <circle cx="10" cy="10" r="2" />
                             </svg>
                           ) : (
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" width="18" height="18">
-                              <path d="M2 2l16 16M7.5 7.6A5 5 0 0115 10c0 .5-.07 1-.2 1.4M9.4 14.8A7 7 0 013 10c.6-1.4 1.6-2.7 2.8-3.7" strokeLinecap="round" />
+                            <svg
+                              viewBox="0 0 20 20"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              width="18"
+                              height="18"
+                            >
+                              <path
+                                d="M2 2l16 16M7.5 7.6A5 5 0 0115 10c0 .5-.07 1-.2 1.4M9.4 14.8A7 7 0 013 10c.6-1.4 1.6-2.7 2.8-3.7"
+                                strokeLinecap="round"
+                              />
                             </svg>
                           )}
                         </button>
@@ -316,8 +443,18 @@ function Login() {
             {/* Error */}
             {error && (
               <div style={styles.errorBox} role="alert">
-                <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16" style={{ flexShrink: 0 }}>
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-3a1 1 0 00-1 1v.5a1 1 0 002 0V11a1 1 0 00-1-1z" clipRule="evenodd" />
+                <svg
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  width="16"
+                  height="16"
+                  style={{ flexShrink: 0 }}
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-3a1 1 0 00-1 1v.5a1 1 0 002 0V11a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 <span>{error}</span>
               </div>
@@ -338,30 +475,60 @@ function Login() {
             <button
               type="submit"
               disabled={loading}
-              style={loading ? { ...styles.btn, ...styles.btnDisabled } : styles.btn}
+              style={
+                loading ? { ...styles.btn, ...styles.btnDisabled } : styles.btn
+              }
             >
               {loading ? (
                 <>
-                  <svg style={styles.spinner} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+                  <svg
+                    style={styles.spinner}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    width="18"
+                    height="18"
+                  >
                     <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
                     <path d="M12 2a10 10 0 0110 10" strokeLinecap="round" />
                   </svg>
-                  {mode === 'login' ? 'Iniciando sesión...' : mode === 'forgot' ? 'Enviando código...' : 'Restableciendo...' }
+                  {mode === "login"
+                    ? "Iniciando sesión..."
+                    : mode === "forgot"
+                      ? "Enviando código..."
+                      : "Restableciendo..."}
                 </>
+              ) : mode === "login" ? (
+                "Iniciar sesión"
+              ) : mode === "forgot" ? (
+                "Enviar código"
               ) : (
-                mode === 'login' ? 'Iniciar sesión' : mode === 'forgot' ? 'Enviar código' : 'Restablecer contraseña'
+                "Restablecer contraseña"
               )}
             </button>
           </form>
 
           <p style={styles.footer}>
-            {mode === 'login' ? (
+            {mode === "login" ? (
               <>
-                ¿Olvidaste tu contraseña?{' '}
-                <button type="button" onClick={handleShowForgot} style={styles.linkButton}>Recuperarla</button>
+                ¿Olvidaste tu contraseña?{" "}
+                <button
+                  type="button"
+                  onClick={handleShowForgot}
+                  style={styles.linkButton}
+                >
+                  Recuperarla
+                </button>
               </>
             ) : (
-              <button type="button" onClick={handleCancelRecover} style={styles.linkButton}>Volver al inicio de sesión</button>
+              <button
+                type="button"
+                onClick={handleCancelRecover}
+                style={styles.linkButton}
+              >
+                Volver al inicio de sesión
+              </button>
             )}
           </p>
         </div>
@@ -490,269 +657,270 @@ function Login() {
         }
       `}</style>
     </div>
-  )
+  );
 }
 
 const styles = {
   root: {
-    display: 'flex',
-    minHeight: '100vh',
-    backgroundColor: '#f4faf9',
+    display: "flex",
+    minHeight: "100vh",
+    backgroundColor: "#f4faf9",
     fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
   },
 
   // Left decorative panel
   panel: {
-    width: '45%',
-    background: 'linear-gradient(135deg, #0f766e 0%, #0e7490 55%, #075985 100%)',
-    display: 'flex',
-    alignItems: 'stretch',
-    position: 'relative',
-    overflow: 'hidden',
+    width: "45%",
+    background:
+      "linear-gradient(135deg, #0f766e 0%, #0e7490 55%, #075985 100%)",
+    display: "flex",
+    alignItems: "stretch",
+    position: "relative",
+    overflow: "hidden",
   },
   panelInner: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    gap: '56px',
-    padding: '40px',
-    width: '100%',
-    position: 'relative',
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    gap: "56px",
+    padding: "40px",
+    width: "100%",
+    position: "relative",
     zIndex: 1,
   },
   logo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
   },
   logoText: {
-    color: 'white',
-    fontSize: '18px',
-    fontWeight: '600',
-    letterSpacing: '-0.3px',
+    color: "white",
+    fontSize: "18px",
+    fontWeight: "600",
+    letterSpacing: "-0.3px",
   },
   panelContent: {
-    marginBottom: '0',
+    marginBottom: "0",
   },
   quote: {
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: '22px',
-    fontWeight: '400',
-    lineHeight: '1.5',
-    letterSpacing: '-0.3px',
-    margin: '0 0 32px 0',
-    fontStyle: 'normal',
+    color: "rgba(255,255,255,0.85)",
+    fontSize: "22px",
+    fontWeight: "400",
+    lineHeight: "1.5",
+    letterSpacing: "-0.3px",
+    margin: "0 0 32px 0",
+    fontStyle: "normal",
   },
   dots: {
-    display: 'flex',
-    gap: '8px',
+    display: "flex",
+    gap: "8px",
   },
   dot: {
-    width: '8px',
-    height: '8px',
-    borderRadius: '50%',
-    background: '#fb7185',
+    width: "8px",
+    height: "8px",
+    borderRadius: "50%",
+    background: "#fb7185",
     opacity: 0.35,
   },
   circle1: {
-    position: 'absolute',
-    width: '300px',
-    height: '300px',
-    borderRadius: '50%',
-    border: '1px solid rgba(255,255,255,0.1)',
-    top: '-80px',
-    right: '-80px',
+    position: "absolute",
+    width: "300px",
+    height: "300px",
+    borderRadius: "50%",
+    border: "1px solid rgba(255,255,255,0.1)",
+    top: "-80px",
+    right: "-80px",
   },
   circle2: {
-    position: 'absolute',
-    width: '200px',
-    height: '200px',
-    borderRadius: '50%',
-    border: '1px solid rgba(251,113,133,0.18)',
-    bottom: '60px',
-    right: '-40px',
+    position: "absolute",
+    width: "200px",
+    height: "200px",
+    borderRadius: "50%",
+    border: "1px solid rgba(251,113,133,0.18)",
+    bottom: "60px",
+    right: "-40px",
   },
 
   // Right form side
   formSide: {
     flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '40px 24px',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "40px 24px",
   },
   formCard: {
-    width: '100%',
-    maxWidth: '400px',
+    width: "100%",
+    maxWidth: "400px",
   },
   mobileLogo: {
-    display: 'none',
-    alignItems: 'center',
-    gap: '8px',
-    marginBottom: '32px',
+    display: "none",
+    alignItems: "center",
+    gap: "8px",
+    marginBottom: "32px",
   },
   mobileLogoText: {
-    fontSize: '17px',
-    fontWeight: '600',
-    color: '#0f766e',
+    fontSize: "17px",
+    fontWeight: "600",
+    color: "#0f766e",
   },
   header: {
-    marginBottom: '32px',
+    marginBottom: "32px",
   },
   title: {
-    fontSize: '26px',
-    fontWeight: '700',
-    color: '#0c2a27',
-    margin: '0 0 8px 0',
-    letterSpacing: '-0.5px',
+    fontSize: "26px",
+    fontWeight: "700",
+    color: "#0c2a27",
+    margin: "0 0 8px 0",
+    letterSpacing: "-0.5px",
   },
   subtitle: {
-    fontSize: '14px',
-    color: '#6b7280',
+    fontSize: "14px",
+    color: "#6b7280",
     margin: 0,
-    lineHeight: '1.5',
+    lineHeight: "1.5",
   },
 
   // Form
   form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px',
+    display: "flex",
+    flexDirection: "column",
+    gap: "20px",
   },
   fieldGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px',
+    display: "flex",
+    flexDirection: "column",
+    gap: "6px",
   },
   label: {
-    fontSize: '13px',
-    fontWeight: '500',
-    color: '#374151',
-    letterSpacing: '0.01em',
+    fontSize: "13px",
+    fontWeight: "500",
+    color: "#374151",
+    letterSpacing: "0.01em",
   },
   inputWrapper: {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
   },
   inputIcon: {
-    position: 'absolute',
-    left: '12px',
-    width: '17px',
-    height: '17px',
-    color: '#9ca3af',
-    pointerEvents: 'none',
+    position: "absolute",
+    left: "12px",
+    width: "17px",
+    height: "17px",
+    color: "#9ca3af",
+    pointerEvents: "none",
     flexShrink: 0,
   },
   input: {
-    width: '100%',
-    padding: '11px 40px 11px 38px',
-    fontSize: '14px',
-    color: '#0c2a27',
-    background: 'white',
-    border: '1.5px solid #e5e7eb',
-    borderRadius: '10px',
-    outline: 'none',
-    boxSizing: 'border-box',
-    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+    width: "100%",
+    padding: "11px 40px 11px 38px",
+    fontSize: "14px",
+    color: "#0c2a27",
+    background: "white",
+    border: "1.5px solid #e5e7eb",
+    borderRadius: "10px",
+    outline: "none",
+    boxSizing: "border-box",
+    transition: "border-color 0.15s ease, box-shadow 0.15s ease",
   },
   inputFocus: {
-    width: '100%',
-    padding: '11px 40px 11px 38px',
-    fontSize: '14px',
-    color: '#0c2a27',
-    background: 'white',
-    border: '1.5px solid #0f766e',
-    borderRadius: '10px',
-    outline: 'none',
-    boxSizing: 'border-box',
-    boxShadow: '0 0 0 3px rgba(15,118,110,0.12)',
-    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+    width: "100%",
+    padding: "11px 40px 11px 38px",
+    fontSize: "14px",
+    color: "#0c2a27",
+    background: "white",
+    border: "1.5px solid #0f766e",
+    borderRadius: "10px",
+    outline: "none",
+    boxSizing: "border-box",
+    boxShadow: "0 0 0 3px rgba(15,118,110,0.12)",
+    transition: "border-color 0.15s ease, box-shadow 0.15s ease",
   },
   eyeBtn: {
-    position: 'absolute',
-    right: '12px',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    color: '#9ca3af',
-    padding: '2px',
-    display: 'flex',
-    alignItems: 'center',
+    position: "absolute",
+    right: "12px",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    color: "#9ca3af",
+    padding: "2px",
+    display: "flex",
+    alignItems: "center",
   },
 
   // Error
   errorBox: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '10px 14px',
-    background: '#fef2f2',
-    border: '1px solid #fecaca',
-    borderRadius: '8px',
-    fontSize: '13px',
-    color: '#b91c1c',
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    padding: "10px 14px",
+    background: "#fef2f2",
+    border: "1px solid #fecaca",
+    borderRadius: "8px",
+    fontSize: "13px",
+    color: "#b91c1c",
   },
 
   // Button
   btn: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-    padding: '13px',
-    fontSize: '14px',
-    fontWeight: '600',
-    color: 'white',
-    background: 'linear-gradient(135deg, #0f766e 0%, #0e7490 100%)',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    letterSpacing: '0.01em',
-    transition: 'opacity 0.15s ease, transform 0.1s ease',
-    marginTop: '4px',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+    padding: "13px",
+    fontSize: "14px",
+    fontWeight: "600",
+    color: "white",
+    background: "linear-gradient(135deg, #0f766e 0%, #0e7490 100%)",
+    border: "none",
+    borderRadius: "10px",
+    cursor: "pointer",
+    letterSpacing: "0.01em",
+    transition: "opacity 0.15s ease, transform 0.1s ease",
+    marginTop: "4px",
   },
   btnDisabled: {
     opacity: 0.65,
-    cursor: 'not-allowed',
+    cursor: "not-allowed",
   },
   spinner: {
-    animation: 'spin 0.8s linear infinite',
+    animation: "spin 0.8s linear infinite",
   },
 
   // Footer
   footer: {
-    marginTop: '28px',
-    textAlign: 'center',
-    fontSize: '13px',
-    color: '#6b7280',
+    marginTop: "28px",
+    textAlign: "center",
+    fontSize: "13px",
+    color: "#6b7280",
   },
   link: {
-    color: '#0f766e',
-    fontWeight: '500',
-    textDecoration: 'none',
+    color: "#0f766e",
+    fontWeight: "500",
+    textDecoration: "none",
   },
   linkButton: {
-    background: 'none',
-    border: 'none',
-    color: '#0f766e',
-    fontWeight: '600',
-    cursor: 'pointer',
+    background: "none",
+    border: "none",
+    color: "#0f766e",
+    fontWeight: "600",
+    cursor: "pointer",
     padding: 0,
   },
   feedbackBox: {
-    padding: '12px 14px',
-    background: '#ecfdf5',
-    border: '1px solid #a7f3d0',
-    borderRadius: '8px',
-    color: '#0c2a27',
-    fontSize: '13px',
+    padding: "12px 14px",
+    background: "#ecfdf5",
+    border: "1px solid #a7f3d0",
+    borderRadius: "8px",
+    color: "#0c2a27",
+    fontSize: "13px",
   },
   debugInfo: {
-    marginTop: '10px',
-    fontSize: '12px',
-    color: '#334155',
+    marginTop: "10px",
+    fontSize: "12px",
+    color: "#334155",
   },
-}
+};
 
-export default Login
+export default Login;
