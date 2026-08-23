@@ -554,5 +554,4 @@ function Pagos() {
     </div>
   );
 }
-
 export default Pagos;
