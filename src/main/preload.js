@@ -5,10 +5,12 @@ contextBridge.exposeInMainWorld("api", {
   //  AUTH
   // ══════════════════════════════════════
   auth: {
-    login: (credentials) => ipcRenderer.invoke('auth:login', credentials),
-    getById: (id) => ipcRenderer.invoke('auth:getById', id),
-    requestPasswordReset: (payload) => ipcRenderer.invoke('auth:requestPasswordReset', payload),
-    resetPassword: (payload) => ipcRenderer.invoke('auth:resetPassword', payload),
+    login: (credentials) => ipcRenderer.invoke("auth:login", credentials),
+    getById: (id) => ipcRenderer.invoke("auth:getById", id),
+    requestPasswordReset: (payload) =>
+      ipcRenderer.invoke("auth:requestPasswordReset", payload),
+    resetPassword: (payload) =>
+      ipcRenderer.invoke("auth:resetPassword", payload),
   },
 
   // ══════════════════════════════════════
@@ -106,6 +108,14 @@ contextBridge.exposeInMainWorld("api", {
     historialCliente: (clienteId) =>
       ipcRenderer.invoke("pagos:historialCliente", clienteId),
     resumen: () => ipcRenderer.invoke("pagos:resumen"),
+  },
+
+  // ══════════════════════════════════════
+  //  FACTURAS
+  // ══════════════════════════════════════
+  facturas: {
+    getById: (id) => ipcRenderer.invoke("facturas:getById", id),
+    getByPagoId: (pagoId) => ipcRenderer.invoke("facturas:getByPagoId", pagoId),
   },
 
   // ══════════════════════════════════════

@@ -1,4 +1,5 @@
 const { getDb } = require("../db");
+const facturasRepository = require("./facturas.repository");
 
 function getAll(filtros = {}) {
   let query = `
@@ -116,6 +117,10 @@ function create(data) {
       estado_pago,
       data.orden_id,
     );
+
+    if (estado_pago === "pagado") {
+      facturasRepository.crearParaPago(result.lastInsertRowid, data.orden_id);
+    }
 
     return getById(result.lastInsertRowid);
   });
