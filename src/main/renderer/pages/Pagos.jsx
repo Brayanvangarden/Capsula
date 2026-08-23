@@ -14,8 +14,8 @@ const METODOS_PAGO = [
 function Pagos() {
   const { user } = useAuth();
   const { pagos, resumen, loading, error, registrarPago } = usePagos();
-  const { clientes } = useClientes();
-  const { ordenes } = useOrdenes();
+  const { clientes, fetchClientes } = useClientes();
+  const { ordenes, fetchOrdenes } = useOrdenes();
 
   const [form, setForm] = useState({
     clienteId: "",
@@ -27,6 +27,34 @@ function Pagos() {
   const [mensaje, setMensaje] = useState("");
   const [mensajeTipo, setMensajeTipo] = useState("success");
   const [busqueda, setBusqueda] = useState("");
+  const [busquedaOrden, setBusquedaOrden] = useState("");
+
+  const ordenesPendientes = useMemo(
+    () =>
+      ordenes
+        .map((orden) => {
+          const totalPagado = pagos
+            .filter((pago) => String(pago.orden_id) === String(orden.id))
+            .reduce((total, pago) => total + Number(pago.monto), 0);
+          return {
+            ...orden,
+            totalPagado,
+            saldoPendiente: Math.max(0, Number(orden.total) - totalPagado),
+          };
+        })
+        .filter((orden) => orden.saldoPendiente > 0.005),
+    [ordenes, pagos],
+  );
+
+  const ordenSeleccionada = useMemo(
+    () =>
+      ordenesPendientes.find(
+        (orden) => String(orden.id) === String(form.ordenId),
+      ),
+    [ordenesPendientes, form.ordenId],
+  );
+
+  const saldoOrdenRestante = ordenSeleccionada?.saldoPendiente ?? null;
 
   const clienteSeleccionado = useMemo(
     () =>
@@ -36,34 +64,56 @@ function Pagos() {
 
   const ordenesCliente = useMemo(() => {
     if (!form.clienteId) return [];
-    return ordenes.filter(
+    return ordenesPendientes.filter(
+      (orden) => String(orden.cliente_id) === String(form.clienteId),
+    );
+  }, [form.clienteId, ordenesPendientes]);
+
+  const ordenesFiltradasBusqueda = useMemo(() => {
+    const q = busquedaOrden.trim().toLowerCase();
+    if (!q) return [];
+    return ordenesPendientes.filter(
       (orden) =>
-        String(orden.cliente_id) === String(form.clienteId) &&
-        orden.estado_pago !== "pagado",
+        String(orden.id).includes(q) ||
+        orden.cliente_nombre?.toLowerCase().includes(q) ||
+        orden.cliente_empresa?.toLowerCase().includes(q),
     );
-  }, [form.clienteId, ordenes]);
+  }, [busquedaOrden, ordenesPendientes]);
 
-  const ordenSeleccionada = useMemo(
-    () =>
-      ordenesCliente.find((orden) => String(orden.id) === String(form.ordenId)),
-    [ordenesCliente, form.ordenId],
-  );
+  const seleccionarOrden = (orden) => {
+    setForm({
+      ...form,
+      clienteId: String(orden.cliente_id),
+      ordenId: String(orden.id),
+      monto: "",
+    });
+    setBusquedaOrden("");
+    setMensaje("");
+  };
 
-  const pagosOrdenSeleccionada = useMemo(() => {
-    if (!ordenSeleccionada) return [];
-    return pagos.filter(
-      (pago) => String(pago.orden_id) === String(ordenSeleccionada.id),
-    );
-  }, [pagos, ordenSeleccionada]);
+  const limpiarOrdenSeleccionada = () => {
+    setForm({ ...form, ordenId: "", monto: "" });
+  };
 
-  const saldoOrdenRestante = useMemo(() => {
-    if (!ordenSeleccionada) return null;
-    const totalPagado = pagosOrdenSeleccionada.reduce(
-      (acc, pago) => acc + Number(pago.monto),
-      0,
-    );
-    return Number(ordenSeleccionada.total) - totalPagado;
-  }, [ordenSeleccionada, pagosOrdenSeleccionada]);
+  // ── Indicador en vivo: cuánto queda mientras se escribe el monto ──
+  const previsualizacion = useMemo(() => {
+    if (saldoOrdenRestante == null) return null;
+    const monto = Number(form.monto);
+    if (!monto || monto <= 0) return null;
+
+    if (monto > saldoOrdenRestante + 0.005) {
+      return { tipo: "error", texto: "El monto supera el saldo pendiente." };
+    }
+
+    const restante = saldoOrdenRestante - monto;
+    if (restante <= 0.005) {
+      return { tipo: "completo", texto: "Este pago deja la orden completamente saldada." };
+    }
+    return {
+      tipo: "abono",
+      texto: `Es un abono. Después de este pago quedarán ₡${restante.toLocaleString("es-CR")} pendientes.`,
+    };
+  }, [form.monto, saldoOrdenRestante]);
 
   const pagosFiltrados = useMemo(() => {
     if (!busqueda) return pagos;
@@ -82,13 +132,13 @@ function Pagos() {
     setMensaje("");
 
     const monto = Number(form.monto);
-    if (!form.clienteId || !monto || monto <= 0) {
+    if (!form.clienteId || !form.ordenId || !monto || monto <= 0) {
       setMensajeTipo("error");
-      setMensaje("Selecciona un cliente y escribe un monto válido.");
+      setMensaje("Selecciona una orden y escribe un monto válido.");
       return;
     }
 
-    if (ordenSeleccionada && monto > saldoOrdenRestante) {
+    if (monto > saldoOrdenRestante + 0.005) {
       setMensajeTipo("error");
       setMensaje(
         `El monto no puede ser mayor al saldo pendiente de la orden (₡${Number(
@@ -100,7 +150,7 @@ function Pagos() {
 
     const resultado = await registrarPago({
       cliente_id: Number(form.clienteId),
-      orden_id: form.ordenId ? Number(form.ordenId) : null,
+      orden_id: Number(form.ordenId),
       monto,
       metodo_pago: form.metodoPago,
       notas: form.notas,
@@ -114,7 +164,13 @@ function Pagos() {
     }
 
     setMensajeTipo("success");
-    setMensaje("Pago registrado correctamente.");
+    const saldoRestante = Math.max(0, saldoOrdenRestante - monto);
+    setMensaje(
+      saldoRestante > 0.005
+        ? `Abono registrado. Saldo restante: ₡${saldoRestante.toLocaleString("es-CR")}`
+        : "Pago registrado. La orden quedó pagada.",
+    );
+    await Promise.all([fetchOrdenes(), fetchClientes()]);
     setForm({
       clienteId: "",
       ordenId: "",
@@ -167,90 +223,222 @@ function Pagos() {
         <form className="panel-card" onSubmit={handleSubmit}>
           <h2>Registrar pago</h2>
 
-          <div className="form-group">
-            <label>Cliente *</label>
-            <select
-              value={form.clienteId}
-              onChange={(e) =>
-                setForm({ ...form, clienteId: e.target.value, ordenId: "" })
-              }
-              required
-            >
-              <option value="">Selecciona un cliente</option>
-              {clientes.map((cliente) => (
-                <option key={cliente.id} value={cliente.id}>
-                  {cliente.nombre}{" "}
-                  {cliente.empresa ? `- ${cliente.empresa}` : ""}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* ── Paso 1: Buscar orden (protagonista) ─────────────── */}
+          {!ordenSeleccionada ? (
+            <div className="pago-buscador">
+              <label className="pago-buscador-label">
+                Número de orden o nombre del cliente
+              </label>
+              <div className="search-bar">
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="Ej: 12, o Andrea Solís..."
+                  value={busquedaOrden}
+                  onChange={(e) => setBusquedaOrden(e.target.value)}
+                />
+                {busquedaOrden && (
+                  <button
+                    type="button"
+                    className="search-bar-clear"
+                    onClick={() => setBusquedaOrden("")}
+                    aria-label="Limpiar búsqueda"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
 
-          <div className="form-group">
-            <label>Orden (opcional)</label>
-            <select
-              value={form.ordenId}
-              onChange={(e) => setForm({ ...form, ordenId: e.target.value })}
-            >
-              <option value="">Sin orden</option>
-              {ordenesCliente.map((orden) => (
-                <option key={orden.id} value={orden.id}>
-                  #{orden.id} — ₡{Number(orden.total).toLocaleString("es-CR")} —{" "}
-                  {orden.estado_pago}
-                </option>
-              ))}
-            </select>
-            {ordenSeleccionada && (
-              <p className="field-help">
-                Saldo pendiente: ₡
-                {Number(saldoOrdenRestante).toLocaleString("es-CR")}
-              </p>
-            )}
-          </div>
+              {busquedaOrden && (
+                <div className="pago-resultados">
+                  {ordenesFiltradasBusqueda.length === 0 ? (
+                    <p className="field-help">
+                      No se encontró ninguna orden pendiente con eso.
+                    </p>
+                  ) : (
+                    ordenesFiltradasBusqueda.map((orden) => (
+                      <button
+                        type="button"
+                        key={orden.id}
+                        className="pago-resultado-item"
+                        onClick={() => seleccionarOrden(orden)}
+                      >
+                        <span className="pago-resultado-orden">
+                          #{orden.id} — {orden.cliente_nombre}
+                        </span>
+                        <span className="pill pill-warn">
+                          Faltan ₡{orden.saldoPendiente.toLocaleString("es-CR")}
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
 
-          <div className="form-group">
-            <label>Monto *</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.monto}
-              onChange={(e) => setForm({ ...form, monto: e.target.value })}
-              required
-            />
-          </div>
+              {!busquedaOrden && (
+                <details className="pago-alt-camino">
+                  <summary>O elegir por cliente en vez de por orden</summary>
+                  <div className="form-group">
+                    <select
+                      value={form.clienteId}
+                      onChange={(e) =>
+                        setForm({ ...form, clienteId: e.target.value, ordenId: "" })
+                      }
+                    >
+                      <option value="">Selecciona un cliente</option>
+                      {clientes.map((cliente) => (
+                        <option key={cliente.id} value={cliente.id}>
+                          {cliente.nombre}{" "}
+                          {cliente.empresa ? `- ${cliente.empresa}` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-          <div className="form-group">
-            <label>Método de pago</label>
-            <select
-              value={form.metodoPago}
-              onChange={(e) => setForm({ ...form, metodoPago: e.target.value })}
-            >
-              {METODOS_PAGO.map((metodo) => (
-                <option key={metodo.value} value={metodo.value}>
-                  {metodo.label}
-                </option>
-              ))}
-            </select>
-          </div>
+                  {form.clienteId && ordenesCliente.length === 0 && (
+                    <p className="field-help">
+                      Este cliente no tiene órdenes pendientes de pago.
+                    </p>
+                  )}
 
-          {clienteSeleccionado?.balance_pendiente != null && (
-            <div className="form-note">
-              Balance pendiente del cliente: ₡
-              {Number(clienteSeleccionado.balance_pendiente).toLocaleString(
-                "es-CR",
+                  {ordenesCliente.length > 0 && (
+                    <div className="pago-resultados">
+                      {ordenesCliente.map((orden) => (
+                        <button
+                          type="button"
+                          key={orden.id}
+                          className="pago-resultado-item"
+                          onClick={() => seleccionarOrden(orden)}
+                        >
+                          <span className="pago-resultado-orden">
+                            #{orden.id}
+                          </span>
+                          <span className="pill pill-warn">
+                            Faltan ₡{orden.saldoPendiente.toLocaleString("es-CR")}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </details>
               )}
             </div>
-          )}
+          ) : (
+            <>
+              {/* ── Paso 2: Orden seleccionada, con sus datos ────── */}
+              <div className="pago-orden-card">
+                <div className="pago-orden-card-header">
+                  <div>
+                    <span className="pago-orden-numero">Orden #{ordenSeleccionada.id}</span>
+                    <span className="pago-orden-cliente">
+                      {ordenSeleccionada.cliente_nombre}
+                      {ordenSeleccionada.cliente_empresa
+                        ? ` — ${ordenSeleccionada.cliente_empresa}`
+                        : ""}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={limpiarOrdenSeleccionada}
+                  >
+                    Cambiar orden
+                  </button>
+                </div>
 
-          <div className="form-group">
-            <label>Notas</label>
-            <textarea
-              rows={3}
-              value={form.notas}
-              onChange={(e) => setForm({ ...form, notas: e.target.value })}
-            />
-          </div>
+                <div className="detail-grid">
+                  <div className="detail-row">
+                    <span className="detail-label">Total de la orden</span>
+                    <span className="detail-value">
+                      ₡{Number(ordenSeleccionada.total).toLocaleString("es-CR")}
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Ya pagado</span>
+                    <span className="detail-value">
+                      ₡{Number(ordenSeleccionada.totalPagado).toLocaleString("es-CR")}
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Saldo pendiente</span>
+                    <span className="detail-value">
+                      ₡{Number(saldoOrdenRestante).toLocaleString("es-CR")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>
+                  Monto a pagar * (máximo ₡
+                  {Number(saldoOrdenRestante).toLocaleString("es-CR")})
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max={saldoOrdenRestante ?? undefined}
+                  step="0.01"
+                  autoFocus
+                  value={form.monto}
+                  onChange={(e) => setForm({ ...form, monto: e.target.value })}
+                  required
+                />
+                <button
+                  type="button"
+                  className="btn-link-inline"
+                  onClick={() =>
+                    setForm({ ...form, monto: String(saldoOrdenRestante) })
+                  }
+                >
+                  Usar el saldo completo (₡{Number(saldoOrdenRestante).toLocaleString("es-CR")})
+                </button>
+              </div>
+
+              {previsualizacion && (
+                <p
+                  className={
+                    previsualizacion.tipo === "error"
+                      ? "message-error"
+                      : previsualizacion.tipo === "completo"
+                        ? "message-success"
+                        : "form-note"
+                  }
+                >
+                  {previsualizacion.texto}
+                </p>
+              )}
+
+              <div className="form-group">
+                <label>Método de pago</label>
+                <select
+                  value={form.metodoPago}
+                  onChange={(e) => setForm({ ...form, metodoPago: e.target.value })}
+                >
+                  {METODOS_PAGO.map((metodo) => (
+                    <option key={metodo.value} value={metodo.value}>
+                      {metodo.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Notas</label>
+                <textarea
+                  rows={3}
+                  value={form.notas}
+                  onChange={(e) => setForm({ ...form, notas: e.target.value })}
+                />
+              </div>
+
+              {clienteSeleccionado?.balance_pendiente != null && (
+                <div className="form-note">
+                  Balance pendiente total del cliente: ₡
+                  {Number(clienteSeleccionado.balance_pendiente).toLocaleString("es-CR")}
+                </div>
+              )}
+            </>
+          )}
 
           {mensaje && (
             <p
@@ -262,13 +450,60 @@ function Pagos() {
             </p>
           )}
 
-          <button className="btn-primary" type="submit">
+          <button
+            className="btn-primary"
+            type="submit"
+            disabled={!ordenSeleccionada}
+          >
             Registrar pago
           </button>
         </form>
 
         <div className="panel-card panel-table">
           <div className="toolbar">
+            <h2>Órdenes pendientes de pago</h2>
+          </div>
+
+          {ordenesPendientes.length === 0 ? (
+            <p className="empty-msg">No hay órdenes pendientes de pago.</p>
+          ) : (
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Orden</th>
+                    <th>Cliente</th>
+                    <th>Total</th>
+                    <th>Pagado</th>
+                    <th>Faltante</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ordenesPendientes.map((orden) => (
+                    <tr
+                      key={orden.id}
+                      className={
+                        String(orden.id) === String(form.ordenId)
+                          ? "row-selected"
+                          : ""
+                      }
+                      onClick={() => seleccionarOrden(orden)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <td>#{orden.id}</td>
+                      <td>{orden.cliente_nombre}</td>
+                      <td>₡{Number(orden.total).toLocaleString("es-CR")}</td>
+                      <td>₡{Number(orden.totalPagado).toLocaleString("es-CR")}</td>
+                      <td>₡{Number(orden.saldoPendiente).toLocaleString("es-CR")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div className="toolbar">
+            <h2>Historial de pagos</h2>
             <input
               type="text"
               className="search-input"
@@ -303,9 +538,7 @@ function Pagos() {
                       <td>{pago.metodo_pago}</td>
                       <td>
                         {pago.fecha_pago
-                          ? new Date(pago.fecha_pago).toLocaleDateString(
-                              "es-CR",
-                            )
+                          ? new Date(pago.fecha_pago).toLocaleDateString("es-CR")
                           : "—"}
                       </td>
                     </tr>
