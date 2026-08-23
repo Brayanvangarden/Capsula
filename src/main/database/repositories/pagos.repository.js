@@ -1,4 +1,4 @@
-const { getDb } = require('../db')
+const { getDb } = require("../db");
 
 function getAll(filtros = {}) {
   let query = `
@@ -11,103 +11,136 @@ function getAll(filtros = {}) {
     LEFT JOIN clientes c ON p.cliente_id = c.id
     LEFT JOIN usuarios u ON p.usuario_id = u.id
     WHERE 1=1
-  `
-  const params = []
+  `;
+  const params = [];
 
   if (filtros.cliente_id) {
-    query += ' AND p.cliente_id = ?'
-    params.push(filtros.cliente_id)
+    query += " AND p.cliente_id = ?";
+    params.push(filtros.cliente_id);
   }
   if (filtros.orden_id) {
-    query += ' AND p.orden_id = ?'
-    params.push(filtros.orden_id)
+    query += " AND p.orden_id = ?";
+    params.push(filtros.orden_id);
   }
   if (filtros.fecha_desde) {
-    query += ' AND DATE(p.fecha_pago) >= ?'
-    params.push(filtros.fecha_desde)
+    query += " AND DATE(p.fecha_pago) >= ?";
+    params.push(filtros.fecha_desde);
   }
   if (filtros.fecha_hasta) {
-    query += ' AND DATE(p.fecha_pago) <= ?'
-    params.push(filtros.fecha_hasta)
+    query += " AND DATE(p.fecha_pago) <= ?";
+    params.push(filtros.fecha_hasta);
   }
 
-  query += ' ORDER BY p.fecha_pago DESC'
-  return getDb().prepare(query).all(...params)
+  query += " ORDER BY p.fecha_pago DESC";
+  return getDb()
+    .prepare(query)
+    .all(...params);
 }
 
 function getById(id) {
   return getDb()
-    .prepare(`
+    .prepare(
+      `
       SELECT p.*, c.nombre AS cliente_nombre
       FROM pagos p
       LEFT JOIN clientes c ON p.cliente_id = c.id
       WHERE p.id = ?
-    `)
-    .get(id)
+    `,
+    )
+    .get(id);
 }
 
 function create(data) {
-  const db = getDb()
+  const db = getDb();
 
   const transaction = db.transaction((data) => {
-    // 1️⃣ Registrar el pago
-    const result = db.prepare(`
+    if (!data.orden_id) {
+      throw new Error("Todo pago debe estar ligado a una orden");
+    }
+
+    const monto = Number(data.monto);
+    if (!Number.isFinite(monto) || monto <= 0) {
+      throw new Error("El monto del pago debe ser mayor que cero");
+    }
+
+    const orden = db
+      .prepare("SELECT id, cliente_id, total FROM ordenes WHERE id = ?")
+      .get(data.orden_id);
+
+    if (!orden) {
+      throw new Error("La orden no existe");
+    }
+    if (Number(orden.cliente_id) !== Number(data.cliente_id)) {
+      throw new Error("La orden no pertenece al cliente seleccionado");
+    }
+
+    const totalPagadoAnterior = db
+      .prepare(
+        "SELECT COALESCE(SUM(monto), 0) AS total FROM pagos WHERE orden_id = ?",
+      )
+      .get(data.orden_id).total;
+    const saldoPendiente = Number(orden.total) - Number(totalPagadoAnterior);
+
+    if (monto > saldoPendiente + 0.005) {
+      throw new Error(
+        `El monto no puede ser mayor al saldo pendiente de la orden (${saldoPendiente})`,
+      );
+    }
+
+    // Registrar cada pago como un movimiento independiente del historial.
+    const result = db
+      .prepare(
+        `
       INSERT INTO pagos
         (cliente_id, orden_id, monto, metodo_pago, notas, usuario_id)
       VALUES
         (@cliente_id, @orden_id, @monto, @metodo_pago, @notas, @usuario_id)
-    `).run(data)
+    `,
+      )
+      .run(data);
 
-    // 2️⃣ Reducir balance del cliente
-    db.prepare(`
+    db.prepare(
+      `
       UPDATE clientes
       SET balance_pendiente = MAX(0, balance_pendiente - ?),
           actualizado = datetime('now')
       WHERE id = ?
-    `).run(data.monto, data.cliente_id)
+    `,
+    ).run(monto, data.cliente_id);
 
-    // 3️⃣ Si tiene orden_id, actualizar estado de pago de la orden
-    if (data.orden_id) {
-      const orden = db
-        .prepare('SELECT total FROM ordenes WHERE id = ?')
-        .get(data.orden_id)
+    const totalPagado = Number(totalPagadoAnterior) + monto;
+    const estado_pago =
+      totalPagado >= Number(orden.total) - 0.005 ? "pagado" : "parcial";
 
-      const totalPagado = db
-        .prepare('SELECT SUM(monto) AS total FROM pagos WHERE orden_id = ?')
-        .get(data.orden_id)?.total ?? 0
+    db.prepare("UPDATE ordenes SET estado_pago = ? WHERE id = ?").run(
+      estado_pago,
+      data.orden_id,
+    );
 
-      let estado_pago = 'pendiente'
-      if (totalPagado >= orden.total) {
-        estado_pago = 'pagado'
-      } else if (totalPagado > 0) {
-        estado_pago = 'parcial'
-      }
+    return getById(result.lastInsertRowid);
+  });
 
-      db.prepare('UPDATE ordenes SET estado_pago = ? WHERE id = ?')
-        .run(estado_pago, data.orden_id)
-    }
-
-    return getById(result.lastInsertRowid)
-  })
-
-  return transaction(data)
+  return transaction(data);
 }
 
 function getHistorialCliente(cliente_id) {
   return getDb()
-    .prepare(`
+    .prepare(
+      `
       SELECT p.*, o.total AS orden_total
       FROM pagos p
       LEFT JOIN ordenes o ON p.orden_id = o.id
       WHERE p.cliente_id = ?
       ORDER BY p.fecha_pago DESC
-    `)
-    .all(cliente_id)
+    `,
+    )
+    .all(cliente_id);
 }
 
 function getResumen() {
   return getDb()
-    .prepare(`
+    .prepare(
+      `
       SELECT
         COUNT(*)          AS total_pagos,
         SUM(monto)        AS total_recaudado,
@@ -115,8 +148,9 @@ function getResumen() {
         SUM(CASE WHEN metodo_pago = 'transferencia' THEN monto ELSE 0 END) AS transferencia,
         SUM(CASE WHEN metodo_pago = 'sinpe'        THEN monto ELSE 0 END) AS sinpe
       FROM pagos
-    `)
-    .get()
+    `,
+    )
+    .get();
 }
 
-module.exports = { getAll, getById, create, getHistorialCliente, getResumen }
+module.exports = { getAll, getById, create, getHistorialCliente, getResumen };
