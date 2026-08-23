@@ -1,8 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { usePagos } from "../hooks/usePagos";
 import { useClientes } from "../hooks/useClientes";
 import { useOrdenes } from "../hooks/useOrdenes";
+import Factura from "../components/Factura";
+import { facturasService } from "../services/facturas.service";
 
 const METODOS_PAGO = [
   { value: "efectivo", label: "Efectivo" },
@@ -28,6 +30,69 @@ function Pagos() {
   const [mensajeTipo, setMensajeTipo] = useState("success");
   const [busqueda, setBusqueda] = useState("");
   const [busquedaOrden, setBusquedaOrden] = useState("");
+  const [facturasPorPago, setFacturasPorPago] = useState({});
+  const [facturaReciente, setFacturaReciente] = useState(null);
+  const [facturaSeleccionada, setFacturaSeleccionada] = useState(null);
+  const [cargandoFacturaId, setCargandoFacturaId] = useState(null);
+
+  const limpiarPantalla = () => {
+    setForm({
+      clienteId: "",
+      ordenId: "",
+      monto: "",
+      metodoPago: "efectivo",
+      notas: "",
+    });
+    setBusqueda("");
+    setBusquedaOrden("");
+    setMensaje("");
+    setMensajeTipo("success");
+    setFacturaReciente(null);
+    setFacturaSeleccionada(null);
+  };
+
+  const abrirFactura = async (pago) => {
+    if (!pago.orden_id) return;
+    setCargandoFacturaId(pago.id);
+    try {
+      const factura =
+        facturasPorPago[pago.id] ??
+        (await facturasService.getByPagoId(pago.id));
+      if (!factura) {
+        setMensajeTipo("error");
+        setMensaje(
+          "La factura estará disponible cuando el pago complete totalmente la orden.",
+        );
+        return;
+      }
+      setFacturasPorPago((prev) => ({ ...prev, [pago.id]: factura }));
+      setFacturaSeleccionada(factura);
+    } catch (err) {
+      setMensajeTipo("error");
+      setMensaje(err.message || "No se pudo cargar la factura.");
+    } finally {
+      setCargandoFacturaId(null);
+    }
+  };
+
+  useEffect(() => {
+    let activo = true;
+    const cargarFacturas = async () => {
+      const resultados = await Promise.all(
+        pagos.map(async (pago) => [
+          pago.id,
+          await facturasService.getByPagoId(pago.id),
+        ]),
+      );
+      if (activo) setFacturasPorPago(Object.fromEntries(resultados));
+    };
+    cargarFacturas().catch(() => {
+      if (activo) setFacturasPorPago({});
+    });
+    return () => {
+      activo = false;
+    };
+  }, [pagos]);
 
   const ordenesPendientes = useMemo(
     () =>
@@ -107,7 +172,10 @@ function Pagos() {
 
     const restante = saldoOrdenRestante - monto;
     if (restante <= 0.005) {
-      return { tipo: "completo", texto: "Este pago deja la orden completamente saldada." };
+      return {
+        tipo: "completo",
+        texto: "Este pago deja la orden completamente saldada.",
+      };
     }
     return {
       tipo: "abono",
@@ -165,11 +233,25 @@ function Pagos() {
 
     setMensajeTipo("success");
     const saldoRestante = Math.max(0, saldoOrdenRestante - monto);
+    setFacturaReciente(null);
+    setFacturaSeleccionada(null);
     setMensaje(
       saldoRestante > 0.005
         ? `Abono registrado. Saldo restante: ₡${saldoRestante.toLocaleString("es-CR")}`
         : "Pago registrado. La orden quedó pagada.",
     );
+    if (saldoRestante <= 0.005 && resultado.data?.id) {
+      try {
+        const factura = await facturasService.getByPagoId(resultado.data.id);
+        setFacturaReciente(factura);
+        setFacturasPorPago((prev) => ({
+          ...prev,
+          [resultado.data.id]: factura,
+        }));
+      } catch {
+        setFacturaReciente(null);
+      }
+    }
     await Promise.all([fetchOrdenes(), fetchClientes()]);
     setForm({
       clienteId: "",
@@ -221,7 +303,16 @@ function Pagos() {
 
       <div className="panel-row">
         <form className="panel-card" onSubmit={handleSubmit}>
-          <h2>Registrar pago</h2>
+          <div className="pago-form-header">
+            <h2>Registrar pago</h2>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={limpiarPantalla}
+            >
+              Limpiar
+            </button>
+          </div>
 
           {/* ── Paso 1: Buscar orden (protagonista) ─────────────── */}
           {!ordenSeleccionada ? (
@@ -282,7 +373,11 @@ function Pagos() {
                     <select
                       value={form.clienteId}
                       onChange={(e) =>
-                        setForm({ ...form, clienteId: e.target.value, ordenId: "" })
+                        setForm({
+                          ...form,
+                          clienteId: e.target.value,
+                          ordenId: "",
+                        })
                       }
                     >
                       <option value="">Selecciona un cliente</option>
@@ -314,7 +409,8 @@ function Pagos() {
                             #{orden.id}
                           </span>
                           <span className="pill pill-warn">
-                            Faltan ₡{orden.saldoPendiente.toLocaleString("es-CR")}
+                            Faltan ₡
+                            {orden.saldoPendiente.toLocaleString("es-CR")}
                           </span>
                         </button>
                       ))}
@@ -329,7 +425,9 @@ function Pagos() {
               <div className="pago-orden-card">
                 <div className="pago-orden-card-header">
                   <div>
-                    <span className="pago-orden-numero">Orden #{ordenSeleccionada.id}</span>
+                    <span className="pago-orden-numero">
+                      Orden #{ordenSeleccionada.id}
+                    </span>
                     <span className="pago-orden-cliente">
                       {ordenSeleccionada.cliente_nombre}
                       {ordenSeleccionada.cliente_empresa
@@ -356,7 +454,10 @@ function Pagos() {
                   <div className="detail-row">
                     <span className="detail-label">Ya pagado</span>
                     <span className="detail-value">
-                      ₡{Number(ordenSeleccionada.totalPagado).toLocaleString("es-CR")}
+                      ₡
+                      {Number(ordenSeleccionada.totalPagado).toLocaleString(
+                        "es-CR",
+                      )}
                     </span>
                   </div>
                   <div className="detail-row">
@@ -390,7 +491,8 @@ function Pagos() {
                     setForm({ ...form, monto: String(saldoOrdenRestante) })
                   }
                 >
-                  Usar el saldo completo (₡{Number(saldoOrdenRestante).toLocaleString("es-CR")})
+                  Usar el saldo completo (₡
+                  {Number(saldoOrdenRestante).toLocaleString("es-CR")})
                 </button>
               </div>
 
@@ -412,7 +514,9 @@ function Pagos() {
                 <label>Método de pago</label>
                 <select
                   value={form.metodoPago}
-                  onChange={(e) => setForm({ ...form, metodoPago: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, metodoPago: e.target.value })
+                  }
                 >
                   {METODOS_PAGO.map((metodo) => (
                     <option key={metodo.value} value={metodo.value}>
@@ -434,7 +538,9 @@ function Pagos() {
               {clienteSeleccionado?.balance_pendiente != null && (
                 <div className="form-note">
                   Balance pendiente total del cliente: ₡
-                  {Number(clienteSeleccionado.balance_pendiente).toLocaleString("es-CR")}
+                  {Number(clienteSeleccionado.balance_pendiente).toLocaleString(
+                    "es-CR",
+                  )}
                 </div>
               )}
             </>
@@ -448,6 +554,21 @@ function Pagos() {
             >
               {mensaje}
             </p>
+          )}
+
+          {mensajeTipo === "success" && facturaReciente && (
+            <div className="factura-disponible">
+              <strong>
+                Factura generada: {facturaReciente.numero_factura}
+              </strong>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => setFacturaSeleccionada(facturaReciente)}
+              >
+                Ver factura y descargar PDF
+              </button>
+            </div>
           )}
 
           <button
@@ -493,8 +614,12 @@ function Pagos() {
                       <td>#{orden.id}</td>
                       <td>{orden.cliente_nombre}</td>
                       <td>₡{Number(orden.total).toLocaleString("es-CR")}</td>
-                      <td>₡{Number(orden.totalPagado).toLocaleString("es-CR")}</td>
-                      <td>₡{Number(orden.saldoPendiente).toLocaleString("es-CR")}</td>
+                      <td>
+                        ₡{Number(orden.totalPagado).toLocaleString("es-CR")}
+                      </td>
+                      <td>
+                        ₡{Number(orden.saldoPendiente).toLocaleString("es-CR")}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -526,6 +651,7 @@ function Pagos() {
                     <th>Monto</th>
                     <th>Método</th>
                     <th>Fecha</th>
+                    <th>Factura</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -538,8 +664,26 @@ function Pagos() {
                       <td>{pago.metodo_pago}</td>
                       <td>
                         {pago.fecha_pago
-                          ? new Date(pago.fecha_pago).toLocaleDateString("es-CR")
+                          ? new Date(pago.fecha_pago).toLocaleDateString(
+                              "es-CR",
+                            )
                           : "—"}
+                      </td>
+                      <td>
+                        {pago.orden_id ? (
+                          <button
+                            type="button"
+                            className="btn-action-outline"
+                            onClick={() => abrirFactura(pago)}
+                            disabled={cargandoFacturaId === pago.id}
+                          >
+                            {cargandoFacturaId === pago.id
+                              ? "Cargando..."
+                              : "Generar factura"}
+                          </button>
+                        ) : (
+                          <span className="text-muted">Sin orden asociada</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -551,6 +695,10 @@ function Pagos() {
       </div>
 
       {error && <p className="message-error">{error}</p>}
+      <Factura
+        factura={facturaSeleccionada}
+        onClose={() => setFacturaSeleccionada(null)}
+      />
     </div>
   );
 }

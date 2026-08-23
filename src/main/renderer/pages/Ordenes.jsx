@@ -212,7 +212,7 @@ function Ordenes() {
       const producto = productosActivos.find(
         (p) => String(p.id) === linea.productoId,
       );
-      return producto && Number(linea.cantidad) > Number(producto.stock);
+      return producto && Number(linea.cantidad) > Number(producto.cantidad);
     });
 
     if (excedeStock) {
@@ -529,12 +529,12 @@ function Ordenes() {
                           <option
                             key={productoItem.id}
                             value={productoItem.id}
-                            disabled={Number(productoItem.stock) <= 0}
+                            disabled={Number(productoItem.cantidad) <= 0}
                           >
                             {productoItem.nombre}{" "}
-                            {productoItem.stock <= 0
+                            {productoItem.cantidad <= 0
                               ? "(Agotado)"
-                              : `(stock: ${productoItem.stock})`}
+                              : `(stock: ${productoItem.cantidad})`}
                           </option>
                         ))}
                       </select>
@@ -545,7 +545,7 @@ function Ordenes() {
                         {linea.productoId
                           ? (productosActivos.find(
                               (p) => String(p.id) === linea.productoId,
-                            )?.stock ?? "—")
+                            )?.cantidad ?? "—")
                           : "—"}
                       </div>
                     </div>
@@ -555,10 +555,27 @@ function Ordenes() {
                         required
                         type="number"
                         min="1"
-                        value={linea.cantidad}
-                        onChange={(e) =>
-                          actualizarLinea(index, { cantidad: e.target.value })
+                        max={
+                          productosActivos.find(
+                            (p) => String(p.id) === linea.productoId,
+                          )?.cantidad
                         }
+                        value={linea.cantidad}
+                        onChange={(e) => {
+                          const producto = productosActivos.find(
+                            (p) => String(p.id) === linea.productoId,
+                          );
+                          const stockDisponible = Number(
+                            producto?.cantidad ?? 0,
+                          );
+                          const cantidad = Math.min(
+                            Number(e.target.value) || 0,
+                            stockDisponible,
+                          );
+                          actualizarLinea(index, {
+                            cantidad: cantidad ? String(cantidad) : "",
+                          });
+                        }}
                       />
                     </div>
                     <div className="form-group">
