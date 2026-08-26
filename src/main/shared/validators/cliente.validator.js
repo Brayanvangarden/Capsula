@@ -1,19 +1,17 @@
 const { z } = require("zod");
 
 const clienteSchema = z.object({
-  empresa: z.string().trim().optional().default(""),
+  empresa: z
+    .string({ required_error: "La empresa es obligatoria" })
+    .trim()
+    .min(1, "La empresa es obligatoria")
+    .default(""),
 
   nombre: z
     .string({ required_error: "El nombre es obligatorio" })
     .trim()
     .min(1, "El nombre es obligatorio"),
 
-  apellido: z
-    .string({ required_error: "El apellido es obligatorio" })
-    .trim()
-    .min(1, "El apellido es obligatorio"),
-
-  cedula: z.string().trim().optional().default(""),
   telefono: z.string().trim().optional().default(""),
 
   correo: z

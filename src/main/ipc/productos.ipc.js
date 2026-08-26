@@ -45,9 +45,9 @@ function registerProductosIpc() {
   })
 
   // ── Eliminar lógico ────────────────────────────────
-  ipcMain.handle('productos:delete', async (_, id) => {
+  ipcMain.handle('productos:delete', async (_, { id, usuario_id = null } = {}) => {
     try {
-      productosRepo.remove(id)
+      productosRepo.remove(id, usuario_id)
       return { ok: true, message: 'Producto desactivado correctamente' }
     } catch (error) {
       return { ok: false, message: error.message }
@@ -58,16 +58,6 @@ function registerProductosIpc() {
   ipcMain.handle('productos:stockBajo', async () => {
     try {
       const data = productosRepo.getStockBajo()
-      return { ok: true, data }
-    } catch (error) {
-      return { ok: false, message: error.message }
-    }
-  })
-
-  // ── Próximos a vencer ──────────────────────────────
-  ipcMain.handle('productos:proximosVencer', async (_, dias = 30) => {
-    try {
-      const data = productosRepo.getProximosVencer(dias)
       return { ok: true, data }
     } catch (error) {
       return { ok: false, message: error.message }

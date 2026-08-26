@@ -45,12 +45,12 @@ function TrashIcon(props) {
 
 const EMPTY = {
   nombre: '', descripcion: '', precio: '',
-  stock: '', stockMinimo: '', categoriaId: '', fechaVencimiento: '', material: ''
+  stock: '', stockMinimo: '', categoriaId: '', sku: '', material: ''
 }
 
 function Productos() {
   const {
-    productos, productosActivos, stockBajo, proximosVencer,
+    productos, productosActivos, stockBajo,
     loading, crearProducto, actualizarProducto,
     eliminarProducto, obtenerProducto, buscarProductos
   } = useProductos()
@@ -74,8 +74,7 @@ function Productos() {
   // ── Filtros ──────────────────────────────────────────
   const listaFiltrada = (() => {
     let lista = busqueda ? buscarProductos(busqueda) : productosActivos
-    if (filtro === 'stockBajo')       lista = lista.filter(p => stockBajo.find(s => s.id === p.id))
-    if (filtro === 'proximosVencer')  lista = lista.filter(p => proximosVencer.find(v => v.id === p.id))
+    if (filtro === 'stockBajo') lista = lista.filter(p => stockBajo.find(s => s.id === p.id))
     return lista
   })()
 
@@ -89,7 +88,7 @@ function Productos() {
       precio: p.precio,
       stock: p.stock, stockMinimo: p.stockMinimo ?? '',
       categoriaId: p.categoriaId ?? '',
-      fechaVencimiento: p.fechaVencimiento?.slice(0, 10) ?? '',
+      sku: p.sku ?? '',
       material: p.material ?? ''
     })
     setEditando(p.id)
@@ -111,7 +110,7 @@ function Productos() {
       'Precio',
       'Stock',
       'Stock mínimo',
-      'Fecha de vencimiento',
+      'SKU',
       'Material',
     ]
 
@@ -131,7 +130,7 @@ function Productos() {
         p.precio,
         p.stock,
         p.stockMinimo ?? 0,
-        p.fechaVencimiento ? new Date(p.fechaVencimiento).toLocaleDateString('es-CR') : '—',
+        p.sku ?? '',
         p.material ?? '',
       ]
         .map(escapar)
@@ -181,22 +180,6 @@ function Productos() {
       return campos
     }
 
-    const parseFecha = (valor) => {
-      const texto = String(valor || '').trim()
-      if (!texto || texto === '—') return null
-      const iso = new Date(texto)
-      if (!Number.isNaN(iso.getTime())) {
-        return iso.toISOString().slice(0, 10)
-      }
-      const partes = texto.split(/[\/\-]/).map((item) => item.trim())
-      if (partes.length === 3) {
-        const [dia, mes, anio] = partes
-        const y = anio.length === 2 ? `20${anio}` : anio
-        return `${y.padStart(4, '0')}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`
-      }
-      return null
-    }
-
     return lineas.slice(1).map((linea) => {
       const [
         nombre,
@@ -205,7 +188,7 @@ function Productos() {
         precio,
         stock,
         stockMinimo,
-        fechaVencimiento,
+        sku,
         material,
       ] = parsearLinea(linea)
 
@@ -220,7 +203,7 @@ function Productos() {
         precio: parseFloat(precio) || 0,
         stock: parseInt(stock, 10) || 0,
         stockMinimo: parseInt(stockMinimo, 10) || 0,
-        fechaVencimiento: parseFecha(fechaVencimiento),
+        sku: String(sku ?? '').trim() || null,
         material,
       }
     })
@@ -246,6 +229,12 @@ function Productos() {
         if (!fila.nombre) {
           resultado.fallidos++
           resultado.errores.push(`Fila ${i + 2}: el nombre es obligatorio.`)
+          continue
+        }
+
+        if (!fila.sku) {
+          resultado.fallidos++
+          resultado.errores.push(`Fila ${i + 2}: el SKU es obligatorio.`)
           continue
         }
 
@@ -291,8 +280,15 @@ function Productos() {
       stock:  parseInt(form.stock),
       stockMinimo: parseInt(form.stockMinimo || 0),
       categoriaId: form.categoriaId ? parseInt(form.categoriaId) : null,
-      fechaVencimiento: form.fechaVencimiento || null,
+      sku: String(form.sku ?? '').trim(),
       material: form.material || null
+    }
+
+    if (!data.sku) {
+      setMensajeTipo('error')
+      setMensaje('El SKU es obligatorio para identificar el producto.')
+      setLoadingOp(false)
+      return
     }
 
     try {
@@ -367,9 +363,10 @@ function Productos() {
         </div>
 
         <div className="form-group">
-          <label>Fecha de vencimiento</label>
-          <input type="date" value={form.fechaVencimiento}
-            onChange={e => setForm({...form, fechaVencimiento: e.target.value})} />
+          <label>SKU *</label>
+          <input required type="text" value={form.sku}
+            onChange={e => setForm({...form, sku: e.target.value})}
+            placeholder="SKU o código del producto" />
         </div>
 
         <div className="form-group full-width">
@@ -424,18 +421,11 @@ function Productos() {
       )}
 
       {/* Alertas rápidas */}
-      {(stockBajo.length > 0 || proximosVencer.length > 0) && (
+      {stockBajo.length > 0 && (
         <div className="alertas-row">
-          {stockBajo.length > 0 && (
-            <div className="alerta alerta-warning" onClick={() => setFiltro('stockBajo')}>
-              ⚠️ <strong>{stockBajo.length}</strong> con stock bajo
-            </div>
-          )}
-          {proximosVencer.length > 0 && (
-            <div className="alerta alerta-danger" onClick={() => setFiltro('proximosVencer')}>
-              ⏰ <strong>{proximosVencer.length}</strong> próximos a vencer
-            </div>
-          )}
+          <div className="alerta alerta-warning" onClick={() => setFiltro('stockBajo')}>
+            ⚠️ <strong>{stockBajo.length}</strong> con stock bajo
+          </div>
         </div>
       )}
 
@@ -463,15 +453,13 @@ function Productos() {
           />
         </div>
         <div className="filtros">
-          {['todos','stockBajo','proximosVencer'].map(f => (
+          {['todos','stockBajo'].map(f => (
             <button
               key={f}
               className={`btn-filtro ${filtro === f ? 'active' : ''}`}
               onClick={() => { setFiltro(f); setBusqueda('') }}
             >
-              { f === 'todos' ? 'Todos'
-              : f === 'stockBajo' ? '⚠️ Stock bajo'
-              : '⏰ Próximos a vencer' }
+              { f === 'todos' ? 'Todos' : '⚠️ Stock bajo' }
             </button>
           ))}
         </div>
@@ -489,9 +477,8 @@ function Productos() {
                   <th>Nombre</th>
                   <th>Categoría</th>
                   <th>Precio</th>
-                  
+                  <th>SKU</th>
                   <th>Stock</th>
-                  <th>Vence</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -501,16 +488,11 @@ function Productos() {
                     <td><strong>{p.nombre}</strong><br/><small>{p.descripcion}</small></td>
                     <td>{categorias.find(c => c.id === p.categoriaId)?.nombre ?? p.categoria_nombre ?? '—'}</td>
                     <td>₡{parseFloat(p.precio).toLocaleString('es-CR')}</td>
-                    
+                    <td><strong>{p.sku || '—'}</strong></td>
                     <td>
                       <span className={`badge ${p.stock <= (p.stockMinimo||0) ? 'badge-danger' : 'badge-success'}`}>
                         {p.stock}
                       </span>
-                    </td>
-                    <td>
-                      {p.fechaVencimiento
-                        ? new Date(p.fechaVencimiento).toLocaleDateString('es-CR')
-                        : '—'}
                     </td>
                     <td className="action-buttons">
                       <button
@@ -589,12 +571,8 @@ function Productos() {
                 <div className="readonly-field">{detalleProducto.stock}</div>
               </div>
               <div className="form-group">
-                <label>Fecha de vencimiento</label>
-                <div className="readonly-field">
-                  {detalleProducto.fechaVencimiento
-                    ? new Date(detalleProducto.fechaVencimiento).toLocaleDateString('es-CR')
-                    : '—'}
-                </div>
+                <label>SKU</label>
+                <div className="readonly-field">{detalleProducto.sku || '—'}</div>
               </div>
               <div className="form-group full-width">
                 <label>Material</label>
@@ -620,16 +598,16 @@ function Productos() {
         const producto = productos.find(p => p.id === confirmId)
         return (
           <div className="modal-overlay" onClick={() => setConfirmId(null)}>
-            <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <div className="modal-card modal-card-delete" onClick={e => e.stopPropagation()}>
               <div className="modal-icon">⚠️</div>
               <h3>¿Eliminar producto?</h3>
               <p>
-                Estás a punto de desactivar a <strong>{producto ? producto.nombre : ''}</strong>.
-                <br />Esta acción no se puede deshacer.
+                Estás a punto de desactivar a <strong className="modal-confirm-name">{producto ? producto.nombre : ''}</strong>.
+                <br />Esta acción no se puede deshacer y dejará el inventario en cero para ese producto.
               </p>
-              <div className="modal-actions">
+              <div className="modal-actions modal-actions-compact">
                 <button className="btn-secondary" onClick={() => setConfirmId(null)}>Cancelar</button>
-                <button className="btn-danger" onClick={() => handleEliminar(confirmId)}>Sí, eliminar</button>
+                <button className="btn-secondary btn-delete-modal" onClick={() => handleEliminar(confirmId)}>Eliminar</button>
               </div>
             </div>
           </div>

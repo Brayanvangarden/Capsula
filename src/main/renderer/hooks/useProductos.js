@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { productosService } from '../services/productos.service'
+import { useAuthStore } from '../store/auth.store'
 
 export function useProductos() {
+  const { user } = useAuthStore()
   const [productos,       setProductos]       = useState([])
   const [stockBajo,       setStockBajo]       = useState([])
-  const [proximosVencer,  setProximosVencer]  = useState([])
   const [loading,         setLoading]         = useState(false)
   const [error,           setError]           = useState(null)
 
@@ -25,12 +26,8 @@ export function useProductos() {
   // ── Cargar alertas ──────────────────────────────────
   const fetchAlertas = useCallback(async () => {
     try {
-      const [bajo, vencer] = await Promise.all([
-        productosService.getStockBajo(),
-        productosService.getProximosVencer(30),
-      ])
+      const bajo = await productosService.getStockBajo()
       setStockBajo(bajo)
-      setProximosVencer(vencer)
     } catch (err) {
       setError(err.message)
     }
@@ -39,18 +36,18 @@ export function useProductos() {
   // ── Crear ───────────────────────────────────────────
   const crearProducto = useCallback(async (data) => {
     try {
-      const nuevo = await productosService.create(data)
+      const nuevo = await productosService.create({ ...data, usuario_id: user?.id ?? null })
       setProductos(prev => [...prev, nuevo])
       return { ok: true, data: nuevo }
     } catch (err) {
       return { ok: false, message: err.message }
     }
-  }, [])
+  }, [user?.id])
 
   // ── Actualizar ──────────────────────────────────────
   const actualizarProducto = useCallback(async (data) => {
     try {
-      const actualizado = await productosService.update(data)
+      const actualizado = await productosService.update({ ...data, usuario_id: user?.id ?? null })
       setProductos(prev =>
         prev.map(p => p.id === actualizado.id ? actualizado : p)
       )
@@ -58,12 +55,12 @@ export function useProductos() {
     } catch (err) {
       return { ok: false, message: err.message }
     }
-  }, [])
+  }, [user?.id])
 
   // ── Eliminar (lógico) ───────────────────────────────
   const eliminarProducto = useCallback(async (id) => {
     try {
-      await productosService.delete(id)
+      await productosService.delete(id, user?.id ?? null)
       setProductos(prev =>
         prev.map(p => p.id === id ? { ...p, estado: 'inactivo' } : p)
       )
@@ -71,7 +68,7 @@ export function useProductos() {
     } catch (err) {
       return { ok: false, message: err.message }
     }
-  }, [])
+  }, [user?.id])
 
   const obtenerProducto = useCallback(async (id) => {
     try {
@@ -97,7 +94,8 @@ export function useProductos() {
       p.nombre.toLowerCase().includes(q)          ||
       p.categoria_nombre?.toLowerCase().includes(q)||
       p.color?.toLowerCase().includes(q)          ||
-      p.numero_lote?.toLowerCase().includes(q)
+      p.numero_lote?.toLowerCase().includes(q)    ||
+      p.sku?.toLowerCase().includes(q)
     )
   }, [productosActivos])
 
@@ -105,7 +103,6 @@ export function useProductos() {
     productos,
     productosActivos,
     stockBajo,
-    proximosVencer,
     loading,
     error,
     fetchProductos,

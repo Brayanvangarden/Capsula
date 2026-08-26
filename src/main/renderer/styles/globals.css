@@ -584,6 +584,38 @@ h6 {
   text-align: center;
 }
 
+.modal-card-delete {
+  width: min(540px, 100%);
+  padding: 1.8rem 1.5rem 1.5rem;
+}
+
+.modal-card-delete p {
+  max-width: 32rem;
+  margin-left: auto;
+  margin-right: auto;
+  overflow-wrap: anywhere;
+}
+
+.modal-card-delete .modal-actions {
+  width: 100%;
+  max-width: 100%;
+}
+
+.modal-card-delete .modal-actions-compact {
+  width: 100%;
+}
+
+.btn-delete-modal {
+  background: rgba(239, 68, 68, 0.08);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.btn-delete-modal:hover {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.34);
+}
+
 .modal-detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

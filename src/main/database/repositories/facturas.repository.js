@@ -19,7 +19,7 @@ function crearParaPago(pagoId, ordenId) {
   const orden = db
     .prepare(
       `
-    SELECT o.*, c.nombre, c.apellido, c.cedula, c.correo, c.telefono, c.direccion
+    SELECT o.*, c.nombre, c.empresa, c.correo, c.telefono, c.direccion
     FROM ordenes o
     JOIN clientes c ON c.id = o.cliente_id
     WHERE o.id = ?
@@ -55,9 +55,7 @@ function crearParaPago(pagoId, ordenId) {
     .prepare("SELECT COALESCE(MAX(id), 0) + 1 AS siguiente FROM facturas")
     .get().siguiente;
   const numero = `FAC-${new Date().getFullYear()}-${String(siguienteNumero).padStart(6, "0")}`;
-  const nombreCliente = [orden.nombre, orden.apellido]
-    .filter(Boolean)
-    .join(" ");
+  const nombreCliente = orden.nombre || orden.empresa || "Cliente";
 
   const result = db
     .prepare(
@@ -89,7 +87,7 @@ function crearParaPago(pagoId, ordenId) {
       empresa_telefono: EMPRESA.telefono,
       empresa_correo: EMPRESA.correo,
       cliente_nombre: nombreCliente,
-      cliente_identificacion: orden.cedula,
+      cliente_identificacion: orden.empresa,
       cliente_correo: orden.correo,
       cliente_telefono: orden.telefono,
       cliente_direccion: orden.direccion,

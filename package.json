@@ -4,7 +4,7 @@
   "description": "Sistema de Inventario - Escritorio",
   "main": "src/main/main.js",
   "scripts": {
-    "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "dev": "concurrently \"vite --port 4173\" \"wait-on http://localhost:4173 http://localhost:4174 http://localhost:4175 && electron .\"",
     "build": "vite build && electron-builder",
     "start": "electron .",
     "preview": "vite preview",

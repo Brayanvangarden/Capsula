@@ -1,4 +1,5 @@
 const { app, BrowserWindow } = require("electron");
+const http = require("http");
 const path = require("path");
 const isDev = require("electron-is-dev");
 
@@ -15,7 +16,34 @@ const { registerPagosIpc } = require("./ipc/pagos.ipc");
 const { registerFacturasIpc } = require("./ipc/facturas.ipc");
 const { registerUsuariosIpc } = require("./ipc/usuarios.ipc");
 
-function createWindow() {
+function getDevUrl() {
+  const ports = [4173, 4174, 4175, 5173, 5174];
+
+  return new Promise((resolve) => {
+    const tryPort = (index) => {
+      if (index >= ports.length) {
+        resolve("http://localhost:4173");
+        return;
+      }
+
+      const port = ports[index];
+      const req = http.get({ hostname: "localhost", port, path: "/" }, (res) => {
+        res.resume();
+        resolve(`http://localhost:${port}`);
+      });
+
+      req.on("error", () => tryPort(index + 1));
+      req.setTimeout(400, () => {
+        req.destroy();
+        tryPort(index + 1);
+      });
+    };
+
+    tryPort(0);
+  });
+}
+
+async function createWindow() {
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -27,7 +55,8 @@ function createWindow() {
   });
 
   if (isDev) {
-    win.loadURL("http://localhost:5173");
+    const devUrl = await getDevUrl();
+    win.loadURL(devUrl);
     win.webContents.openDevTools();
   } else {
     win.loadFile(path.join(__dirname, "../../dist/index.html"));

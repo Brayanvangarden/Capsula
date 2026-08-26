@@ -4,11 +4,9 @@ function getMovimientos(filtros = {}) {
   let query = `
     SELECT
       m.*,
-      p.nombre  AS producto_nombre,
-      u.nombre  AS usuario_nombre
+      p.nombre AS producto_nombre
     FROM movimientos_inventario m
     LEFT JOIN productos p ON m.producto_id = p.id
-    LEFT JOIN usuarios  u ON m.usuario_id  = u.id
     WHERE 1=1
   `
   const params = []

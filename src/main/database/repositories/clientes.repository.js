@@ -17,13 +17,11 @@ function getById(id) {
 
 function create(data) {
   const result = getDb().prepare(`
-    INSERT INTO clientes (empresa, nombre, apellido, cedula, telefono, correo, direccion, notas, tiene_descuento, descuento_porcentaje)
-    VALUES (@empresa, @nombre, @apellido, @cedula, @telefono, @correo, @direccion, @notas, @tiene_descuento, @descuento_porcentaje)
+    INSERT INTO clientes (empresa, nombre, telefono, correo, direccion, notas, tiene_descuento, descuento_porcentaje)
+    VALUES (@empresa, @nombre, @telefono, @correo, @direccion, @notas, @tiene_descuento, @descuento_porcentaje)
   `).run({
     empresa: data.empresa ?? '',
     nombre: data.nombre,
-    apellido: data.apellido ?? '',
-    cedula: data.cedula ?? '',
     telefono: data.telefono ?? '',
     correo: data.correo ?? '',
     direccion: data.direccion ?? '',
@@ -41,8 +39,6 @@ function update(id, data) {
     UPDATE clientes SET
       empresa    = @empresa,
       nombre     = @nombre,
-      apellido   = @apellido,
-      cedula     = @cedula,
       telefono   = @telefono,
       correo     = @correo,
       direccion  = @direccion,
@@ -56,8 +52,6 @@ function update(id, data) {
     .run({
       empresa: data.empresa ?? '',
       nombre: data.nombre,
-      apellido: data.apellido ?? '',
-      cedula: data.cedula ?? '',
       telefono: data.telefono ?? '',
       correo: data.correo ?? '',
       direccion: data.direccion ?? '',

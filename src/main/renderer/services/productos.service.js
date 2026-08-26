@@ -5,7 +5,7 @@ const normalizeProductoFromDb = (producto) => ({
   stockMinimo: producto.stock_minimo,
   categoriaId: producto.categoria_id,
   descripcion: producto.notas ?? '',
-  fechaVencimiento: producto.fecha_vencimiento,
+  sku: producto.sku ?? '',
 })
 
 const mapProductoToDb = (data) => ({
@@ -19,7 +19,7 @@ const mapProductoToDb = (data) => ({
   stock_minimo: data.stockMinimo ?? 0,
   material: data.material ?? null,
   color: data.color ?? null,
-  fecha_vencimiento: data.fechaVencimiento || null,
+  sku: String(data.sku ?? '').trim(),
   estado: data.estado ?? 'activo',
   notas: data.descripcion ?? '',
 })
@@ -52,20 +52,14 @@ export const productosService = {
     return normalizeProductoFromDb(res.data)
   },
 
-  delete: async (id) => {
-    const res = await window.api.productos.delete(id)
+  delete: async (id, usuarioId = null) => {
+    const res = await window.api.productos.delete({ id, usuario_id: usuarioId })
     if (!res.ok) throw new Error(res.message)
     return res
   },
 
   getStockBajo: async () => {
     const res = await window.api.productos.stockBajo()
-    if (!res.ok) throw new Error(res.message)
-    return normalizeList(res.data)
-  },
-
-  getProximosVencer: async (dias = 30) => {
-    const res = await window.api.productos.proximosVencer(dias)
     if (!res.ok) throw new Error(res.message)
     return normalizeList(res.data)
   },
