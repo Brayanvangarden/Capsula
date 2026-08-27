@@ -28,6 +28,7 @@ function sendResetEmail(to, code, smtpConfig) {
 function registerAuthIpc() {
   const LOCK_TIMEOUT_MS = 2 * 60 * 1000
   const MAX_FAILED_ATTEMPTS = 3
+  
 
   // ── Login ──────────────────────────────────────────
   ipcMain.handle('auth:login', async (_, { usuario, password }) => {
