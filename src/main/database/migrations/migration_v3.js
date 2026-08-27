@@ -1,20 +1,16 @@
 function up(db) {
   const columnas = db.prepare(`PRAGMA table_info(clientes)`).all()
-  const apellidoInfo = columnas.find((c) => c.name === "apellido")
+  const tieneApellido = columnas.some((c) => c.name === "apellido")
+  const tieneCedula = columnas.some((c) => c.name === "cedula")
 
-  if (apellidoInfo && apellidoInfo.notnull === 1) {
-    console.log("📦 Migración v3: ya aplicada, se omite")
+  if (!tieneApellido && !tieneCedula) {
+    console.log("📦 Migración v3: ya está sin campos legacy, se omite")
     return
   }
 
-  // ⚠️ El pragma de foreign_keys debe cambiarse FUERA de la transacción,
-  // o SQLite lo ignora y el DROP TABLE falla por las referencias de
-  // ordenes/pagos/clientes_precios hacia clientes(id).
   db.pragma("foreign_keys = OFF")
 
   const transaccion = db.transaction(() => {
-    db.exec(`UPDATE clientes SET apellido  = '' WHERE apellido  IS NULL`)
-    db.exec(`UPDATE clientes SET cedula    = '' WHERE cedula    IS NULL`)
     db.exec(`UPDATE clientes SET telefono  = '' WHERE telefono  IS NULL`)
     db.exec(`UPDATE clientes SET correo    = '' WHERE correo    IS NULL`)
     db.exec(`UPDATE clientes SET direccion = '' WHERE direccion IS NULL`)
@@ -24,8 +20,6 @@ function up(db) {
         id               INTEGER PRIMARY KEY AUTOINCREMENT,
         empresa          TEXT,
         nombre           TEXT    NOT NULL,
-        apellido         TEXT    NOT NULL DEFAULT '',
-        cedula           TEXT    NOT NULL DEFAULT '',
         telefono         TEXT    NOT NULL DEFAULT '',
         correo           TEXT    NOT NULL DEFAULT '',
         direccion        TEXT    NOT NULL DEFAULT '',
@@ -41,11 +35,11 @@ function up(db) {
 
     db.exec(`
       INSERT INTO clientes_new (
-        id, empresa, nombre, apellido, cedula, telefono, correo, direccion, notas,
+        id, empresa, nombre, telefono, correo, direccion, notas,
         balance_pendiente, tiene_descuento, descuento_porcentaje, estado, creado_en, actualizado
       )
       SELECT
-        id, empresa, nombre, apellido, cedula, telefono, correo, direccion, notas,
+        id, empresa, nombre, telefono, correo, direccion, notas,
         balance_pendiente, tiene_descuento, descuento_porcentaje, estado, creado_en, actualizado
       FROM clientes
     `)
@@ -56,10 +50,8 @@ function up(db) {
 
   try {
     transaccion()
-    console.log("📦 Migración v3 aplicada: apellido/cedula/telefono/correo/direccion ahora son NOT NULL")
+    console.log("📦 Migración v3 aplicada: clientes sin apellido/cedula")
   } finally {
-    // Se reactiva siempre, incluso si algo falla, para no dejar la
-    // protección de integridad apagada en el resto de la app.
     db.pragma("foreign_keys = ON")
   }
 }

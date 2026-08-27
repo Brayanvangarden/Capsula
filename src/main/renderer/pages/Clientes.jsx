@@ -100,8 +100,7 @@ function DownloadIcon(props) {
 }
 const EMPTY_FORM = {
   nombre: "",
-  apellido: "",
-  cedula: "",
+  empresa: "",
   telefono: "",
   correo: "",
   direccion: "",
@@ -146,8 +145,7 @@ function Clientes() {
     setClienteEdit(cliente);
     setForm({
       nombre: cliente.nombre || "",
-      apellido: cliente.apellido || "",
-      cedula: cliente.cedula || "",
+      empresa: cliente.empresa || "",
       telefono: cliente.telefono || "",
       correo: cliente.correo || "",
       direccion: cliente.direccion || "",
@@ -225,9 +223,7 @@ function Clientes() {
   const exportarCSV = () => {
     const columnas = [
       "Nombre",
-      "Apellido",
       "Empresa",
-      "Cédula",
       "Teléfono",
       "Correo",
       "Dirección",
@@ -249,9 +245,7 @@ function Clientes() {
     const filas = clientesFiltrados.map((c) =>
       [
         c.nombre,
-        c.apellido,
         c.empresa,
-        c.cedula,
         c.telefono,
         c.correo,
         c.direccion,
@@ -314,9 +308,7 @@ function Clientes() {
     const filas = lineas.slice(1).map((linea) => {
       const [
         nombre,
-        apellido,
         empresa,
-        cedula,
         telefono,
         correo,
         direccion,
@@ -328,9 +320,7 @@ function Clientes() {
       ] = parsearLinea(linea);
       return {
         nombre,
-        apellido,
         empresa,
-        cedula,
         telefono,
         correo,
         direccion,
@@ -392,23 +382,13 @@ function Clientes() {
         </div>
 
         <div className="form-group">
-          <label>Apellido *</label>
+          <label>Empresa *</label>
           <input
             type="text"
-            value={form.apellido}
-            onChange={(e) => setForm({ ...form, apellido: e.target.value })}
-            placeholder="Apellido del cliente"
+            value={form.empresa}
+            onChange={(e) => setForm({ ...form, empresa: e.target.value })}
+            placeholder="Nombre de la empresa"
             required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Cédula / ID</label>
-          <input
-            type="text"
-            value={form.cedula}
-            onChange={(e) => setForm({ ...form, cedula: e.target.value })}
-            placeholder="Número de identificación"
           />
         </div>
 
@@ -549,7 +529,7 @@ function Clientes() {
           <div className="search-bar">
             <input
               type="text"
-              placeholder="Buscar por nombre, cédula o correo..."
+              placeholder="Buscar por nombre, empresa o correo..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />
@@ -598,7 +578,6 @@ function Clientes() {
                 <tr>
                   <th>#</th>
                   <th>Nombre</th>
-                  <th>Cédula</th>
                   <th>Teléfono</th>
                   <th>Correo</th>
                   <th>Descuento</th>
@@ -610,9 +589,10 @@ function Clientes() {
                   <tr key={cliente.id}>
                     <td>{index + 1}</td>
                     <td>
-                      {cliente.nombre} {cliente.apellido}
+                      <strong>{cliente.nombre}</strong>
+                      <br />
+                      <small>{cliente.empresa || "Sin empresa"}</small>
                     </td>
-                    <td>{(cliente.cedula ?? "").toString().trim() || "—"}</td>
                     <td>{cliente.telefono || "—"}</td>
                     <td>{cliente.correo || "—"}</td>
                     <td>
@@ -662,7 +642,7 @@ function Clientes() {
           >
             <div className="modal-header">
               <h2>
-                {clienteDetalle.nombre} {clienteDetalle.apellido}
+                {clienteDetalle.nombre}
               </h2>
               <button
                 className="modal-close"
@@ -678,12 +658,6 @@ function Clientes() {
                 <span className="detail-label">Empresa</span>
                 <span className="detail-value">
                   {clienteDetalle.empresa || "—"}
-                </span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Cédula / ID</span>
-                <span className="detail-value">
-                  {clienteDetalle.cedula || "—"}
                 </span>
               </div>
               <div className="detail-row">
@@ -766,7 +740,7 @@ function Clientes() {
             <p>
               Estás a punto de desactivar a{" "}
               <span className="modal-confirm-name">
-                {clienteToDelete.nombre} {clienteToDelete.apellido}
+                {clienteToDelete.nombre}
               </span>
               . Esta acción no se puede deshacer.
             </p>
@@ -796,7 +770,7 @@ function Clientes() {
       {tab === "editar" && (
         <div className="form-section scrollable-form">
           <h2>
-            ✏️ Editar Cliente — {clienteEdit?.nombre} {clienteEdit?.apellido}
+            ✏️ Editar Cliente — {clienteEdit?.nombre}
           </h2>
           {renderFormulario(handleActualizar)}
         </div>

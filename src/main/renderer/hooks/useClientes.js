@@ -64,7 +64,6 @@ export function useClientes() {
     const q = query.toLowerCase()
     return clientesActivos.filter(c =>
       (c.nombre ?? '').toLowerCase().includes(q)   ||
-      (c.apellido ?? '').toLowerCase().includes(q) ||
       (c.empresa ?? '').toLowerCase().includes(q) ||
       (c.telefono ?? '').includes(q)              ||
       (c.correo ?? '').toLowerCase().includes(q)

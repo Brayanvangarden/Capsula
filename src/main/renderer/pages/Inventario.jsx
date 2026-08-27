@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useInventario } from '../hooks/useInventario'
 import { useProductos } from '../hooks/useProductos'
+import { useAuthStore } from '../store/auth.store'
 
 function ArrowDownIcon(props) {
   return (
@@ -32,11 +33,12 @@ function AlertIcon(props) {
 const EMPTY_FORM = { producto_id: '', cantidad: '', observaciones: '' }
 
 function Inventario() {
+  const { user } = useAuthStore()
   const {
     movimientos, loading, error,
     fetchMovimientos, registrarEntrada, registrarSalida,
   } = useInventario()
-  const { productos } = useProductos()
+  const { productosActivos } = useProductos()
 
   const [tab, setTab] = useState('movimientos') // movimientos | entrada | salida
   const [formE, setFormE] = useState(EMPTY_FORM)
@@ -47,8 +49,8 @@ function Inventario() {
   const [filtroProducto, setFiltroProducto] = useState('')
 
   const productosStockBajo = useMemo(
-    () => productos.filter(p => Number(p.cantidad) <= Number(p.stock_minimo ?? 0)),
-    [productos]
+    () => productosActivos.filter(p => Number(p.cantidad) <= Number(p.stock_minimo ?? 0)),
+    [productosActivos]
   )
 
   const hoy = new Date().toISOString().slice(0, 10)
@@ -76,6 +78,7 @@ function Inventario() {
         producto_id: parseInt(formE.producto_id),
         cantidad: parseFloat(formE.cantidad),
         observaciones: formE.observaciones,
+        usuario_id: user?.id ?? null,
       })
       if (!resultado.ok) {
         setMensaje(resultado.message || 'No se pudo registrar la entrada.')
@@ -98,6 +101,7 @@ function Inventario() {
         producto_id: parseInt(formS.producto_id),
         cantidad: parseFloat(formS.cantidad),
         observaciones: formS.observaciones,
+        usuario_id: user?.id ?? null,
       })
       if (!resultado.ok) {
         setMensaje(resultado.message || 'No se pudo registrar la salida.')
@@ -209,7 +213,7 @@ function Inventario() {
               onChange={(e) => setFiltroProducto(e.target.value)}
             >
               <option value="">Todos los productos</option>
-              {productos.map((p) => (
+              {productosActivos.map((p) => (
                 <option key={p.id} value={p.id}>{p.nombre}</option>
               ))}
             </select>
@@ -226,7 +230,6 @@ function Inventario() {
                   <th>Producto</th>
                   <th>Cantidad</th>
                   <th>Observaciones</th>
-                  <th>Usuario</th>
                   <th>Fecha</th>
                 </tr>
               </thead>
@@ -243,7 +246,6 @@ function Inventario() {
                     <td>{m.producto_nombre ?? '—'}</td>
                     <td>{m.cantidad}</td>
                     <td>{m.observaciones || '—'}</td>
-                    <td>{m.usuario_nombre || '—'}</td>
                     <td>{new Date(m.fecha).toLocaleString('es-CR')}</td>
                   </tr>
                 ))}

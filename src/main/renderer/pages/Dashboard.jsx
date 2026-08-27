@@ -200,7 +200,7 @@ function fechaCorta(value) {
 
 function Dashboard() {
   const { user, logout } = useAuth();
-  const { productos, stockBajo, proximosVencer } = useProductos();
+  const { productos, stockBajo } = useProductos();
   const { clientes, clientesConDeuda } = useClientes();
   const { ordenes, ordenesPendientes, ordenesPorCobrar, fetchOrdenes } =
     useOrdenes();
@@ -235,7 +235,6 @@ function Dashboard() {
   ).length;
   const hayAlertas =
     stockBajo.length > 0 ||
-    proximosVencer.length > 0 ||
     clientesConDeuda.length > 0;
 
   const actualizarDashboard = async () => {
@@ -293,14 +292,6 @@ function Dashboard() {
                     icon="📦"
                     count={stockBajo.length}
                     label="con stock bajo"
-                  />
-                )}
-                {proximosVencer.length > 0 && (
-                  <AlertaCard
-                    type="danger"
-                    icon="⏰"
-                    count={proximosVencer.length}
-                    label="próximos a vencer"
                   />
                 )}
                 {clientesConDeuda.length > 0 && (

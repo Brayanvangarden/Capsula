@@ -78,6 +78,20 @@ function getById(id) {
   return { ...orden, detalle };
 }
 
+function registrarSalidaOrden(db, productoId, cantidad, ordenId, usuarioId = null) {
+  db.prepare(`
+    INSERT INTO movimientos_inventario
+      (producto_id, tipo, cantidad, observaciones, usuario_id)
+    VALUES
+      (@producto_id, 'salida', @cantidad, @observaciones, @usuario_id)
+  `).run({
+    producto_id: productoId,
+    cantidad,
+    observaciones: `Venta - Orden #${ordenId}`,
+    usuario_id: usuarioId,
+  })
+}
+
 function create(data) {
   const db = getDb();
 
@@ -133,6 +147,7 @@ function create(data) {
 
       insertDetalle.run({ ...item, orden_id });
       descontarStock.run(item);
+      registrarSalidaOrden(db, item.producto_id, item.cantidad, orden_id, ordenData.usuario_id ?? null);
     }
 
     db.prepare(
@@ -236,6 +251,7 @@ function update(id, data) {
 
       insertDetalle.run({ ...item, orden_id: id });
       descontarStock.run(item);
+      registrarSalidaOrden(db, item.producto_id, item.cantidad, id, ordenData.usuario_id ?? existingOrder.usuario_id ?? null);
     }
 
     const clienteId = ordenData.cliente_id ?? existingOrder.cliente_id;

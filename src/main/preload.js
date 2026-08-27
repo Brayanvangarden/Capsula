@@ -35,8 +35,6 @@ contextBridge.exposeInMainWorld("api", {
     update: (data) => ipcRenderer.invoke("productos:update", data),
     delete: (id) => ipcRenderer.invoke("productos:delete", id),
     stockBajo: () => ipcRenderer.invoke("productos:stockBajo"),
-    proximosVencer: (dias) =>
-      ipcRenderer.invoke("productos:proximosVencer", dias),
   },
 
   // ══════════════════════════════════════
