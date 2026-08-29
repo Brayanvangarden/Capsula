@@ -51,7 +51,7 @@ function AppRoutes() {
         <Route path="/configuracion" element={<Configuracion />} />
       </Route>
 
-      {/* ── Ruta no encontrada ── */}
+      {/* ── Ruta no encontrada  pendiente ── */}
       <Route path="*" element={<Navigate to="/" replace />} />
 
     </Routes>

@@ -1,7 +1,7 @@
 const { app, BrowserWindow } = require("electron");
 const http = require("http");
 const path = require("path");
-const isDev = require("electron-is-dev");
+const isDev = !app.isPackaged;
 
 const { initDatabase } = require("./database/initDatabase");
 
@@ -27,10 +27,13 @@ function getDevUrl() {
       }
 
       const port = ports[index];
-      const req = http.get({ hostname: "localhost", port, path: "/" }, (res) => {
-        res.resume();
-        resolve(`http://localhost:${port}`);
-      });
+      const req = http.get(
+        { hostname: "localhost", port, path: "/" },
+        (res) => {
+          res.resume();
+          resolve(`http://localhost:${port}`);
+        },
+      );
 
       req.on("error", () => tryPort(index + 1));
       req.setTimeout(400, () => {
