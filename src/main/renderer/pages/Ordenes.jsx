@@ -250,7 +250,9 @@ function Ordenes() {
         }
 
         cerrarModal();
-        setMensaje("Orden actualizada correctamente.");
+        setMensaje(
+          `Orden N.º ${String(respuesta.data.id).padStart(4, "0")} creada correctamente.`,
+        );
       } else {
         const respuesta = await crearOrden({
           cliente_id: Number(form.clienteId),
@@ -379,7 +381,7 @@ function Ordenes() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>#</th>
+                <th>N.º Orden</th>
                 <th>Cliente</th>
                 <th>Total</th>
                 <th>Pago</th>
@@ -392,7 +394,9 @@ function Ordenes() {
                 const saldo = saldoPorOrden.get(orden.id);
                 return (
                   <tr key={orden.id}>
-                    <td>#{orden.id}</td>
+                    <td className="orden-numero">
+                      N.º {String(orden.id).padStart(4, "0")}
+                    </td>
                     <td>
                       <strong>{orden.cliente_nombre ?? "Sin cliente"}</strong>
                       {orden.cliente_empresa && (
@@ -458,7 +462,9 @@ function Ordenes() {
           <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>
-                {editandoId ? `Editar orden #${editandoId}` : "Nueva orden"}
+                {editandoId
+                  ? `Editar orden N.º ${String(editandoId).padStart(4, "0")}`
+                  : "Nueva orden"}
               </h2>
               <button
                 className="modal-close"
