@@ -61,11 +61,14 @@ contextBridge.exposeInMainWorld("api", {
     delete: (id) => ipcRenderer.invoke("clientes:delete", id),
     updateBalance: (id, monto) =>
       ipcRenderer.invoke("clientes:updateBalance", { id, monto }),
-    getPrecioEspecial: (cliente_id, producto_id) =>
-      ipcRenderer.invoke("clientes:getPrecioEspecial", {
-        cliente_id,
-        producto_id,
-      }),
+    getPrecioEspecial: (cliente_id, producto_id) => {
+      const payload =
+        typeof cliente_id === "object" && cliente_id !== null
+          ? cliente_id
+          : { cliente_id, producto_id };
+
+      return ipcRenderer.invoke("clientes:getPrecioEspecial", payload);
+    },
     getPreciosEspeciales: () => ipcRenderer.invoke("clientes:precios:getAll"),
     getPreciosEspecialesByCliente: (cliente_id) =>
       ipcRenderer.invoke("clientes:precios:getByClienteId", cliente_id),
