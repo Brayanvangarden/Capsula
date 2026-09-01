@@ -8,10 +8,13 @@ import { facturasService } from "../services/facturas.service";
 
 const METODOS_PAGO = [
   { value: "efectivo", label: "Efectivo" },
-  { value: "transferencia", label: "Transferencia" },
-  { value: "sinpe", label: "Sinpe" },
-  { value: "otro", label: "Otro" },
+  { value: "cheque", label: "Cheque" },
+  { value: "datafono", label: "Datafono" },
+  { value: "zelle", label: "Zelle" },
 ];
+
+const formatOrdenNumero = (id) =>
+  `N.º ${String(Number(id ?? 0)).padStart(4, "0")}`;
 
 function Pagos() {
   const { user } = useAuth();
@@ -24,6 +27,7 @@ function Pagos() {
     ordenId: "",
     monto: "",
     metodoPago: "efectivo",
+    referenciaDatafono: "",
     notas: "",
   });
   const [mensaje, setMensaje] = useState("");
@@ -41,6 +45,7 @@ function Pagos() {
       ordenId: "",
       monto: "",
       metodoPago: "efectivo",
+      referenciaDatafono: "",
       notas: "",
     });
     setBusqueda("");
@@ -151,13 +156,14 @@ function Pagos() {
       clienteId: String(orden.cliente_id),
       ordenId: String(orden.id),
       monto: "",
+      referenciaDatafono: "",
     });
     setBusquedaOrden("");
     setMensaje("");
   };
 
   const limpiarOrdenSeleccionada = () => {
-    setForm({ ...form, ordenId: "", monto: "" });
+    setForm({ ...form, ordenId: "", monto: "", referenciaDatafono: "" });
   };
 
   // ── Indicador en vivo: cuánto queda mientras se escribe el monto ──
@@ -216,12 +222,21 @@ function Pagos() {
       return;
     }
 
+    const referenciaDatafono =
+      form.metodoPago === "datafono" ? form.referenciaDatafono.trim() : "";
+    const notasPayload = [
+      form.notas?.trim(),
+      referenciaDatafono ? `Referencia Datafono: ${referenciaDatafono}` : "",
+    ]
+      .filter(Boolean)
+      .join(" | ");
+
     const resultado = await registrarPago({
       cliente_id: Number(form.clienteId),
       orden_id: Number(form.ordenId),
       monto,
       metodo_pago: form.metodoPago,
-      notas: form.notas,
+      notas: notasPayload,
       usuario_id: user?.id,
     });
 
@@ -240,16 +255,18 @@ function Pagos() {
         ? `Abono registrado. Saldo restante: ₡${saldoRestante.toLocaleString("es-CR")}`
         : "Pago registrado. La orden quedó pagada.",
     );
-    if (saldoRestante <= 0.005 && resultado.data?.id) {
+    if (resultado.data?.id) {
       try {
         const factura = await facturasService.getByPagoId(resultado.data.id);
         setFacturaReciente(factura);
+        setFacturaSeleccionada(factura);
         setFacturasPorPago((prev) => ({
           ...prev,
           [resultado.data.id]: factura,
         }));
       } catch {
         setFacturaReciente(null);
+        setFacturaSeleccionada(null);
       }
     }
     await Promise.all([fetchOrdenes(), fetchClientes()]);
@@ -258,6 +275,7 @@ function Pagos() {
       ordenId: "",
       monto: "",
       metodoPago: "efectivo",
+      referenciaDatafono: "",
       notas: "",
     });
   };
@@ -355,7 +373,7 @@ function Pagos() {
                         onClick={() => seleccionarOrden(orden)}
                       >
                         <span className="pago-resultado-orden">
-                          #{orden.id} — {orden.cliente_nombre}
+                          {formatOrdenNumero(orden.id)} — {orden.cliente_nombre}
                         </span>
                         <span className="pill pill-warn">
                           Faltan ₡{orden.saldoPendiente.toLocaleString("es-CR")}
@@ -406,7 +424,7 @@ function Pagos() {
                           onClick={() => seleccionarOrden(orden)}
                         >
                           <span className="pago-resultado-orden">
-                            #{orden.id}
+                            {formatOrdenNumero(orden.id)}
                           </span>
                           <span className="pill pill-warn">
                             Faltan ₡
@@ -426,7 +444,7 @@ function Pagos() {
                 <div className="pago-orden-card-header">
                   <div>
                     <span className="pago-orden-numero">
-                      Orden #{ordenSeleccionada.id}
+                      Orden {formatOrdenNumero(ordenSeleccionada.id)}
                     </span>
                     <span className="pago-orden-cliente">
                       {ordenSeleccionada.cliente_nombre}
@@ -514,9 +532,15 @@ function Pagos() {
                 <label>Método de pago</label>
                 <select
                   value={form.metodoPago}
-                  onChange={(e) =>
-                    setForm({ ...form, metodoPago: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const metodo = e.target.value;
+                    setForm({
+                      ...form,
+                      metodoPago: metodo,
+                      referenciaDatafono:
+                        metodo === "datafono" ? form.referenciaDatafono : "",
+                    });
+                  }}
                 >
                   {METODOS_PAGO.map((metodo) => (
                     <option key={metodo.value} value={metodo.value}>
@@ -525,6 +549,20 @@ function Pagos() {
                   ))}
                 </select>
               </div>
+
+              {form.metodoPago === "datafono" && (
+                <div className="form-group">
+                  <label>Referencia</label>
+                  <input
+                    type="text"
+                    value={form.referenciaDatafono}
+                    onChange={(e) =>
+                      setForm({ ...form, referenciaDatafono: e.target.value })
+                    }
+                    placeholder="Número o referencia del datáfono"
+                  />
+                </div>
+              )}
 
               <div className="form-group">
                 <label>Notas</label>
@@ -611,7 +649,7 @@ function Pagos() {
                       onClick={() => seleccionarOrden(orden)}
                       style={{ cursor: "pointer" }}
                     >
-                      <td>#{orden.id}</td>
+                      <td>{formatOrdenNumero(orden.id)}</td>
                       <td>{orden.cliente_nombre}</td>
                       <td>₡{Number(orden.total).toLocaleString("es-CR")}</td>
                       <td>
@@ -659,7 +697,9 @@ function Pagos() {
                     <tr key={pago.id}>
                       <td>{pago.id}</td>
                       <td>{pago.cliente_nombre}</td>
-                      <td>{pago.orden_id ?? "—"}</td>
+                      <td>
+                        {pago.orden_id ? formatOrdenNumero(pago.orden_id) : "—"}
+                      </td>
                       <td>₡{Number(pago.monto).toLocaleString("es-CR")}</td>
                       <td>{pago.metodo_pago}</td>
                       <td>
