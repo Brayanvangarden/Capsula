@@ -149,9 +149,10 @@ function getResumen() {
       SELECT
         COUNT(*)          AS total_pagos,
         SUM(monto)        AS total_recaudado,
-        SUM(CASE WHEN metodo_pago = 'efectivo'     THEN monto ELSE 0 END) AS efectivo,
-        SUM(CASE WHEN metodo_pago = 'transferencia' THEN monto ELSE 0 END) AS transferencia,
-        SUM(CASE WHEN metodo_pago = 'sinpe'        THEN monto ELSE 0 END) AS sinpe
+        SUM(CASE WHEN metodo_pago = 'efectivo' THEN monto ELSE 0 END) AS efectivo,
+        SUM(CASE WHEN metodo_pago = 'cheque'   THEN monto ELSE 0 END) AS cheque,
+        SUM(CASE WHEN metodo_pago = 'datafono' THEN monto ELSE 0 END) AS datafono,
+        SUM(CASE WHEN metodo_pago = 'zelle'    THEN monto ELSE 0 END) AS zelle
       FROM pagos
     `,
     )

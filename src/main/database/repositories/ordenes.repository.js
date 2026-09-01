@@ -50,6 +50,9 @@ function getById(id) {
         o.*,
         c.nombre AS cliente_nombre,
         c.empresa AS cliente_empresa,
+        c.telefono AS cliente_telefono,
+        c.correo AS cliente_correo,
+        c.direccion AS cliente_direccion,
         u.nombre AS usuario_nombre
       FROM ordenes o
       LEFT JOIN clientes c ON o.cliente_id = c.id
@@ -67,6 +70,7 @@ function getById(id) {
       SELECT
         d.*, 
         p.nombre AS producto_nombre,
+        p.sku AS producto_sku,
         p.cantidad AS producto_stock
       FROM ordenes_detalle d
       LEFT JOIN productos p ON d.producto_id = p.id
@@ -78,18 +82,26 @@ function getById(id) {
   return { ...orden, detalle };
 }
 
-function registrarSalidaOrden(db, productoId, cantidad, ordenId, usuarioId = null) {
-  db.prepare(`
+function registrarSalidaOrden(
+  db,
+  productoId,
+  cantidad,
+  ordenId,
+  usuarioId = null,
+) {
+  db.prepare(
+    `
     INSERT INTO movimientos_inventario
       (producto_id, tipo, cantidad, observaciones, usuario_id)
     VALUES
       (@producto_id, 'salida', @cantidad, @observaciones, @usuario_id)
-  `).run({
+  `,
+  ).run({
     producto_id: productoId,
     cantidad,
     observaciones: `Venta - Orden #${ordenId}`,
     usuario_id: usuarioId,
-  })
+  });
 }
 
 function create(data) {
@@ -147,7 +159,13 @@ function create(data) {
 
       insertDetalle.run({ ...item, orden_id });
       descontarStock.run(item);
-      registrarSalidaOrden(db, item.producto_id, item.cantidad, orden_id, ordenData.usuario_id ?? null);
+      registrarSalidaOrden(
+        db,
+        item.producto_id,
+        item.cantidad,
+        orden_id,
+        ordenData.usuario_id ?? null,
+      );
     }
 
     db.prepare(
@@ -251,7 +269,13 @@ function update(id, data) {
 
       insertDetalle.run({ ...item, orden_id: id });
       descontarStock.run(item);
-      registrarSalidaOrden(db, item.producto_id, item.cantidad, id, ordenData.usuario_id ?? existingOrder.usuario_id ?? null);
+      registrarSalidaOrden(
+        db,
+        item.producto_id,
+        item.cantidad,
+        id,
+        ordenData.usuario_id ?? existingOrder.usuario_id ?? null,
+      );
     }
 
     const clienteId = ordenData.cliente_id ?? existingOrder.cliente_id;

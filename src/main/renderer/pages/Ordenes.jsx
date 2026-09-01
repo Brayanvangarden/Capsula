@@ -5,6 +5,7 @@ import { useClientes } from "../hooks/useClientes";
 import { useProductos } from "../hooks/useProductos";
 import { usePagos } from "../hooks/usePagos";
 import { clientesService } from "../services/clientes.service";
+import { generarProformaPdf } from "../services/facturaPdf.service";
 import { ordenesService } from "../services/ordenes.service";
 
 const NUEVA_LINEA = { productoId: "", cantidad: "1", precio: "0" };
@@ -185,6 +186,18 @@ function Ordenes() {
       setModal(true);
     } catch (err) {
       setMensaje(err.message || "No se pudo cargar la orden.");
+    }
+  };
+
+  const generarProforma = async (orden) => {
+    try {
+      const ordenCompleta = await ordenesService.getById(orden.id);
+      generarProformaPdf(ordenCompleta);
+      setMensaje(
+        `Proforma de la orden N.º ${String(orden.id).padStart(4, "0")} descargada.`,
+      );
+    } catch (err) {
+      setMensaje(err.message || "No se pudo generar la proforma.");
     }
   };
 
@@ -436,6 +449,13 @@ function Ordenes() {
                       >
                         ✏️ Editar
                       </button>
+                      <button
+                        className="btn-action-outline"
+                        type="button"
+                        onClick={() => generarProforma(orden)}
+                      >
+                        🧾 Generar INVOICE
+                      </button>
                       {(orden.estado === "pendiente" ||
                         orden.estado === "en_proceso") && (
                         <button
@@ -509,7 +529,7 @@ function Ordenes() {
               </div>
 
               <div className="form-group">
-                <label>Notas</label>
+                <label>Dirección de Envió</label>
                 <textarea
                   rows={3}
                   value={form.notas}
