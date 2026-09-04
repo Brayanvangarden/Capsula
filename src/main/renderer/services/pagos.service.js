@@ -20,7 +20,7 @@ export const pagosService = {
    *   cliente_id: number,
    *   orden_id: number,
    *   monto: number,
-   *   metodo_pago: 'efectivo'|'transferencia'|'sinpe'|'otro',
+   *   metodo_pago: 'efectivo'|'cheque'|'datafono'|'zelle',
    *   notas?: string,
    *   usuario_id: number
    * }} data
