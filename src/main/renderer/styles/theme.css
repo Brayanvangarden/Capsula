@@ -589,6 +589,17 @@
   font-size: 16px;
 }
 
+.factura-payment-block,
+.factura-note-block {
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.factura-payment-block p,
+.factura-note-block p {
+  margin: 3px 0;
+}
+
 .factura-pie-proforma {
   padding-top: 16px;
   border-top: 1px solid var(--border-default);

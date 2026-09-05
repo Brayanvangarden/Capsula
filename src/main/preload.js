@@ -115,8 +115,22 @@ contextBridge.exposeInMainWorld("api", {
   //  FACTURAS
   // ══════════════════════════════════════
   facturas: {
+    getHistorial: (filtros) =>
+      ipcRenderer.invoke("facturas:getHistorial", filtros),
     getById: (id) => ipcRenderer.invoke("facturas:getById", id),
     getByPagoId: (pagoId) => ipcRenderer.invoke("facturas:getByPagoId", pagoId),
+  },
+
+  // ══════════════════════════════════════
+  //  CUENTAS POR COBRAR
+  // ══════════════════════════════════════
+  cuentasPorCobrar: {
+    getResumen: () => ipcRenderer.invoke("cuentasPorCobrar:getResumen"),
+    getEstadoCuenta: (clienteId, mes) =>
+      ipcRenderer.invoke("cuentasPorCobrar:getEstadoCuenta", {
+        clienteId,
+        mes,
+      }),
   },
 
   // ══════════════════════════════════════

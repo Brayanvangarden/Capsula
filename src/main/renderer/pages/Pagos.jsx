@@ -26,6 +26,7 @@ function Pagos() {
     clienteId: "",
     ordenId: "",
     monto: "",
+    tipoPago: "abono",
     metodoPago: "efectivo",
     referenciaDatafono: "",
     notas: "",
@@ -44,6 +45,7 @@ function Pagos() {
       clienteId: "",
       ordenId: "",
       monto: "",
+      tipoPago: "abono",
       metodoPago: "efectivo",
       referenciaDatafono: "",
       notas: "",
@@ -155,7 +157,8 @@ function Pagos() {
       ...form,
       clienteId: String(orden.cliente_id),
       ordenId: String(orden.id),
-      monto: "",
+      monto:
+        form.tipoPago === "pago_total" ? String(orden.saldoPendiente) : "",
       referenciaDatafono: "",
     });
     setBusquedaOrden("");
@@ -164,6 +167,17 @@ function Pagos() {
 
   const limpiarOrdenSeleccionada = () => {
     setForm({ ...form, ordenId: "", monto: "", referenciaDatafono: "" });
+  };
+
+  const cambiarTipoPago = (tipoPago) => {
+    setForm({
+      ...form,
+      tipoPago,
+      monto:
+        tipoPago === "pago_total" && saldoOrdenRestante != null
+          ? String(saldoOrdenRestante)
+          : "",
+    });
   };
 
   // ── Indicador en vivo: cuánto queda mientras se escribe el monto ──
@@ -212,6 +226,15 @@ function Pagos() {
       return;
     }
 
+    if (
+      form.tipoPago === "pago_total" &&
+      Math.abs(monto - Number(saldoOrdenRestante)) > 0.005
+    ) {
+      setMensajeTipo("error");
+      setMensaje("El pago total debe cubrir todo el saldo pendiente.");
+      return;
+    }
+
     if (monto > saldoOrdenRestante + 0.005) {
       setMensajeTipo("error");
       setMensaje(
@@ -235,6 +258,7 @@ function Pagos() {
       cliente_id: Number(form.clienteId),
       orden_id: Number(form.ordenId),
       monto,
+      tipo_pago: form.tipoPago,
       metodo_pago: form.metodoPago,
       notas: notasPayload,
       usuario_id: user?.id,
@@ -274,6 +298,7 @@ function Pagos() {
       clienteId: "",
       ordenId: "",
       monto: "",
+      tipoPago: "abono",
       metodoPago: "efectivo",
       referenciaDatafono: "",
       notas: "",
@@ -488,6 +513,32 @@ function Pagos() {
               </div>
 
               <div className="form-group">
+                <label>Tipo de pago</label>
+                <div className="radio-group">
+                  <label>
+                    <input
+                      type="radio"
+                      name="tipoPago"
+                      value="pago_total"
+                      checked={form.tipoPago === "pago_total"}
+                      onChange={() => cambiarTipoPago("pago_total")}
+                    />
+                    Pago total
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="tipoPago"
+                      value="abono"
+                      checked={form.tipoPago === "abono"}
+                      onChange={() => cambiarTipoPago("abono")}
+                    />
+                    Abono
+                  </label>
+                </div>
+              </div>
+
+              <div className="form-group">
                 <label>
                   Monto a pagar * (máximo ₡
                   {Number(saldoOrdenRestante).toLocaleString("es-CR")})
@@ -499,19 +550,20 @@ function Pagos() {
                   step="0.01"
                   autoFocus
                   value={form.monto}
+                  readOnly={form.tipoPago === "pago_total"}
                   onChange={(e) => setForm({ ...form, monto: e.target.value })}
                   required
                 />
-                <button
-                  type="button"
-                  className="btn-link-inline"
-                  onClick={() =>
-                    setForm({ ...form, monto: String(saldoOrdenRestante) })
-                  }
-                >
-                  Usar el saldo completo (₡
-                  {Number(saldoOrdenRestante).toLocaleString("es-CR")})
-                </button>
+                {form.tipoPago === "abono" && (
+                  <button
+                    type="button"
+                    className="btn-link-inline"
+                    onClick={() => cambiarTipoPago("pago_total")}
+                  >
+                    Usar el saldo completo (₡
+                    {Number(saldoOrdenRestante).toLocaleString("es-CR")})
+                  </button>
+                )}
               </div>
 
               {previsualizacion && (
@@ -687,6 +739,7 @@ function Pagos() {
                     <th>Cliente</th>
                     <th>Orden</th>
                     <th>Monto</th>
+                    <th>Tipo</th>
                     <th>Método</th>
                     <th>Fecha</th>
                     <th>Factura</th>
@@ -701,6 +754,11 @@ function Pagos() {
                         {pago.orden_id ? formatOrdenNumero(pago.orden_id) : "—"}
                       </td>
                       <td>₡{Number(pago.monto).toLocaleString("es-CR")}</td>
+                      <td>
+                        {pago.tipo_pago === "pago_total"
+                          ? "Pago total"
+                          : "Abono"}
+                      </td>
                       <td>{pago.metodo_pago}</td>
                       <td>
                         {pago.fecha_pago

@@ -139,6 +139,7 @@ function crearPdf(factura) {
   pdf.setFont("helvetica", "normal");
   pdf.text(monedaUsd(subtotal), totalsX + 80, totalsY);
 
+  pdf.setFontSize(8);
   pdf.setFont("helvetica", "bold");
   pdf.text("Payment method", margin, totalsY + 20);
   pdf.setFont("helvetica", "normal");
@@ -326,6 +327,7 @@ function crearProformaPdf(orden) {
   pdf.setFont("helvetica", "normal");
   pdf.text(monedaUsd(subtotal), totalsX + 80, totalsY);
 
+  pdf.setFontSize(8);
   pdf.setFont("helvetica", "bold");
   pdf.text("Payment method", margin, totalsY + 20);
   pdf.setFont("helvetica", "normal");
