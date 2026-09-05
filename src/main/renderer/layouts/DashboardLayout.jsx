@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
+import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 
 const navLinks = [
@@ -6,6 +7,8 @@ const navLinks = [
   { label: "Productos", path: "/productos", icon: "📦" },
   { label: "Clientes", path: "/clientes", icon: "👥" },
   { label: "Pagos", path: "/pagos", icon: "💳" },
+  { label: "Facturas", path: "/facturas", icon: "🧾" },
+  { label: "Cuentas por Cobrar", path: "/cuentas-por-cobrar", icon: "💼" },
   { label: "Reportes", path: "/reportes", icon: "📊" },
   { label: "Usuarios", path: "/usuarios", icon: "🧑‍💼" },
   { label: "Órdenes", path: "/ordenes", icon: "📝" },
@@ -16,10 +19,21 @@ const navLinks = [
 
 function DashboardLayout() {
   const { user, logout } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(
+    () => window.matchMedia("(min-width: 901px)").matches,
+  );
 
   return (
-    <div className="dashboard-layout">
-      <aside className="sidebar">
+    <div
+      className={`dashboard-layout ${sidebarOpen ? "" : "sidebar-collapsed"}`}
+    >
+      <button
+        type="button"
+        className={`sidebar-overlay ${sidebarOpen ? "visible" : ""}`}
+        aria-label="Cerrar menú"
+        onClick={() => setSidebarOpen(false)}
+      />
+      <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
         <div className="sidebar-brand">
           <span className="sidebar-logo">💊</span>
           <div>
@@ -61,9 +75,22 @@ function DashboardLayout() {
 
       <main className="main-content">
         <header className="navbar">
-          <div>
-            <p className="navbar-path">Logicaps / Dashboard</p>
-            <h1 className="navbar-title">Panel administrativo</h1>
+          <div className="navbar-heading">
+            <button
+              type="button"
+              className="menu-toggle"
+              aria-label={sidebarOpen ? "Ocultar menú" : "Mostrar menú"}
+              aria-expanded={sidebarOpen}
+              onClick={() => setSidebarOpen((isOpen) => !isOpen)}
+            >
+              <span />
+              <span />
+              <span />
+            </button>
+            <div>
+              <p className="navbar-path">Logicaps / Dashboard</p>
+              <h1 className="navbar-title">Panel administrativo</h1>
+            </div>
           </div>
           <div className="navbar-user-info">
             <span>Bienvenido</span>

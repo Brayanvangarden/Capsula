@@ -135,6 +135,7 @@ CREATE TABLE IF NOT EXISTS pagos (
   cliente_id  INTEGER NOT NULL REFERENCES clientes(id) ON DELETE RESTRICT,
   orden_id    INTEGER REFERENCES ordenes(id) ON DELETE SET NULL,
   monto       REAL    NOT NULL,
+  tipo_pago   TEXT    NOT NULL DEFAULT 'abono' CHECK(tipo_pago IN ('pago_total','abono')),
   metodo_pago TEXT    NOT NULL CHECK(metodo_pago IN ('efectivo','cheque','datafono','zelle')),
   fecha_pago  TEXT    NOT NULL DEFAULT (datetime('now')),
   notas       TEXT,

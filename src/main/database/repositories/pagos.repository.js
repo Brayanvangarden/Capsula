@@ -93,9 +93,9 @@ function create(data) {
       .prepare(
         `
       INSERT INTO pagos
-        (cliente_id, orden_id, monto, metodo_pago, notas, usuario_id)
+          (cliente_id, orden_id, monto, tipo_pago, metodo_pago, notas, usuario_id)
       VALUES
-        (@cliente_id, @orden_id, @monto, @metodo_pago, @notas, @usuario_id)
+          (@cliente_id, @orden_id, @monto, @tipo_pago, @metodo_pago, @notas, @usuario_id)
     `,
       )
       .run(data);

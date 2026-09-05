@@ -14,6 +14,7 @@ const { registerClientesIpc } = require("./ipc/clientes.ipc");
 const { registerOrdenesIpc } = require("./ipc/ordenes.ipc");
 const { registerPagosIpc } = require("./ipc/pagos.ipc");
 const { registerFacturasIpc } = require("./ipc/facturas.ipc");
+const { registerCuentasPorCobrarIpc } = require("./ipc/cuentas_por_cobrar.ipc");
 const { registerUsuariosIpc } = require("./ipc/usuarios.ipc");
 
 function getDevUrl() {
@@ -81,6 +82,7 @@ app
     registerOrdenesIpc();
     registerPagosIpc();
     registerFacturasIpc();
+    registerCuentasPorCobrarIpc();
     registerUsuariosIpc();
 
     // 3️⃣ Crear ventana

@@ -139,4 +139,58 @@ function getByPagoId(pagoId) {
   return factura ? getById(factura.id) : null;
 }
 
-module.exports = { crearParaPago, getById, getByPagoId };
+function getHistorial(filtros = {}) {
+  const db = getDb();
+  let query = `
+    SELECT
+      o.id AS orden_id,
+      o.fecha_creacion,
+      o.fecha_entrega,
+      o.estado AS estado_orden,
+      o.total,
+      c.id AS cliente_id,
+      c.nombre AS cliente_nombre,
+      c.empresa AS cliente_empresa,
+      COALESCE(p.total_pagado, 0) AS monto_pagado,
+      MAX(0, o.total - COALESCE(p.total_pagado, 0)) AS saldo,
+      CASE
+        WHEN o.estado = 'completada' THEN 'finalizado'
+        ELSE 'pendiente'
+      END AS estado_orden_label,
+      CASE
+        WHEN COALESCE(p.total_pagado, 0) >= o.total - 0.005 THEN 'pagado'
+        ELSE 'pendiente'
+      END AS estado_pago,
+      f.id AS factura_id,
+      f.numero_factura
+    FROM ordenes o
+    LEFT JOIN clientes c ON c.id = o.cliente_id
+    LEFT JOIN (
+      SELECT orden_id, SUM(monto) AS total_pagado
+      FROM pagos
+      GROUP BY orden_id
+    ) p ON p.orden_id = o.id
+    LEFT JOIN facturas f ON f.orden_id = o.id
+    WHERE 1 = 1
+  `;
+  const params = [];
+
+  if (filtros.fecha_desde) {
+    query += " AND DATE(o.fecha_creacion) >= ?";
+    params.push(filtros.fecha_desde);
+  }
+  if (filtros.fecha_hasta) {
+    query += " AND DATE(o.fecha_creacion) <= ?";
+    params.push(filtros.fecha_hasta);
+  }
+  if (filtros.estado_pago === "pagado") {
+    query += " AND COALESCE(p.total_pagado, 0) >= o.total - 0.005";
+  } else if (filtros.estado_pago === "pendiente") {
+    query += " AND COALESCE(p.total_pagado, 0) < o.total - 0.005";
+  }
+
+  query += " ORDER BY o.fecha_creacion DESC";
+  return db.prepare(query).all(...params);
+}
+
+module.exports = { crearParaPago, getById, getByPagoId, getHistorial };
