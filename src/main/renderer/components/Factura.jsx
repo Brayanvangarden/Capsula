@@ -138,26 +138,23 @@ export default function Factura({ factura, onClose }) {
             <p>Account #2813330806</p>
             <p>For direct deposit routing #063107513</p>
             <p>For wire transfer routing #121000248</p>
+            <p>$35 Applies to all the checks returned for any reason</p>
           </div>
 
           <div className="factura-note-block">
-            <p>NOTE: All orders must be paid as follows:</p>
+            <p>
+              <strong>*NOTE:</strong> All orders must be paid as follows:
+            </p>
             <p>
               1) Any payments to Natur Vitalia LLC greater or equal to $5,000
-              will need to be made in
+              will need to be made in the form of a wire or credit card (CC 3%
+              processing fee will be charged for any amount) to facilitate a
+              commencement of the order.
             </p>
-            <p>
-              the form of a wire or credit card (CC 3% processing fee will be
-              charged for any amount)
-            </p>
-            <p>to facilitate a commencement of the order.</p>
             <p>
               2) Any payments via check (regardless of size) may delay
-              commencement of the order
-            </p>
-            <p>
-              and/or delivery by up to 10 days from the date Natur Vitalia LLC
-              receives the check.
+              commencement of the order and/or delivery by up to 10 days from
+              the date Natur Vitalia LLC receives the check.
             </p>
             <p>
               3) Payments must be done within 30 days after the order has been

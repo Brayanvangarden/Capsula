@@ -595,9 +595,17 @@
   line-height: 1.35;
 }
 
+.factura-note-block {
+  margin-top: 30px;
+}
+
 .factura-payment-block p,
 .factura-note-block p {
   margin: 3px 0;
+}
+
+.factura-note-block p + p {
+  margin-top: 30px;
 }
 
 .factura-pie-proforma {

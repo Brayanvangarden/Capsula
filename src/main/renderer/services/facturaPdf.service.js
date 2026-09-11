@@ -15,6 +15,128 @@ function monedaUsd(value) {
   })}`;
 }
 
+/**
+ * Dibuja el bloque de "Payment method" (izquierda) y la caja de totales
+ * (derecha) con las líneas/bordes del formato solicitado:
+ * - Línea horizontal completa arriba del bloque.
+ * - Línea vertical separando etiquetas y montos en la caja de totales.
+ * - Línea horizontal fina antes de "Total".
+ * - Línea doble debajo de "Total".
+ *
+ * Devuelve el Y donde termina el bloque, para poder ubicar el
+ * texto de notas debajo sin que se encime.
+ */
+function dibujarPieYPago(pdf, { margin, pageWidth, startY, subtotal, total, impuestosLabel = "Included" }) {
+  const totalsLabelX = pageWidth - 170;
+  const totalsValueX = pageWidth - margin;
+  const dividerX = totalsLabelX + 65;
+  const rowHeight = 20;
+  const lineTop = startY - 16;
+
+  const rows = [
+    { label: "Subtotal", value: monedaUsd(subtotal) },
+    { label: "Shipping", value: monedaUsd(0) },
+    { label: "Tax", value: impuestosLabel },
+    { label: "Deposit", value: monedaUsd(0) },
+  ];
+
+  // Línea horizontal completa arriba de todo el bloque
+  pdf.setDrawColor(0, 0, 0);
+  pdf.setLineWidth(1);
+  pdf.line(margin, lineTop, pageWidth - margin, lineTop);
+
+  pdf.setFontSize(10);
+  rows.forEach((row, i) => {
+    const rowY = startY + i * rowHeight;
+    pdf.setFont("helvetica", "bold");
+    pdf.text(row.label, totalsLabelX, rowY);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(row.value, totalsValueX, rowY, { align: "right" });
+  });
+
+  const totalY = startY + rows.length * rowHeight;
+
+  // Línea fina arriba de "Total"
+  pdf.setLineWidth(0.8);
+  pdf.line(totalsLabelX - 10, totalY - 15, pageWidth - margin, totalY - 15);
+
+  pdf.setFont("helvetica", "bold");
+  pdf.text("Total", totalsLabelX, totalY);
+  pdf.text(monedaUsd(total), totalsValueX, totalY, { align: "right" });
+
+  // Línea vertical separando etiqueta / monto
+  pdf.setLineWidth(0.6);
+  pdf.line(dividerX, lineTop, dividerX, totalY + 12);
+
+  // Línea doble debajo de "Total"
+  pdf.setLineWidth(1);
+  pdf.line(totalsLabelX - 10, totalY + 9, pageWidth - margin, totalY + 9);
+  pdf.line(totalsLabelX - 10, totalY + 12, pageWidth - margin, totalY + 12);
+
+  // Bloque "Payment method" (columna izquierda)
+  pdf.setFontSize(9.5);
+  pdf.setFont("helvetica", "bold");
+  pdf.text("Payment method", margin, startY + 4);
+  pdf.setFont("helvetica", "normal");
+  pdf.text("Checks may be sent ACH to:", margin, startY + 20);
+  pdf.setFont("helvetica", "bold");
+  pdf.text("NATUR VITALIA LLC", margin, startY + 36);
+  pdf.setFont("helvetica", "normal");
+  pdf.text("Wells Fargo Bank", margin, startY + 52);
+  pdf.text("Account #2813330806", margin, startY + 68);
+  pdf.text("For direct deposit routing #063107513", margin, startY + 84);
+  pdf.text("For wire transfer routing #121000248", margin, startY + 100);
+  pdf.text(
+    "$35 Applies to all the checks returned for any reason",
+    margin,
+    startY + 116,
+  );
+
+  const paymentBottom = startY + 116 + 14;
+  return Math.max(totalY + 12, paymentBottom);
+}
+
+function dibujarNotas(pdf, { margin, pageWidth, pageHeight, startY }) {
+  const noteParagraphs = [
+    [
+      "1) Any payments to Natur Vitalia LLC greater or equal to $5,000 will need to be made in",
+      "the form of a wire or credit card (CC 3% processing fee will be charged for any amount)",
+      "to facilitate a commencement of the order.",
+    ],
+    [
+      "2) Any payments via check (regardless of size) may delay commencement of the order",
+      "and/or delivery by up to 10 days from the date Natur Vitalia LLC receives the check.",
+    ],
+    ["3) Payments must be done within 30 days after the order has been delivered."],
+  ];
+
+  // Si no cabe en la página actual, agrega una nueva
+  const alturaEstimada = 14 + noteParagraphs.reduce((acc, p) => acc + p.length * 12 + 24, 0);
+  let y = startY;
+  if (y + alturaEstimada > pageHeight - 30) {
+    pdf.addPage();
+    y = 60;
+  }
+
+  pdf.setFontSize(9);
+  pdf.setFont("helvetica", "bold");
+  pdf.text("*NOTE:", margin, y);
+  const noteLabelWidth = pdf.getTextWidth("*NOTE:");
+  pdf.setFont("helvetica", "normal");
+  pdf.text(" All orders must be paid as follows:", margin + noteLabelWidth, y);
+
+  let noteCursor = y + 14;
+  noteParagraphs.forEach((paragraph, paragraphIndex) => {
+    paragraph.forEach((line) => {
+      pdf.text(String(line), margin, noteCursor);
+      noteCursor += 12;
+    });
+    if (paragraphIndex < noteParagraphs.length - 1) {
+      noteCursor += 6;
+    }
+  });
+}
+
 function crearPdf(factura) {
   const pdf = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -131,73 +253,16 @@ function crearPdf(factura) {
     y += 18;
   });
 
-  const totalsX = pageWidth - 160;
-  const totalsY = Math.min(y + 32, pageHeight - 220);
-
-  pdf.setFont("helvetica", "bold");
-  pdf.text("Subtotal", totalsX, totalsY);
-  pdf.setFont("helvetica", "normal");
-  pdf.text(monedaUsd(subtotal), totalsX + 80, totalsY);
-
-  pdf.setFontSize(8);
-  pdf.setFont("helvetica", "bold");
-  pdf.text("Payment method", margin, totalsY + 20);
-  pdf.setFont("helvetica", "normal");
-  pdf.text("Checks may be sent ACH to:", margin, totalsY + 38);
-  pdf.setFont("helvetica", "bold");
-  pdf.text("NATUR VITALIA LLC", margin, totalsY + 54);
-  pdf.setFont("helvetica", "normal");
-  pdf.text("Wells Fargo Bank", margin, totalsY + 70);
-  pdf.text("Account #2813330806", margin, totalsY + 86);
-  pdf.text("For direct deposit routing #063107513", margin, totalsY + 102);
-  pdf.text("For wire transfer routing #121000248", margin, totalsY + 118);
-
-  pdf.setFont("helvetica", "bold");
-  pdf.text("Shipping", totalsX, totalsY + 18);
-  pdf.setFont("helvetica", "normal");
-  pdf.text(monedaUsd(0), totalsX + 80, totalsY + 18);
-
-  pdf.setFont("helvetica", "bold");
-  pdf.text("Tax", totalsX, totalsY + 36);
-  pdf.setFont("helvetica", "normal");
-  pdf.text("Included", totalsX + 80, totalsY + 36);
-  pdf.setFont("helvetica", "bold");
-  pdf.text("Deposit", totalsX, totalsY + 54);
-  pdf.setFont("helvetica", "normal");
-  pdf.text(monedaUsd(0), totalsX + 80, totalsY + 54);
-  pdf.setFont("helvetica", "bold");
-  pdf.text("Total", totalsX, totalsY + 72);
-  pdf.setFont("helvetica", "normal");
-  pdf.text(monedaUsd(total), totalsX + 80, totalsY + 72);
-  pdf.setFont("helvetica", "bold");
-  pdf.text(
-    "$35 Applies to all the checks returned for any reason.",
+  const startY = Math.min(y + 48, pageHeight - 200);
+  const bottomY = dibujarPieYPago(pdf, {
     margin,
-    totalsY + 160,
-  );
-
-  const noteY = pageHeight - 180;
-  const noteText = [
-    "NOTE: All orders must be paid as follows:",
-    "1) Any payments to Natur Vitalia LLC greater or equal to $5,000 will need to be made in",
-    "the form of a wire or credit card (CC 3% processing fee will be charged for any amount)",
-    "to facilitate a commencement of the order.",
-    "2) Any payments via check (regardless of size) may delay commencement of the order",
-    "and/or delivery by up to 10 days from the date Natur Vitalia LLC receives the check.",
-    "3) Payments must be done within 30 days after the order has been delivered.",
-  ];
-
-  pdf.setFont("helvetica", "bold");
-  pdf.text("NOTE:", margin, noteY);
-  pdf.setFont("helvetica", "normal");
-  const noteLines = noteText.flatMap((line) =>
-    pdf.splitTextToSize(line, pageWidth - margin * 2),
-  );
-  let noteCursor = noteY + 14;
-  noteLines.forEach((line) => {
-    pdf.text(String(line), margin, noteCursor);
-    noteCursor += 12;
+    pageWidth,
+    startY,
+    subtotal,
+    total,
   });
+
+  dibujarNotas(pdf, { margin, pageWidth, pageHeight, startY: bottomY + 34 });
 
   return pdf;
 }
@@ -319,73 +384,16 @@ function crearProformaPdf(orden) {
     y += 18;
   });
 
-  const totalsX = pageWidth - 160;
-  const totalsY = Math.min(y + 32, pageHeight - 220);
-
-  pdf.setFont("helvetica", "bold");
-  pdf.text("Subtotal", totalsX, totalsY);
-  pdf.setFont("helvetica", "normal");
-  pdf.text(monedaUsd(subtotal), totalsX + 80, totalsY);
-
-  pdf.setFontSize(8);
-  pdf.setFont("helvetica", "bold");
-  pdf.text("Payment method", margin, totalsY + 20);
-  pdf.setFont("helvetica", "normal");
-  pdf.text("Checks may be sent ACH to:", margin, totalsY + 38);
-  pdf.setFont("helvetica", "bold");
-  pdf.text("NATUR VITALIA LLC", margin, totalsY + 54);
-  pdf.setFont("helvetica", "normal");
-  pdf.text("Wells Fargo Bank", margin, totalsY + 70);
-  pdf.text("Account #2813330806", margin, totalsY + 86);
-  pdf.text("For direct deposit routing #063107513", margin, totalsY + 102);
-  pdf.text("For wire transfer routing #121000248", margin, totalsY + 118);
-
-  pdf.setFont("helvetica", "bold");
-  pdf.text("Shipping", totalsX, totalsY + 18);
-  pdf.setFont("helvetica", "normal");
-  pdf.text(monedaUsd(0), totalsX + 80, totalsY + 18);
-
-  pdf.setFont("helvetica", "bold");
-  pdf.text("Tax", totalsX, totalsY + 36);
-  pdf.setFont("helvetica", "normal");
-  pdf.text("Included", totalsX + 80, totalsY + 36);
-  pdf.setFont("helvetica", "bold");
-  pdf.text("Deposit", totalsX, totalsY + 54);
-  pdf.setFont("helvetica", "normal");
-  pdf.text(monedaUsd(0), totalsX + 80, totalsY + 54);
-  pdf.setFont("helvetica", "bold");
-  pdf.text("Total", totalsX, totalsY + 72);
-  pdf.setFont("helvetica", "normal");
-  pdf.text(monedaUsd(total), totalsX + 80, totalsY + 72);
-  pdf.setFont("helvetica", "bold");
-  pdf.text(
-    "$35 Applies to all the checks returned for any reason.",
+  const startY = Math.min(y + 48, pageHeight - 200);
+  const bottomY = dibujarPieYPago(pdf, {
     margin,
-    totalsY + 160,
-  );
-
-  const noteY = pageHeight - 180;
-  const noteText = [
-    "NOTE: All orders must be paid as follows:",
-    "1) Any payments to Natur Vitalia LLC greater or equal to $5,000 will need to be made in",
-    "the form of a wire or credit card (CC 3% processing fee will be charged for any amount)",
-    "to facilitate a commencement of the order.",
-    "2) Any payments via check (regardless of size) may delay commencement of the order",
-    "and/or delivery by up to 10 days from the date Natur Vitalia LLC receives the check.",
-    "3) Payments must be done within 30 days after the order has been delivered.",
-  ];
-
-  pdf.setFont("helvetica", "bold");
-  pdf.text("NOTE:", margin, noteY);
-  pdf.setFont("helvetica", "normal");
-  const noteLines = noteText.flatMap((line) =>
-    pdf.splitTextToSize(line, pageWidth - margin * 2),
-  );
-  let noteCursor = noteY + 14;
-  noteLines.forEach((line) => {
-    pdf.text(String(line), margin, noteCursor);
-    noteCursor += 12;
+    pageWidth,
+    startY,
+    subtotal,
+    total,
   });
+
+  dibujarNotas(pdf, { margin, pageWidth, pageHeight, startY: bottomY + 34 });
 
   return pdf;
 }
