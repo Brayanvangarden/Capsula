@@ -26,7 +26,10 @@ function monedaUsd(value) {
  * Devuelve el Y donde termina el bloque, para poder ubicar el
  * texto de notas debajo sin que se encime.
  */
-function dibujarPieYPago(pdf, { margin, pageWidth, startY, subtotal, total, impuestosLabel = "Included" }) {
+function dibujarPieYPago(
+  pdf,
+  { margin, pageWidth, startY, subtotal, total, impuestosLabel = "Included" },
+) {
   const totalsLabelX = pageWidth - 170;
   const totalsValueX = pageWidth - margin;
   const dividerX = totalsLabelX + 65;
@@ -107,11 +110,14 @@ function dibujarNotas(pdf, { margin, pageWidth, pageHeight, startY }) {
       "2) Any payments via check (regardless of size) may delay commencement of the order",
       "and/or delivery by up to 10 days from the date Natur Vitalia LLC receives the check.",
     ],
-    ["3) Payments must be done within 30 days after the order has been delivered."],
+    [
+      "3) Payments must be done within 30 days after the order has been delivered.",
+    ],
   ];
 
   // Si no cabe en la página actual, agrega una nueva
-  const alturaEstimada = 14 + noteParagraphs.reduce((acc, p) => acc + p.length * 12 + 24, 0);
+  const alturaEstimada =
+    14 + noteParagraphs.reduce((acc, p) => acc + p.length * 12 + 24, 0);
   let y = startY;
   if (y + alturaEstimada > pageHeight - 30) {
     pdf.addPage();
@@ -290,7 +296,7 @@ function crearProformaPdf(orden) {
 
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(18);
-  pdf.text("INVOICE", pageWidth - 150, 52);
+  pdf.text("QUOTATION", pageWidth - 150, 52);
   pdf.setFontSize(11);
   pdf.text(
     `No. ${String(orden?.id ?? 0).padStart(4, "0")}`,
@@ -405,7 +411,7 @@ export function generarFacturaPdf(factura) {
 export function generarProformaPdf(orden) {
   if (!orden) return;
   crearProformaPdf(orden).save(
-    `INVOICE-${String(orden.id).padStart(4, "0")}.pdf`,
+    `PROFORMA-${String(orden.id).padStart(4, "0")}.pdf`,
   );
 }
 

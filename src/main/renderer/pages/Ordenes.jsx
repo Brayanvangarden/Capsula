@@ -454,7 +454,7 @@ function Ordenes() {
                         type="button"
                         onClick={() => generarProforma(orden)}
                       >
-                        🧾 Generar INVOICE
+                        🧾 Generar PROFORMA
                       </button>
                       {(orden.estado === "pendiente" ||
                         orden.estado === "en_proceso") && (
