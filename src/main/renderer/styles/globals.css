@@ -74,6 +74,10 @@ h6 {
   background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
 }
 
+body.theme-dark .dashboard-layout {
+  background: var(--color-bg);
+}
+
 .dashboard-layout.sidebar-collapsed {
   grid-template-columns: 0 minmax(0, 1fr);
 }
@@ -416,8 +420,40 @@ h6 {
   padding: 0.95rem 1rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: #ffffff;
+  background: var(--color-surface);
   color: var(--color-text);
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 1rem 0 0.25rem;
+}
+
+.pagination-button {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.pagination-button:hover:not(:disabled),
+.pagination-button.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.pagination-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .search-input:focus {
@@ -456,7 +492,7 @@ h6 {
   padding: 0.8rem 2.75rem 0.8rem 2.75rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: #ffffff;
+  background: var(--color-surface);
   color: var(--color-text);
   font-size: 0.9rem;
   box-shadow: var(--shadow-sm);
@@ -963,7 +999,7 @@ h6 {
   padding: 0.95rem 1rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: #ffffff;
+  background: var(--color-surface);
   color: var(--color-text);
   transition:
     border-color 0.2s ease,
@@ -1095,7 +1131,7 @@ h6 {
   padding: 0.95rem 1rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: #ffffff;
+  background: var(--color-surface);
   color: var(--color-text);
   transition:
     border-color 0.2s ease,
@@ -1653,7 +1689,7 @@ h6 {
   justify-content: center;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: #ffffff;
+  background: var(--color-surface);
   color: var(--color-text-muted);
   cursor: pointer;
   padding: 0;
@@ -1747,7 +1783,7 @@ h6 {
 
 .modal-confirm {
   width: min(400px, 100%);
-  background: #ffffff;
+  background: var(--color-surface);
   border-radius: 1.4rem;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.3);
   padding: 2rem 1.8rem 1.8rem;
@@ -1848,7 +1884,7 @@ h6 {
 }
 
 .header-actions .btn-secondary {
-  background: #ffffff;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   color: var(--color-text);
 }
@@ -1946,7 +1982,7 @@ h6 {
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  background: #ffffff;
+  background: var(--color-surface);
   color: var(--color-text-muted);
   font-weight: 600;
   cursor: pointer;
@@ -1972,7 +2008,7 @@ h6 {
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  background: #ffffff;
+  background: var(--color-surface);
   color: var(--color-text);
 }
 

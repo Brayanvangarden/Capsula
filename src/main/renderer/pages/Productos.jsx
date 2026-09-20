@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
-import { useProductos }  from '../hooks/useProductos'
-import { useCategorias } from '../hooks/useCategorias'
+import { useState, useEffect, useRef } from "react";
+import { useProductos } from "../hooks/useProductos";
+import { useCategorias } from "../hooks/useCategorias";
 
 function PencilIcon(props) {
   return (
@@ -18,7 +18,7 @@ function PencilIcon(props) {
       <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .622.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
       <path d="m15 5 4 4" />
     </svg>
-  )
+  );
 }
 
 function TrashIcon(props) {
@@ -40,145 +40,197 @@ function TrashIcon(props) {
       <line x1="10" x2="10" y1="11" y2="17" />
       <line x1="14" x2="14" y1="11" y2="17" />
     </svg>
-  )
+  );
 }
 
 const EMPTY = {
-  nombre: '', descripcion: '', precio: '',
-  stock: '', stockMinimo: '', categoriaId: '', sku: '', material: ''
-}
+  nombre: "",
+  descripcion: "",
+  precio: "",
+  stock: "",
+  stockMinimo: "",
+  categoriaId: "",
+  sku: "",
+  material: "",
+};
+
+const bloquearTeclasNoNumericas = (event) => {
+  if (["e", "E", "+", "-"].includes(event.key)) event.preventDefault();
+};
+
+const aceptarNumero = (value, decimal = false) => {
+  const patron = decimal ? /^\d*(\.\d*)?$/ : /^\d*$/;
+  return patron.test(value) ? value : null;
+};
+
+const PRODUCTOS_POR_PAGINA = 10;
 
 function Productos() {
   const {
-    productos, productosActivos, stockBajo,
-    loading, crearProducto, actualizarProducto,
-    eliminarProducto, obtenerProducto, buscarProductos
-  } = useProductos()
+    productos,
+    productosActivos,
+    stockBajo,
+    loading,
+    crearProducto,
+    actualizarProducto,
+    eliminarProducto,
+    obtenerProducto,
+    buscarProductos,
+  } = useProductos();
 
-  const { categorias } = useCategorias()
+  const { categorias } = useCategorias();
 
-  const [busqueda, setBusqueda]   = useState('')
-  const [tab, setTab]             = useState('lista')
-  const [editando, setEditando]   = useState(null)
-  const [form, setForm]           = useState(EMPTY)
-  const [detalleModal, setDetalleModal] = useState(false)
-  const [detalleProducto, setDetalleProducto] = useState(null)
-  const [filtro, setFiltro]       = useState('todos')
-  const [confirmId, setConfirmId] = useState(null)
-  const [mensaje, setMensaje]     = useState('')
-  const [mensajeTipo, setMensajeTipo] = useState('success')
-  const [loadingOp, setLoadingOp] = useState(false)
-  const [detalleLoading, setDetalleLoading] = useState(false)
-  const inputImportRef = useRef(null)
+  const [busqueda, setBusqueda] = useState("");
+  const [tab, setTab] = useState("lista");
+  const [editando, setEditando] = useState(null);
+  const [form, setForm] = useState(EMPTY);
+  const [detalleModal, setDetalleModal] = useState(false);
+  const [detalleProducto, setDetalleProducto] = useState(null);
+  const [filtro, setFiltro] = useState("todos");
+  const [confirmId, setConfirmId] = useState(null);
+  const [mensaje, setMensaje] = useState("");
+  const [mensajeTipo, setMensajeTipo] = useState("success");
+  const [loadingOp, setLoadingOp] = useState(false);
+  const [detalleLoading, setDetalleLoading] = useState(false);
+  const [pagina, setPagina] = useState(1);
+  const inputImportRef = useRef(null);
 
   // ── Filtros ──────────────────────────────────────────
   const listaFiltrada = (() => {
-    let lista = busqueda ? buscarProductos(busqueda) : productosActivos
-    if (filtro === 'stockBajo') lista = lista.filter(p => stockBajo.find(s => s.id === p.id))
-    return lista
-  })()
+    let lista = busqueda ? buscarProductos(busqueda) : productosActivos;
+    if (filtro === "stockBajo")
+      lista = lista.filter((p) => stockBajo.find((s) => s.id === p.id));
+    return lista;
+  })();
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(listaFiltrada.length / PRODUCTOS_POR_PAGINA),
+  );
+  const paginaActual = Math.min(pagina, totalPaginas);
+  const productosVisibles = listaFiltrada.slice(
+    (paginaActual - 1) * PRODUCTOS_POR_PAGINA,
+    paginaActual * PRODUCTOS_POR_PAGINA,
+  );
+
+  useEffect(() => {
+    setPagina(1);
+  }, [busqueda, filtro]);
+
+  useEffect(() => {
+    if (pagina > totalPaginas) setPagina(totalPaginas);
+  }, [pagina, totalPaginas]);
 
   // ── Handlers ─────────────────────────────────────────
-  const abrirCrear = () => { setForm(EMPTY); setEditando(null); setMensaje(''); setTab('nuevo') }
+  const abrirCrear = () => {
+    setForm(EMPTY);
+    setEditando(null);
+    setMensaje("");
+    setTab("nuevo");
+  };
 
   const abrirEditar = (p) => {
-    setMensaje('')
+    setMensaje("");
     setForm({
-      nombre: p.nombre, descripcion: p.descripcion ?? '',
+      nombre: p.nombre,
+      descripcion: p.descripcion ?? "",
       precio: p.precio,
-      stock: p.stock, stockMinimo: p.stockMinimo ?? '',
-      categoriaId: p.categoriaId ?? '',
-      sku: p.sku ?? '',
-      material: p.material ?? ''
-    })
-    setEditando(p.id)
-    setTab('editar')
-  }
+      stock: p.stock,
+      stockMinimo: p.stockMinimo ?? "",
+      categoriaId: p.categoriaId ?? "",
+      sku: p.sku ?? "",
+      material: p.material ?? "",
+    });
+    setEditando(p.id);
+    setTab("editar");
+  };
 
   const cerrarFormulario = (clearMessage = true) => {
-    setEditando(null)
-    setForm(EMPTY)
-    setTab('lista')
-    if (clearMessage) setMensaje('')
-  }
+    setEditando(null);
+    setForm(EMPTY);
+    setTab("lista");
+    if (clearMessage) setMensaje("");
+  };
 
   const exportarCSV = () => {
     const columnas = [
-      'Nombre',
-      'Descripción',
-      'Categoría',
-      'Precio',
-      'Stock',
-      'Stock mínimo',
-      'SKU',
-      'Material',
-    ]
+      "Nombre",
+      "Descripción",
+      "Categoría",
+      "Precio",
+      "Stock",
+      "Stock mínimo",
+      "SKU",
+      "Material",
+    ];
 
     const escapar = (valor) => {
-      const texto = String(valor ?? '')
+      const texto = String(valor ?? "");
       if (/['";\n]/.test(texto)) {
-        return `"${texto.replace(/"/g, '""')}"`
+        return `"${texto.replace(/"/g, '""')}"`;
       }
-      return texto
-    }
+      return texto;
+    };
 
     const filas = listaFiltrada.map((p) =>
       [
         p.nombre,
         p.descripcion,
-        categorias.find(c => c.id === p.categoriaId)?.nombre ?? p.categoria_nombre ?? 'Sin categoría',
+        categorias.find((c) => c.id === p.categoriaId)?.nombre ??
+          p.categoria_nombre ??
+          "Sin categoría",
         p.precio,
         p.stock,
         p.stockMinimo ?? 0,
-        p.sku ?? '',
-        p.material ?? '',
+        p.sku ?? "",
+        p.material ?? "",
       ]
         .map(escapar)
-        .join(';'),
-    )
+        .join(";"),
+    );
 
-    const contenido = '\uFEFF' + [columnas.join(';'), ...filas].join('\r\n')
-    const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const fecha = new Date().toISOString().slice(0, 10)
+    const contenido = "\uFEFF" + [columnas.join(";"), ...filas].join("\r\n");
+    const blob = new Blob([contenido], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const fecha = new Date().toISOString().slice(0, 10);
 
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `productos_${fecha}.csv`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-  }
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `productos_${fecha}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const parsearCSV = (texto) => {
-    const limpio = texto.replace(/^\uFEFF/, '')
-    const lineas = limpio.split(/\r\n|\n/).filter((l) => l.trim() !== '')
-    if (lineas.length < 2) return []
+    const limpio = texto.replace(/^\uFEFF/, "");
+    const lineas = limpio.split(/\r\n|\n/).filter((l) => l.trim() !== "");
+    if (lineas.length < 2) return [];
 
     const parsearLinea = (linea) => {
-      const campos = []
-      let actual = ''
-      let entreComillas = false
+      const campos = [];
+      let actual = "";
+      let entreComillas = false;
       for (let i = 0; i < linea.length; i++) {
-        const char = linea[i]
+        const char = linea[i];
         if (char === '"') {
           if (entreComillas && linea[i + 1] === '"') {
-            actual += '"'
-            i++
+            actual += '"';
+            i++;
           } else {
-            entreComillas = !entreComillas
+            entreComillas = !entreComillas;
           }
-        } else if (char === ';' && !entreComillas) {
-          campos.push(actual)
-          actual = ''
+        } else if (char === ";" && !entreComillas) {
+          campos.push(actual);
+          actual = "";
         } else {
-          actual += char
+          actual += char;
         }
       }
-      campos.push(actual)
-      return campos
-    }
+      campos.push(actual);
+      return campos;
+    };
 
     return lineas.slice(1).map((linea) => {
       const [
@@ -190,11 +242,11 @@ function Productos() {
         stockMinimo,
         sku,
         material,
-      ] = parsearLinea(linea)
+      ] = parsearLinea(linea);
 
       const categoriaEncontrada = categorias.find(
-        (c) => c.nombre?.toLowerCase() === (categoria ?? '').toLowerCase(),
-      )
+        (c) => c.nombre?.toLowerCase() === (categoria ?? "").toLowerCase(),
+      );
 
       return {
         nombre,
@@ -203,227 +255,309 @@ function Productos() {
         precio: parseFloat(precio) || 0,
         stock: parseInt(stock, 10) || 0,
         stockMinimo: parseInt(stockMinimo, 10) || 0,
-        sku: String(sku ?? '').trim() || null,
+        sku: String(sku ?? "").trim() || null,
         material,
-      }
-    })
-  }
+      };
+    });
+  };
 
   const handleImportarCSV = async (event) => {
-    const archivo = event.target.files?.[0]
-    if (!archivo) return
+    const archivo = event.target.files?.[0];
+    if (!archivo) return;
 
-    setLoadingOp(true)
-    setMensaje('')
+    setLoadingOp(true);
+    setMensaje("");
     try {
-      const texto = await archivo.text()
-      const filas = parsearCSV(texto)
+      const texto = await archivo.text();
+      const filas = parsearCSV(texto);
       if (filas.length === 0) {
-        setMensaje('El archivo no tiene datos para importar.')
-        return
+        setMensaje("El archivo no tiene datos para importar.");
+        return;
       }
 
-      const resultado = { creados: 0, fallidos: 0, errores: [] }
+      const resultado = { creados: 0, fallidos: 0, errores: [] };
       for (let i = 0; i < filas.length; i++) {
-        const fila = filas[i]
+        const fila = filas[i];
         if (!fila.nombre) {
-          resultado.fallidos++
-          resultado.errores.push(`Fila ${i + 2}: el nombre es obligatorio.`)
-          continue
+          resultado.fallidos++;
+          resultado.errores.push(`Fila ${i + 2}: el nombre es obligatorio.`);
+          continue;
         }
 
         if (!fila.sku) {
-          resultado.fallidos++
-          resultado.errores.push(`Fila ${i + 2}: el SKU es obligatorio.`)
-          continue
+          resultado.fallidos++;
+          resultado.errores.push(`Fila ${i + 2}: el SKU es obligatorio.`);
+          continue;
         }
 
-        const creado = await crearProducto(fila)
+        const creado = await crearProducto(fila);
         if (!creado.ok) {
-          resultado.fallidos++
-          resultado.errores.push(`Fila ${i + 2}: ${creado.message || 'Error al crear producto.'}`)
-          continue
+          resultado.fallidos++;
+          resultado.errores.push(
+            `Fila ${i + 2}: ${creado.message || "Error al crear producto."}`,
+          );
+          continue;
         }
 
-        resultado.creados++
+        resultado.creados++;
       }
 
       setMensaje(
         `Importación completa: ${resultado.creados} creados, ${resultado.fallidos} fallidos.` +
-          (resultado.errores.length ? ' Ver consola para detalles.' : ''),
-      )
-      if (resultado.errores.length) console.warn(resultado.errores)
-      window.location.reload()
+          (resultado.errores.length ? " Ver consola para detalles." : ""),
+      );
+      if (resultado.errores.length) console.warn(resultado.errores);
+      window.location.reload();
     } catch (err) {
-      setMensaje(err.message || 'No se pudo importar el archivo.')
+      setMensaje(err.message || "No se pudo importar el archivo.");
     } finally {
-      setLoadingOp(false)
-      if (event.target) event.target.value = ''
+      setLoadingOp(false);
+      if (event.target) event.target.value = "";
     }
-  }
+  };
 
   // Auto-limpia mensaje
   useEffect(() => {
-    if (!mensaje) return
-    const t = setTimeout(() => setMensaje(''), 3000)
-    return () => clearTimeout(t)
-  }, [mensaje])
+    if (!mensaje) return;
+    const t = setTimeout(() => setMensaje(""), 3000);
+    return () => clearTimeout(t);
+  }, [mensaje]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setMensaje('')
-    setLoadingOp(true)
+    e.preventDefault();
+    setMensaje("");
+    setLoadingOp(true);
 
     const data = {
       ...form,
       precio: parseFloat(form.precio),
-      stock:  parseInt(form.stock),
+      stock: parseInt(form.stock),
       stockMinimo: parseInt(form.stockMinimo || 0),
       categoriaId: form.categoriaId ? parseInt(form.categoriaId) : null,
-      sku: String(form.sku ?? '').trim(),
-      material: form.material || null
+      sku: String(form.sku ?? "").trim(),
+      material: form.material || null,
+    };
+
+    if (
+      !Number.isFinite(data.precio) ||
+      data.precio < 0 ||
+      !Number.isInteger(data.stock) ||
+      data.stock < 0 ||
+      !Number.isInteger(data.stockMinimo) ||
+      data.stockMinimo < 0
+    ) {
+      setMensajeTipo("error");
+      setMensaje(
+        "Precio, stock y stock mínimo deben ser valores numéricos válidos.",
+      );
+      setLoadingOp(false);
+      return;
     }
 
     if (!data.sku) {
-      setMensajeTipo('error')
-      setMensaje('El SKU es obligatorio para identificar el producto.')
-      setLoadingOp(false)
-      return
+      setMensajeTipo("error");
+      setMensaje("El SKU es obligatorio para identificar el producto.");
+      setLoadingOp(false);
+      return;
     }
 
     try {
       const resultado = editando
         ? await actualizarProducto({ id: editando, ...data })
-        : await crearProducto(data)
+        : await crearProducto(data);
 
       if (!resultado.ok) {
-        setMensajeTipo('error')
-        setMensaje(resultado.message || 'No se pudo guardar el producto.')
-        return
+        setMensajeTipo("error");
+        setMensaje(resultado.message || "No se pudo guardar el producto.");
+        return;
       }
 
-      setMensajeTipo('success')
-      setMensaje(editando ? 'Producto actualizado correctamente.' : 'Producto creado correctamente.')
-      cerrarFormulario(false)
+      setMensajeTipo("success");
+      setMensaje(
+        editando
+          ? "Producto actualizado correctamente."
+          : "Producto creado correctamente.",
+      );
+      cerrarFormulario(false);
     } finally {
-      setLoadingOp(false)
+      setLoadingOp(false);
     }
-  }
+  };
 
   const renderFormulario = (onSubmit) => (
     <form onSubmit={onSubmit} className="form-container">
       <div className="form-grid">
         <div className="form-group">
           <label>Nombre *</label>
-          <input required value={form.nombre}
-            onChange={e => setForm({...form, nombre: e.target.value})}
-            placeholder="Nombre del producto" />
+          <input
+            required
+            value={form.nombre}
+            onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+            placeholder="Nombre del producto"
+          />
         </div>
 
         <div className="form-group">
           <label>Categoría</label>
-          <select value={form.categoriaId}
-            onChange={e => setForm({...form, categoriaId: e.target.value})}>
+          <select
+            value={form.categoriaId}
+            onChange={(e) => setForm({ ...form, categoriaId: e.target.value })}
+          >
             <option value="">Sin categoría</option>
-            {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+            {categorias.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nombre}
+              </option>
+            ))}
           </select>
         </div>
 
         <div className="form-group">
           <label>Material</label>
-          <input type="text" value={form.material}
-            onChange={e => setForm({...form, material: e.target.value})}
-            placeholder="Material del producto" />
+          <input
+            type="text"
+            value={form.material}
+            onChange={(e) => setForm({ ...form, material: e.target.value })}
+            placeholder="Material del producto"
+          />
         </div>
 
         <div className="form-group">
           <label>Precio *</label>
-          <input required type="number" step="0.01" min="0"
+          <input
+            required
+            type="text"
+            inputMode="decimal"
             value={form.precio}
-            onChange={e => setForm({...form, precio: e.target.value})}
-            placeholder="0.00" />
+            onKeyDown={bloquearTeclasNoNumericas}
+            onChange={(e) => {
+              const value = aceptarNumero(e.target.value, true);
+              if (value !== null) setForm({ ...form, precio: value });
+            }}
+            placeholder="0.00"
+          />
         </div>
-
-        
 
         <div className="form-group">
           <label>Stock actual *</label>
-          <input required type="number" min="0"
+          <input
+            required
+            type="text"
+            inputMode="numeric"
             value={form.stock}
-            onChange={e => setForm({...form, stock: e.target.value})}
-            placeholder="0" />
+            onKeyDown={bloquearTeclasNoNumericas}
+            onChange={(e) => {
+              const value = aceptarNumero(e.target.value);
+              if (value !== null) setForm({ ...form, stock: value });
+            }}
+            placeholder="0"
+          />
         </div>
 
         <div className="form-group">
           <label>Stock mínimo</label>
-          <input type="number" min="0"
+          <input
+            type="text"
+            inputMode="numeric"
             value={form.stockMinimo}
-            onChange={e => setForm({...form, stockMinimo: e.target.value})}
-            placeholder="0" />
+            onKeyDown={bloquearTeclasNoNumericas}
+            onChange={(e) => {
+              const value = aceptarNumero(e.target.value);
+              if (value !== null) setForm({ ...form, stockMinimo: value });
+            }}
+            placeholder="0"
+          />
         </div>
 
         <div className="form-group">
           <label>SKU *</label>
-          <input required type="text" value={form.sku}
-            onChange={e => setForm({...form, sku: e.target.value})}
-            placeholder="SKU o código del producto" />
+          <input
+            required
+            type="text"
+            value={form.sku}
+            onChange={(e) => setForm({ ...form, sku: e.target.value })}
+            placeholder="SKU o código del producto"
+          />
         </div>
 
         <div className="form-group full-width">
           <label>Descripción</label>
-          <textarea rows={3} value={form.descripcion}
-            onChange={e => setForm({...form, descripcion: e.target.value})}
-            placeholder="Descripción del producto..." />
+          <textarea
+            rows={3}
+            value={form.descripcion}
+            onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
+            placeholder="Descripción del producto..."
+          />
         </div>
       </div>
 
       <div className="form-actions">
-        <button type="button" className="btn-secondary" onClick={cerrarFormulario}>✖ Cancelar</button>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={cerrarFormulario}
+        >
+          ✖ Cancelar
+        </button>
         <button type="submit" className="btn-primary" disabled={loadingOp}>
-          {loadingOp ? 'Guardando...' : editando ? '✏️ Actualizar producto' : '✅ Registrar producto'}
+          {loadingOp
+            ? "Guardando..."
+            : editando
+              ? "✏️ Actualizar producto"
+              : "✅ Registrar producto"}
         </button>
       </div>
 
       {mensaje && (
-        <p className={mensajeTipo === 'success' ? 'message-success' : 'message-error'}>{mensaje}</p>
+        <p
+          className={
+            mensajeTipo === "success" ? "message-success" : "message-error"
+          }
+        >
+          {mensaje}
+        </p>
       )}
     </form>
-  )
+  );
 
   const handleEliminar = async (id) => {
-    if (!id) return
-    const resultado = await eliminarProducto(id)
+    if (!id) return;
+    const resultado = await eliminarProducto(id);
     if (!resultado.ok) {
-      setMensaje(resultado.message || 'No se pudo eliminar el producto.')
-      setConfirmId(null)
-      return
+      setMensaje(resultado.message || "No se pudo eliminar el producto.");
+      setConfirmId(null);
+      return;
     }
-    setMensaje('Producto eliminado correctamente.')
-    setConfirmId(null)
-  }
+    setMensaje("Producto eliminado correctamente.");
+    setConfirmId(null);
+  };
 
-  if (loading) return <div className="page-loading">Cargando productos…</div>
+  if (loading) return <div className="page-loading">Cargando productos…</div>;
 
   return (
     <div className="page">
-
       {/* Cabecera */}
       <div className="page-header">
         <div>
           <h1>📦 Productos</h1>
           <p>{productos.length} productos registrados</p>
         </div>
-        <button className="btn-primary" onClick={abrirCrear}>➕ Nuevo producto</button>
+        <button className="btn-primary" onClick={abrirCrear}>
+          ➕ Nuevo producto
+        </button>
       </div>
 
-      {mensaje && !['nuevo','editar'].includes(tab) && (
+      {mensaje && !["nuevo", "editar"].includes(tab) && (
         <div className="message-success-banner">✅ {mensaje}</div>
       )}
 
       {/* Alertas rápidas */}
       {stockBajo.length > 0 && (
         <div className="alertas-row">
-          <div className="alerta alerta-warning" onClick={() => setFiltro('stockBajo')}>
+          <div
+            className="alerta alerta-warning"
+            onClick={() => setFiltro("stockBajo")}
+          >
             ⚠️ <strong>{stockBajo.length}</strong> con stock bajo
           </div>
         </div>
@@ -432,13 +566,20 @@ function Productos() {
       {/* Barra de búsqueda y filtros */}
       <div className="toolbar">
         <input
-          type="text" placeholder="🔍 Buscar productos…"
+          type="text"
+          placeholder="🔍 Buscar productos…"
           value={busqueda}
-          onChange={e => { setBusqueda(e.target.value); setFiltro('todos') }}
+          onChange={(e) => {
+            setBusqueda(e.target.value);
+            setFiltro("todos");
+          }}
           className="search-input"
         />
         <div className="toolbar-actions">
-          <button className="btn-secondary" onClick={() => inputImportRef.current?.click()}>
+          <button
+            className="btn-secondary"
+            onClick={() => inputImportRef.current?.click()}
+          >
             📤 Importar CSV
           </button>
           <button className="btn-secondary" onClick={exportarCSV}>
@@ -448,28 +589,31 @@ function Productos() {
             ref={inputImportRef}
             type="file"
             accept=".csv"
-            style={{ display: 'none' }}
+            style={{ display: "none" }}
             onChange={handleImportarCSV}
           />
         </div>
         <div className="filtros">
-          {['todos','stockBajo'].map(f => (
+          {["todos", "stockBajo"].map((f) => (
             <button
               key={f}
-              className={`btn-filtro ${filtro === f ? 'active' : ''}`}
-              onClick={() => { setFiltro(f); setBusqueda('') }}
+              className={`btn-filtro ${filtro === f ? "active" : ""}`}
+              onClick={() => {
+                setFiltro(f);
+                setBusqueda("");
+              }}
             >
-              { f === 'todos' ? 'Todos' : '⚠️ Stock bajo' }
+              {f === "todos" ? "Todos" : "⚠️ Stock bajo"}
             </button>
           ))}
         </div>
       </div>
 
       {/* Tabla (solo en vista lista) */}
-      {tab === 'lista' && (
-        listaFiltrada.length === 0
-        ? <p className="empty-msg">No se encontraron productos.</p>
-        : (
+      {tab === "lista" &&
+        (listaFiltrada.length === 0 ? (
+          <p className="empty-msg">No se encontraron productos.</p>
+        ) : (
           <div className="table-wrapper">
             <table className="data-table">
               <thead>
@@ -483,14 +627,31 @@ function Productos() {
                 </tr>
               </thead>
               <tbody>
-                {listaFiltrada.map(p => (
-                  <tr key={p.id} className={stockBajo.find(s=>s.id===p.id) ? 'row-warning' : ''}>
-                    <td><strong>{p.nombre}</strong><br/><small>{p.descripcion}</small></td>
-                    <td>{categorias.find(c => c.id === p.categoriaId)?.nombre ?? p.categoria_nombre ?? '—'}</td>
-                    <td>₡{parseFloat(p.precio).toLocaleString('es-CR')}</td>
-                    <td><strong>{p.sku || '—'}</strong></td>
+                {productosVisibles.map((p) => (
+                  <tr
+                    key={p.id}
+                    className={
+                      stockBajo.find((s) => s.id === p.id) ? "row-warning" : ""
+                    }
+                  >
                     <td>
-                      <span className={`badge ${p.stock <= (p.stockMinimo||0) ? 'badge-danger' : 'badge-success'}`}>
+                      <strong>{p.nombre}</strong>
+                      <br />
+                      <small>{p.descripcion}</small>
+                    </td>
+                    <td>
+                      {categorias.find((c) => c.id === p.categoriaId)?.nombre ??
+                        p.categoria_nombre ??
+                        "—"}
+                    </td>
+                    <td>₡{parseFloat(p.precio).toLocaleString("es-CR")}</td>
+                    <td>
+                      <strong>{p.sku || "—"}</strong>
+                    </td>
+                    <td>
+                      <span
+                        className={`badge ${p.stock <= (p.stockMinimo || 0) ? "badge-danger" : "badge-success"}`}
+                      >
                         {p.stock}
                       </span>
                     </td>
@@ -500,11 +661,11 @@ function Productos() {
                         title="Ver detalle"
                         aria-label="Ver detalle"
                         onClick={async () => {
-                          setDetalleLoading(true)
-                          const resultado = await obtenerProducto(p.id)
-                          setDetalleLoading(false)
-                          setDetalleProducto(resultado.ok ? resultado.data : p)
-                          setDetalleModal(true)
+                          setDetalleLoading(true);
+                          const resultado = await obtenerProducto(p.id);
+                          setDetalleLoading(false);
+                          setDetalleProducto(resultado.ok ? resultado.data : p);
+                          setDetalleModal(true);
                         }}
                       >
                         👁️
@@ -530,14 +691,53 @@ function Productos() {
                 ))}
               </tbody>
             </table>
+            {totalPaginas > 1 && (
+              <nav className="pagination" aria-label="Paginación de productos">
+                <button
+                  type="button"
+                  className="pagination-button"
+                  onClick={() => setPagina((actual) => Math.max(1, actual - 1))}
+                  disabled={paginaActual === 1}
+                >
+                  Anterior
+                </button>
+                {Array.from(
+                  { length: totalPaginas },
+                  (_, index) => index + 1,
+                ).map((numero) => (
+                  <button
+                    key={numero}
+                    type="button"
+                    className={`pagination-button ${paginaActual === numero ? "active" : ""}`}
+                    onClick={() => setPagina(numero)}
+                    aria-current={paginaActual === numero ? "page" : undefined}
+                  >
+                    {numero}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="pagination-button"
+                  onClick={() =>
+                    setPagina((actual) => Math.min(totalPaginas, actual + 1))
+                  }
+                  disabled={paginaActual === totalPaginas}
+                >
+                  Siguiente
+                </button>
+              </nav>
+            )}
           </div>
-        )
-      )}
+        ))}
 
       {/* Formulario Crear / Editar (igual que Clientes) */}
-      {tab !== 'lista' && (
+      {tab !== "lista" && (
         <div className="form-section scrollable-form">
-          <h2>{editando ? `✏️ Editar Producto — ${form.nombre || ''}` : '➕ Registrar Nuevo Producto'}</h2>
+          <h2>
+            {editando
+              ? `✏️ Editar Producto — ${form.nombre || ""}`
+              : "➕ Registrar Nuevo Producto"}
+          </h2>
           {renderFormulario(handleSubmit)}
         </div>
       )}
@@ -545,76 +745,116 @@ function Productos() {
       {/* Modal Detalle (solo lectura) - modal-card compacto */}
       {detalleModal && (
         <div className="modal-overlay" onClick={() => setDetalleModal(false)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="modal-icon">ℹ️</div>
             <h3>Detalle del producto</h3>
             {detalleLoading ? (
               <p className="message-success">Cargando detalle...</p>
             ) : detalleProducto ? (
               <div className="modal-detail-grid">
-              <div className="form-group">
-                <label>Nombre</label>
-                <div className="readonly-field">{detalleProducto.nombre}</div>
-              </div>
-              <div className="form-group">
-                <label>Precio</label>
-                <div className="readonly-field">₡{parseFloat(detalleProducto.precio).toLocaleString('es-CR')}</div>
-              </div>
-              <div className="form-group">
-                <label>Categoría</label>
-                <div className="readonly-field">
-                  {detalleProducto.categoria_nombre ?? categorias.find(c => c.id == detalleProducto.categoriaId)?.nombre ?? '—'}
+                <div className="form-group">
+                  <label>Nombre</label>
+                  <div className="readonly-field">{detalleProducto.nombre}</div>
+                </div>
+                <div className="form-group">
+                  <label>Precio</label>
+                  <div className="readonly-field">
+                    ₡
+                    {parseFloat(detalleProducto.precio).toLocaleString("es-CR")}
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Categoría</label>
+                  <div className="readonly-field">
+                    {detalleProducto.categoria_nombre ??
+                      categorias.find(
+                        (c) => c.id == detalleProducto.categoriaId,
+                      )?.nombre ??
+                      "—"}
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Stock</label>
+                  <div className="readonly-field">{detalleProducto.stock}</div>
+                </div>
+                <div className="form-group">
+                  <label>SKU</label>
+                  <div className="readonly-field">
+                    {detalleProducto.sku || "—"}
+                  </div>
+                </div>
+                <div className="form-group full-width">
+                  <label>Material</label>
+                  <div className="readonly-field">
+                    {detalleProducto.material ?? "—"}
+                  </div>
+                </div>
+                <div className="form-group full-width">
+                  <label>Descripción</label>
+                  <div className="readonly-field description-field">
+                    {detalleProducto.descripcion || "—"}
+                  </div>
                 </div>
               </div>
-              <div className="form-group">
-                <label>Stock</label>
-                <div className="readonly-field">{detalleProducto.stock}</div>
-              </div>
-              <div className="form-group">
-                <label>SKU</label>
-                <div className="readonly-field">{detalleProducto.sku || '—'}</div>
-              </div>
-              <div className="form-group full-width">
-                <label>Material</label>
-                <div className="readonly-field">{detalleProducto.material ?? '—'}</div>
-              </div>
-              <div className="form-group full-width">
-                <label>Descripción</label>
-                <div className="readonly-field description-field">{detalleProducto.descripcion || '—'}</div>
-              </div>
-              </div>
             ) : (
-              <p className="message-error">No se pudo cargar el detalle del producto.</p>
+              <p className="message-error">
+                No se pudo cargar el detalle del producto.
+              </p>
             )}
             <div className="modal-actions modal-actions-small">
-              <button className="btn-secondary" onClick={() => setDetalleModal(false)}>Cerrar</button>
+              <button
+                className="btn-secondary"
+                onClick={() => setDetalleModal(false)}
+              >
+                Cerrar
+              </button>
             </div>
           </div>
         </div>
       )}
 
       {/* Confirmar eliminar (igual que Clientes) */}
-      {confirmId && (() => {
-        const producto = productos.find(p => p.id === confirmId)
-        return (
-          <div className="modal-overlay" onClick={() => setConfirmId(null)}>
-            <div className="modal-card modal-card-delete" onClick={e => e.stopPropagation()}>
-              <div className="modal-icon">⚠️</div>
-              <h3>¿Eliminar producto?</h3>
-              <p>
-                Estás a punto de desactivar a <strong className="modal-confirm-name">{producto ? producto.nombre : ''}</strong>.
-                <br />Esta acción no se puede deshacer y dejará el inventario en cero para ese producto.
-              </p>
-              <div className="modal-actions modal-actions-compact">
-                <button className="btn-secondary" onClick={() => setConfirmId(null)}>Cancelar</button>
-                <button className="btn-secondary btn-delete-modal" onClick={() => handleEliminar(confirmId)}>Eliminar</button>
+      {confirmId &&
+        (() => {
+          const producto = productos.find((p) => p.id === confirmId);
+          return (
+            <div className="modal-overlay" onClick={() => setConfirmId(null)}>
+              <div
+                className="modal-card modal-card-delete"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="modal-icon">⚠️</div>
+                <h3>¿Eliminar producto?</h3>
+                <p>
+                  Estás a punto de desactivar a{" "}
+                  <strong className="modal-confirm-name">
+                    {producto ? producto.nombre : ""}
+                  </strong>
+                  .
+                  <br />
+                  Esta acción no se puede deshacer y dejará el inventario en
+                  cero para ese producto.
+                </p>
+                <div className="modal-actions modal-actions-compact">
+                  <button
+                    className="btn-secondary"
+                    onClick={() => setConfirmId(null)}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="btn-secondary btn-delete-modal"
+                    onClick={() => handleEliminar(confirmId)}
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )
-      })()}
+          );
+        })()}
     </div>
-  )
+  );
 }
 
-export default Productos
+export default Productos;

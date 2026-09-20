@@ -9,6 +9,16 @@ import { generarProformaPdf } from "../services/facturaPdf.service";
 import { ordenesService } from "../services/ordenes.service";
 
 const NUEVA_LINEA = { productoId: "", cantidad: "1", precio: "0" };
+const bloquearTeclasNoNumericas = (event) => {
+  if (["e", "E", "+", "-"].includes(event.key)) event.preventDefault();
+};
+
+const aceptarNumero = (value, decimal = false) => {
+  const patron = decimal ? /^\d*(\.\d*)?$/ : /^\d*$/;
+  return patron.test(value) ? value : null;
+};
+
+const ORDENES_POR_PAGINA = 10;
 
 function Ordenes() {
   const { user } = useAuth();
@@ -41,6 +51,7 @@ function Ordenes() {
   const [busqueda, setBusqueda] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [guardando, setGuardando] = useState(false);
+  const [pagina, setPagina] = useState(1);
 
   // Auto-limpia el mensaje
   useEffect(() => {
@@ -93,6 +104,24 @@ function Ordenes() {
         o.estado_pago?.toLowerCase().includes(q),
     );
   }, [ordenes, filtroPago, busqueda]);
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(ordenarVisible.length / ORDENES_POR_PAGINA),
+  );
+  const paginaActual = Math.min(pagina, totalPaginas);
+  const ordenesVisibles = ordenarVisible.slice(
+    (paginaActual - 1) * ORDENES_POR_PAGINA,
+    paginaActual * ORDENES_POR_PAGINA,
+  );
+
+  useEffect(() => {
+    setPagina(1);
+  }, [busqueda, filtroPago]);
+
+  useEffect(() => {
+    if (pagina > totalPaginas) setPagina(totalPaginas);
+  }, [pagina, totalPaginas]);
 
   const actualizarLinea = (index, cambios) => {
     setLineas((prev) =>
@@ -216,6 +245,22 @@ function Ordenes() {
       setMensaje("Selecciona un cliente para la orden.");
       return;
     }
+
+    const lineaInvalida = lineas.find(
+      (linea) =>
+        linea.productoId &&
+        (!Number.isInteger(Number(linea.cantidad)) ||
+          Number(linea.cantidad) <= 0 ||
+          !Number.isFinite(Number(linea.precio)) ||
+          Number(linea.precio) < 0),
+    );
+    if (lineaInvalida) {
+      setMensaje(
+        "La cantidad y el precio deben ser valores numéricos válidos.",
+      );
+      return;
+    }
+
     if (lineasValidas.length === 0) {
       setMensaje("Agrega al menos un producto a la orden.");
       return;
@@ -391,89 +436,129 @@ function Ordenes() {
             No hay órdenes que coincidan con el filtro.
           </p>
         ) : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>N.º Orden</th>
-                <th>Cliente</th>
-                <th>Total</th>
-                <th>Pago</th>
-                <th>Creado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ordenarVisible.map((orden) => {
-                const saldo = saldoPorOrden.get(orden.id);
-                return (
-                  <tr key={orden.id}>
-                    <td className="orden-numero">
-                      N.º {String(orden.id).padStart(4, "0")}
-                    </td>
-                    <td>
-                      <strong>{orden.cliente_nombre ?? "Sin cliente"}</strong>
-                      {orden.cliente_empresa && (
-                        <>
-                          <br />
-                          <small className="text-muted">
-                            {orden.cliente_empresa}
-                          </small>
-                        </>
-                      )}
-                    </td>
-                    <td>₡{Number(orden.total ?? 0).toLocaleString("es-CR")}</td>
-                    <td>
-                      <span className={`pill ${pillPago(orden.estado_pago)}`}>
-                        {orden.estado_pago}
-                      </span>
-                      {orden.estado_pago !== "pagado" &&
-                        saldo?.saldoPendiente > 0 && (
-                          <div className="pago-faltante">
-                            Faltan ₡
-                            {saldo.saldoPendiente.toLocaleString("es-CR")}
-                          </div>
+          <>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>N.º Orden</th>
+                  <th>Cliente</th>
+                  <th>Total</th>
+                  <th>Pago</th>
+                  <th>Creado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ordenesVisibles.map((orden) => {
+                  const saldo = saldoPorOrden.get(orden.id);
+                  return (
+                    <tr key={orden.id}>
+                      <td className="orden-numero">
+                        N.º {String(orden.id).padStart(4, "0")}
+                      </td>
+                      <td>
+                        <strong>{orden.cliente_nombre ?? "Sin cliente"}</strong>
+                        {orden.cliente_empresa && (
+                          <>
+                            <br />
+                            <small className="text-muted">
+                              {orden.cliente_empresa}
+                            </small>
+                          </>
                         )}
-                    </td>
-                    <td>
-                      {orden.fecha_creacion
-                        ? new Date(orden.fecha_creacion).toLocaleDateString(
-                            "es-CR",
-                          )
-                        : "—"}
-                    </td>
-                    <td className="action-buttons">
-                      <button
-                        className="btn-action-outline"
-                        type="button"
-                        onClick={() => abrirEditar(orden)}
-                      >
-                        ✏️ Editar
-                      </button>
-                      <button
-                        className="btn-action-outline"
-                        type="button"
-                        onClick={() => generarProforma(orden)}
-                      >
-                        🧾 Generar PROFORMA
-                      </button>
-                      {(orden.estado === "pendiente" ||
-                        orden.estado === "en_proceso") && (
+                      </td>
+                      <td>
+                        ₡{Number(orden.total ?? 0).toLocaleString("es-CR")}
+                      </td>
+                      <td>
+                        <span className={`pill ${pillPago(orden.estado_pago)}`}>
+                          {orden.estado_pago}
+                        </span>
+                        {orden.estado_pago !== "pagado" &&
+                          saldo?.saldoPendiente > 0 && (
+                            <div className="pago-faltante">
+                              Faltan ₡
+                              {saldo.saldoPendiente.toLocaleString("es-CR")}
+                            </div>
+                          )}
+                      </td>
+                      <td>
+                        {orden.fecha_creacion
+                          ? new Date(orden.fecha_creacion).toLocaleDateString(
+                              "es-CR",
+                            )
+                          : "—"}
+                      </td>
+                      <td className="action-buttons">
                         <button
                           className="btn-action-outline"
                           type="button"
-                          onClick={() => actualizarEstadoOrden(orden)}
+                          onClick={() => abrirEditar(orden)}
                         >
-                          {orden.estado === "pendiente"
-                            ? "Iniciar"
-                            : "Completar"}
+                          ✏️ Editar
                         </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                        <button
+                          className="btn-action-outline"
+                          type="button"
+                          onClick={() => generarProforma(orden)}
+                        >
+                          🧾 Generar PROFORMA
+                        </button>
+                        {(orden.estado === "pendiente" ||
+                          orden.estado === "en_proceso") && (
+                          <button
+                            className="btn-action-outline"
+                            type="button"
+                            onClick={() => actualizarEstadoOrden(orden)}
+                          >
+                            {orden.estado === "pendiente"
+                              ? "Iniciar"
+                              : "Completar"}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {totalPaginas > 1 && (
+              <nav className="pagination" aria-label="Paginación de órdenes">
+                <button
+                  type="button"
+                  className="pagination-button"
+                  onClick={() => setPagina((actual) => Math.max(1, actual - 1))}
+                  disabled={paginaActual === 1}
+                >
+                  Anterior
+                </button>
+                {Array.from(
+                  { length: totalPaginas },
+                  (_, index) => index + 1,
+                ).map((numero) => (
+                  <button
+                    key={numero}
+                    type="button"
+                    className={`pagination-button ${paginaActual === numero ? "active" : ""}`}
+                    onClick={() => setPagina(numero)}
+                    aria-current={paginaActual === numero ? "page" : undefined}
+                  >
+                    {numero}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="pagination-button"
+                  onClick={() =>
+                    setPagina((actual) => Math.min(totalPaginas, actual + 1))
+                  }
+                  disabled={paginaActual === totalPaginas}
+                >
+                  Siguiente
+                </button>
+              </nav>
+            )}
+          </>
         )}
       </div>
 
@@ -579,15 +664,13 @@ function Ordenes() {
                       <label>Cantidad</label>
                       <input
                         required
-                        type="number"
-                        min="1"
-                        max={
-                          productosActivos.find(
-                            (p) => String(p.id) === linea.productoId,
-                          )?.cantidad
-                        }
+                        type="text"
+                        inputMode="numeric"
                         value={linea.cantidad}
+                        onKeyDown={bloquearTeclasNoNumericas}
                         onChange={(e) => {
+                          const value = aceptarNumero(e.target.value);
+                          if (value === null) return;
                           const producto = productosActivos.find(
                             (p) => String(p.id) === linea.productoId,
                           );
@@ -595,7 +678,7 @@ function Ordenes() {
                             producto?.cantidad ?? 0,
                           );
                           const cantidad = Math.min(
-                            Number(e.target.value) || 0,
+                            Number(value) || 0,
                             stockDisponible,
                           );
                           actualizarLinea(index, {
@@ -608,13 +691,16 @@ function Ordenes() {
                       <label>Precio unitario</label>
                       <input
                         required
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        type="text"
+                        inputMode="decimal"
                         value={linea.precio}
-                        onChange={(e) =>
-                          actualizarLinea(index, { precio: e.target.value })
-                        }
+                        onKeyDown={bloquearTeclasNoNumericas}
+                        onChange={(e) => {
+                          const value = aceptarNumero(e.target.value, true);
+                          if (value !== null) {
+                            actualizarLinea(index, { precio: value });
+                          }
+                        }}
                       />
                     </div>
                     <div className="form-group">

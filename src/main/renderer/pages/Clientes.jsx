@@ -109,6 +109,15 @@ const EMPTY_FORM = {
   descuento_porcentaje: 0,
 };
 
+const bloquearTeclasNoNumericas = (event) => {
+  if (["e", "E", "+", "-"].includes(event.key)) event.preventDefault();
+};
+
+const aceptarPorcentaje = (value) =>
+  /^\d*(\.\d*)?$/.test(value) ? value : null;
+
+const CLIENTES_POR_PAGINA = 10;
+
 function Clientes() {
   const {
     clientes,
@@ -129,11 +138,29 @@ function Clientes() {
   const [clienteToDelete, setClienteToDelete] = useState(null);
   const [clienteDetalle, setClienteDetalle] = useState(null);
   const [filtroDescuento, setFiltroDescuento] = useState("todos");
+  const [pagina, setPagina] = useState(1);
   const clientesFiltrados = buscarClientes(busqueda).filter((c) => {
     if (filtroDescuento === "con") return c.tiene_descuento;
     if (filtroDescuento === "sin") return !c.tiene_descuento;
     return true;
   });
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(clientesFiltrados.length / CLIENTES_POR_PAGINA),
+  );
+  const paginaActual = Math.min(pagina, totalPaginas);
+  const clientesVisibles = clientesFiltrados.slice(
+    (paginaActual - 1) * CLIENTES_POR_PAGINA,
+    paginaActual * CLIENTES_POR_PAGINA,
+  );
+
+  useEffect(() => {
+    setPagina(1);
+  }, [busqueda, filtroDescuento]);
+
+  useEffect(() => {
+    if (pagina > totalPaginas) setPagina(totalPaginas);
+  }, [pagina, totalPaginas]);
   const abrirNuevo = () => {
     setClienteEdit(null);
     setForm(EMPTY_FORM);
@@ -172,6 +199,16 @@ function Clientes() {
   const handleCrear = async (event) => {
     event.preventDefault();
     setMensaje("");
+
+    const porcentaje = Number(form.descuento_porcentaje);
+    if (
+      form.tiene_descuento &&
+      (!Number.isFinite(porcentaje) || porcentaje < 0 || porcentaje > 100)
+    ) {
+      setMensaje("El porcentaje de descuento debe estar entre 0 y 100.");
+      return;
+    }
+
     setLoadingOp(true);
     try {
       const resultado = await crearCliente(form);
@@ -189,6 +226,16 @@ function Clientes() {
   const handleActualizar = async (event) => {
     event.preventDefault();
     setMensaje("");
+
+    const porcentaje = Number(form.descuento_porcentaje);
+    if (
+      form.tiene_descuento &&
+      (!Number.isFinite(porcentaje) || porcentaje < 0 || porcentaje > 100)
+    ) {
+      setMensaje("El porcentaje de descuento debe estar entre 0 y 100.");
+      return;
+    }
+
     setLoadingOp(true);
     try {
       const resultado = await actualizarCliente({
@@ -450,14 +497,16 @@ function Clientes() {
           <div className="form-group">
             <label>Porcentaje de descuento (%)</label>
             <input
-              type="number"
-              min="0"
-              max="100"
-              step="0.5"
+              type="text"
+              inputMode="decimal"
               value={form.descuento_porcentaje}
-              onChange={(e) =>
-                setForm({ ...form, descuento_porcentaje: e.target.value })
-              }
+              onKeyDown={bloquearTeclasNoNumericas}
+              onChange={(e) => {
+                const value = aceptarPorcentaje(e.target.value);
+                if (value !== null) {
+                  setForm({ ...form, descuento_porcentaje: value });
+                }
+              }}
               placeholder="Ej: 5"
             />
           </div>
@@ -573,64 +622,108 @@ function Clientes() {
               No se encontraron clientes registrados.
             </p>
           ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Nombre</th>
-                  <th>Teléfono</th>
-                  <th>Correo</th>
-                  <th>Descuento</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clientesFiltrados.map((cliente, index) => (
-                  <tr key={cliente.id}>
-                    <td>{index + 1}</td>
-                    <td>
-                      <strong>{cliente.nombre}</strong>
-                      <br />
-                      <small>{cliente.empresa || "Sin empresa"}</small>
-                    </td>
-                    <td>{cliente.telefono || "—"}</td>
-                    <td>{cliente.correo || "—"}</td>
-                    <td>
-                      {cliente.tiene_descuento ? (
-                        <span className="pill pill-si">
-                          Sí · {cliente.descuento_porcentaje}%
-                        </span>
-                      ) : (
-                        <span className="pill pill-no">No</span>
-                      )}
-                    </td>
-                    <td className="action-buttons">
-                      <button
-                        className="btn-view"
-                        onClick={() => setClienteDetalle(cliente)}
-                        aria-label="Ver detalles"
-                      >
-                        <EyeIcon />
-                      </button>
-                      <button
-                        className="btn-edit"
-                        onClick={() => abrirEditar(cliente)}
-                        aria-label="Editar cliente"
-                      >
-                        <PencilIcon />
-                      </button>
-                      <button
-                        className="btn-danger"
-                        onClick={() => setClienteToDelete(cliente)}
-                        aria-label="Eliminar cliente"
-                      >
-                        <TrashIcon />
-                      </button>
-                    </td>
+            <>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Nombre</th>
+                    <th>Teléfono</th>
+                    <th>Correo</th>
+                    <th>Descuento</th>
+                    <th>Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {clientesVisibles.map((cliente, index) => (
+                    <tr key={cliente.id}>
+                      <td>
+                        {(paginaActual - 1) * CLIENTES_POR_PAGINA + index + 1}
+                      </td>
+                      <td>
+                        <strong>{cliente.nombre}</strong>
+                        <br />
+                        <small>{cliente.empresa || "Sin empresa"}</small>
+                      </td>
+                      <td>{cliente.telefono || "—"}</td>
+                      <td>{cliente.correo || "—"}</td>
+                      <td>
+                        {cliente.tiene_descuento ? (
+                          <span className="pill pill-si">
+                            Sí · {cliente.descuento_porcentaje}%
+                          </span>
+                        ) : (
+                          <span className="pill pill-no">No</span>
+                        )}
+                      </td>
+                      <td className="action-buttons">
+                        <button
+                          className="btn-view"
+                          onClick={() => setClienteDetalle(cliente)}
+                          aria-label="Ver detalles"
+                        >
+                          <EyeIcon />
+                        </button>
+                        <button
+                          className="btn-edit"
+                          onClick={() => abrirEditar(cliente)}
+                          aria-label="Editar cliente"
+                        >
+                          <PencilIcon />
+                        </button>
+                        <button
+                          className="btn-danger"
+                          onClick={() => setClienteToDelete(cliente)}
+                          aria-label="Eliminar cliente"
+                        >
+                          <TrashIcon />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {totalPaginas > 1 && (
+                <nav className="pagination" aria-label="Paginación de clientes">
+                  <button
+                    type="button"
+                    className="pagination-button"
+                    onClick={() =>
+                      setPagina((actual) => Math.max(1, actual - 1))
+                    }
+                    disabled={paginaActual === 1}
+                  >
+                    Anterior
+                  </button>
+                  {Array.from(
+                    { length: totalPaginas },
+                    (_, index) => index + 1,
+                  ).map((numero) => (
+                    <button
+                      key={numero}
+                      type="button"
+                      className={`pagination-button ${paginaActual === numero ? "active" : ""}`}
+                      onClick={() => setPagina(numero)}
+                      aria-current={
+                        paginaActual === numero ? "page" : undefined
+                      }
+                    >
+                      {numero}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className="pagination-button"
+                    onClick={() =>
+                      setPagina((actual) => Math.min(totalPaginas, actual + 1))
+                    }
+                    disabled={paginaActual === totalPaginas}
+                  >
+                    Siguiente
+                  </button>
+                </nav>
+              )}
+            </>
           )}
         </div>
       )}
@@ -641,9 +734,7 @@ function Clientes() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-header">
-              <h2>
-                {clienteDetalle.nombre}
-              </h2>
+              <h2>{clienteDetalle.nombre}</h2>
               <button
                 className="modal-close"
                 onClick={() => setClienteDetalle(null)}
@@ -769,9 +860,7 @@ function Clientes() {
 
       {tab === "editar" && (
         <div className="form-section scrollable-form">
-          <h2>
-            ✏️ Editar Cliente — {clienteEdit?.nombre}
-          </h2>
+          <h2>✏️ Editar Cliente — {clienteEdit?.nombre}</h2>
           {renderFormulario(handleActualizar)}
         </div>
       )}

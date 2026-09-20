@@ -6,6 +6,8 @@ import { generarFacturaPdf } from "../services/facturaPdf.service";
 const formatoMoneda = (value) =>
   `₡${Number(value ?? 0).toLocaleString("es-CR")}`;
 
+const FACTURAS_POR_PAGINA = 10;
+
 function Facturas() {
   const [registros, setRegistros] = useState([]);
   const [filtros, setFiltros] = useState({
@@ -17,6 +19,7 @@ function Facturas() {
   const [cargandoFacturaId, setCargandoFacturaId] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
+  const [pagina, setPagina] = useState(1);
 
   const cargarHistorial = async () => {
     setCargando(true);
@@ -32,7 +35,22 @@ function Facturas() {
 
   useEffect(() => {
     cargarHistorial();
+    setPagina(1);
   }, [filtros.fecha_desde, filtros.fecha_hasta, filtros.estado_pago]);
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(registros.length / FACTURAS_POR_PAGINA),
+  );
+  const paginaActual = Math.min(pagina, totalPaginas);
+  const registrosVisibles = registros.slice(
+    (paginaActual - 1) * FACTURAS_POR_PAGINA,
+    paginaActual * FACTURAS_POR_PAGINA,
+  );
+
+  useEffect(() => {
+    if (pagina > totalPaginas) setPagina(totalPaginas);
+  }, [pagina, totalPaginas]);
 
   const resumen = useMemo(
     () => ({
@@ -195,7 +213,7 @@ function Facturas() {
                 </tr>
               </thead>
               <tbody>
-                {registros.map((registro) => (
+                {registrosVisibles.map((registro) => (
                   <tr key={registro.orden_id}>
                     <td>{registro.numero_factura || "Pendiente"}</td>
                     <td>
@@ -248,6 +266,42 @@ function Facturas() {
                 ))}
               </tbody>
             </table>
+            {totalPaginas > 1 && (
+              <nav className="pagination" aria-label="Paginación de facturas">
+                <button
+                  type="button"
+                  className="pagination-button"
+                  onClick={() => setPagina((actual) => Math.max(1, actual - 1))}
+                  disabled={paginaActual === 1}
+                >
+                  Anterior
+                </button>
+                {Array.from(
+                  { length: totalPaginas },
+                  (_, index) => index + 1,
+                ).map((numero) => (
+                  <button
+                    key={numero}
+                    type="button"
+                    className={`pagination-button ${paginaActual === numero ? "active" : ""}`}
+                    onClick={() => setPagina(numero)}
+                    aria-current={paginaActual === numero ? "page" : undefined}
+                  >
+                    {numero}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="pagination-button"
+                  onClick={() =>
+                    setPagina((actual) => Math.min(totalPaginas, actual + 1))
+                  }
+                  disabled={paginaActual === totalPaginas}
+                >
+                  Siguiente
+                </button>
+              </nav>
+            )}
           </div>
         )}
       </section>

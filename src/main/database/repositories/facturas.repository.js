@@ -35,7 +35,7 @@ function crearParaPago(pagoId, ordenId) {
   const detalle = db
     .prepare(
       `
-    SELECT d.*, p.numero_lote AS codigo_producto, p.nombre AS producto_nombre
+    SELECT d.*, p.sku AS codigo_producto, p.nombre AS producto_nombre
     FROM ordenes_detalle d
     LEFT JOIN productos p ON p.id = d.producto_id
     WHERE d.orden_id = ?
@@ -126,7 +126,14 @@ function getById(id) {
     ...factura,
     detalle: db
       .prepare(
-        "SELECT * FROM facturas_detalle WHERE factura_id = ? ORDER BY id",
+        `
+        SELECT d.*, COALESCE(p.sku, d.codigo_producto) AS codigo_producto,
+               p.nombre AS producto_nombre
+        FROM facturas_detalle d
+        LEFT JOIN productos p ON p.id = d.producto_id
+        WHERE d.factura_id = ?
+        ORDER BY d.id
+      `,
       )
       .all(id),
   };

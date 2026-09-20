@@ -15,6 +15,11 @@ const METODOS_PAGO = [
 
 const formatOrdenNumero = (id) =>
   `N.º ${String(Number(id ?? 0)).padStart(4, "0")}`;
+const bloquearTeclasNoNumericas = (event) => {
+  if (["e", "E", "+", "-"].includes(event.key)) event.preventDefault();
+};
+
+const aceptarMonto = (value) => (/^\d*(\.\d*)?$/.test(value) ? value : null);
 
 function Pagos() {
   const { user } = useAuth();
@@ -157,8 +162,7 @@ function Pagos() {
       ...form,
       clienteId: String(orden.cliente_id),
       ordenId: String(orden.id),
-      monto:
-        form.tipoPago === "pago_total" ? String(orden.saldoPendiente) : "",
+      monto: form.tipoPago === "pago_total" ? String(orden.saldoPendiente) : "",
       referenciaDatafono: "",
     });
     setBusquedaOrden("");
@@ -544,14 +548,16 @@ function Pagos() {
                   {Number(saldoOrdenRestante).toLocaleString("es-CR")})
                 </label>
                 <input
-                  type="number"
-                  min="0"
-                  max={saldoOrdenRestante ?? undefined}
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   autoFocus
                   value={form.monto}
                   readOnly={form.tipoPago === "pago_total"}
-                  onChange={(e) => setForm({ ...form, monto: e.target.value })}
+                  onKeyDown={bloquearTeclasNoNumericas}
+                  onChange={(e) => {
+                    const value = aceptarMonto(e.target.value);
+                    if (value !== null) setForm({ ...form, monto: value });
+                  }}
                   required
                 />
                 {form.tipoPago === "abono" && (

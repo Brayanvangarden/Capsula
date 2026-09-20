@@ -92,6 +92,7 @@ function Usuarios() {
   });
   const [mensaje, setMensaje] = useState("");
   const [busqueda, setBusqueda] = useState("");
+  const [pagina, setPagina] = useState(1);
 
   const usuariosFiltrados = usuarios.filter((usuario) => {
     const texto =
@@ -99,11 +100,26 @@ function Usuarios() {
     return texto.includes(busqueda.toLowerCase());
   });
 
+  const totalPaginas = Math.max(1, Math.ceil(usuariosFiltrados.length / 10));
+  const paginaActual = Math.min(pagina, totalPaginas);
+  const usuariosVisibles = usuariosFiltrados.slice(
+    (paginaActual - 1) * 10,
+    paginaActual * 10,
+  );
+
   useEffect(() => {
     if (!mensaje) return;
     const timer = setTimeout(() => setMensaje(""), 3000);
     return () => clearTimeout(timer);
   }, [mensaje]);
+
+  useEffect(() => {
+    setPagina(1);
+  }, [busqueda]);
+
+  useEffect(() => {
+    if (pagina > totalPaginas) setPagina(totalPaginas);
+  }, [pagina, totalPaginas]);
 
   const abrirCrear = () => {
     setEditandoId(null);
@@ -306,7 +322,7 @@ function Usuarios() {
                 </tr>
               </thead>
               <tbody>
-                {usuariosFiltrados.map((usuario) => (
+                {usuariosVisibles.map((usuario) => (
                   <tr key={usuario.id}>
                     <td>{usuario.nombre}</td>
                     <td>{usuario.usuario}</td>
@@ -356,6 +372,42 @@ function Usuarios() {
                 ))}
               </tbody>
             </table>
+            {totalPaginas > 1 && (
+              <nav className="pagination" aria-label="Paginación de usuarios">
+                <button
+                  type="button"
+                  className="pagination-button"
+                  onClick={() => setPagina((actual) => Math.max(1, actual - 1))}
+                  disabled={paginaActual === 1}
+                >
+                  Anterior
+                </button>
+                {Array.from(
+                  { length: totalPaginas },
+                  (_, index) => index + 1,
+                ).map((numero) => (
+                  <button
+                    key={numero}
+                    type="button"
+                    className={`pagination-button ${paginaActual === numero ? "active" : ""}`}
+                    onClick={() => setPagina(numero)}
+                    aria-current={paginaActual === numero ? "page" : undefined}
+                  >
+                    {numero}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="pagination-button"
+                  onClick={() =>
+                    setPagina((actual) => Math.min(totalPaginas, actual + 1))
+                  }
+                  disabled={paginaActual === totalPaginas}
+                >
+                  Siguiente
+                </button>
+              </nav>
+            )}
           </div>
         )}
       </div>
