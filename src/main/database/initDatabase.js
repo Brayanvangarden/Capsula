@@ -26,7 +26,7 @@ function initDatabase() {
       .prepare("SELECT COUNT(*) as total FROM clientes")
       .get();
 
-    if (userCount.total === 0 || clienteCount.total === 0) {
+    if (userCount.total === 0 && clienteCount.total === 0) {
       const seedsPath = path.join(__dirname, "seeds.sql");
       const seeds = fs.readFileSync(seedsPath, "utf-8");
       db.exec(seeds);

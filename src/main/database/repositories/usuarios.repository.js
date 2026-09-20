@@ -1,48 +1,55 @@
-const bcrypt = require('bcryptjs')
-const { getDb } = require('../db')
+const bcrypt = require("bcryptjs");
+const { getDb } = require("../db");
 
 function hashPassword(password) {
-  return bcrypt.hashSync(password, 10)
+  return bcrypt.hashSync(password, 10);
 }
 
 function getAll() {
   return getDb()
-    .prepare(`
+    .prepare(
+      `
       SELECT id, nombre, usuario, rol, estado, creado_en
       FROM usuarios
       ORDER BY nombre ASC
-    `)
-    .all()
+    `,
+    )
+    .all();
 }
 
 function getById(id) {
   return getDb()
-    .prepare(`
+    .prepare(
+      `
       SELECT id, nombre, usuario, rol, estado, creado_en
       FROM usuarios WHERE id = ?
-    `)
-    .get(id)
+    `,
+    )
+    .get(id);
 }
 
 function create(data) {
   const result = getDb()
-    .prepare(`
+    .prepare(
+      `
       INSERT INTO usuarios (nombre, usuario, password, rol, estado)
       VALUES (@nombre, @usuario, @password, @rol, @estado)
-    `)
+    `,
+    )
     .run({
-      nombre:   data.nombre,
-      usuario:  data.usuario,
+      nombre: data.nombre,
+      usuario: data.usuario,
       password: hashPassword(data.password),
-      rol:      data.rol    ?? 'vendedor',
-      estado:   data.estado ?? 'activo'
-    })
-  return getById(result.lastInsertRowid)
+      rol: data.rol ?? "vendedor",
+      estado: data.estado ?? "activo",
+    });
+  return getById(result.lastInsertRowid);
 }
 
 function update(id, data) {
   getDb()
-    .prepare(`
+    .prepare(
+      `
       UPDATE usuarios SET
         nombre      = @nombre,
         usuario     = @usuario,
@@ -50,43 +57,66 @@ function update(id, data) {
         estado      = @estado,
         actualizado = datetime('now')
       WHERE id = @id
-    `)
-    .run({ ...data, id })
-  return getById(id)
+    `,
+    )
+    .run({ ...data, id });
+  return getById(id);
 }
 
 function updatePassword(id, newPassword) {
-  const hash = hashPassword(newPassword)
+  const hash = hashPassword(newPassword);
   return getDb()
-    .prepare(`
+    .prepare(
+      `
       UPDATE usuarios
       SET password    = ?,
           actualizado = datetime('now')
       WHERE id = ?
-    `)
-    .run(hash, id)
+    `,
+    )
+    .run(hash, id);
 }
 
 function toggleEstado(id) {
-  const usuario = getById(id)
-  if (!usuario) throw new Error('Usuario no encontrado')
+  const usuario = getById(id);
+  if (!usuario) throw new Error("Usuario no encontrado");
 
-  const nuevoEstado = usuario.estado === 'activo' ? 'inactivo' : 'activo'
+  const nuevoEstado = usuario.estado === "activo" ? "inactivo" : "activo";
 
   getDb()
-    .prepare(`UPDATE usuarios SET estado = ?, actualizado = datetime('now') WHERE id = ?`)
-    .run(nuevoEstado, id)
+    .prepare(
+      `UPDATE usuarios SET estado = ?, actualizado = datetime('now') WHERE id = ?`,
+    )
+    .run(nuevoEstado, id);
 
-  return getById(id)
+  return getById(id);
+}
+
+function remove(id) {
+  const usuario = getById(id);
+  if (!usuario) throw new Error("Usuario no encontrado");
+
+  if (usuario.rol === "admin") {
+    const administradores = getDb()
+      .prepare("SELECT COUNT(*) AS total FROM usuarios WHERE rol = 'admin'")
+      .get().total;
+    if (administradores <= 1) {
+      throw new Error("No se puede eliminar el último administrador");
+    }
+  }
+
+  getDb().prepare("DELETE FROM usuarios WHERE id = ?").run(id);
 }
 
 function existeUsuario(usuario, excludeId = null) {
   const query = excludeId
-    ? 'SELECT id FROM usuarios WHERE usuario = ? AND id != ?'
-    : 'SELECT id FROM usuarios WHERE usuario = ?'
+    ? "SELECT id FROM usuarios WHERE usuario = ? AND id != ?"
+    : "SELECT id FROM usuarios WHERE usuario = ?";
 
-  const params = excludeId ? [usuario, excludeId] : [usuario]
-  return !!getDb().prepare(query).get(...params)
+  const params = excludeId ? [usuario, excludeId] : [usuario];
+  return !!getDb()
+    .prepare(query)
+    .get(...params);
 }
 
 module.exports = {
@@ -96,5 +126,6 @@ module.exports = {
   update,
   updatePassword,
   toggleEstado,
-  existeUsuario
-}
+  remove,
+  existeUsuario,
+};

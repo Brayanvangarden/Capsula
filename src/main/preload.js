@@ -144,5 +144,6 @@ contextBridge.exposeInMainWorld("api", {
     changePassword: (data) =>
       ipcRenderer.invoke("usuarios:changePassword", data),
     toggleEstado: (id) => ipcRenderer.invoke("usuarios:toggleEstado", id),
+    delete: (id) => ipcRenderer.invoke("usuarios:delete", id),
   },
 });

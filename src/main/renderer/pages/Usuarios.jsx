@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../hooks/useAuth";
 import { useUsuarios } from "../hooks/useUsuarios";
 
-function PencilIcon(props) {
+function Icon({ children, ...props }) {
   return (
     <svg
       width="16"
@@ -14,48 +15,48 @@ function PencilIcon(props) {
       strokeLinejoin="round"
       {...props}
     >
-      <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .622.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
-      <path d="m15 5 4 4" />
+      {children}
     </svg>
   );
 }
 
-function KeyIcon(props) {
+function PencilIcon() {
   return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
+    <Icon>
+      <path d="m4 16 10-10 4 4L8 20l-5 1 1-5Z" />
+      <path d="m13 7 4 4" />
+    </Icon>
+  );
+}
+
+function KeyIcon() {
+  return (
+    <Icon>
       <circle cx="7" cy="15" r="4" />
       <path d="M10 15h10" />
       <path d="m15 10 3 3" />
-    </svg>
+    </Icon>
   );
 }
 
-function PowerIcon(props) {
+function PowerIcon() {
   return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
+    <Icon>
       <path d="M12 3v10" />
       <path d="M7 6.34a8 8 0 1 0 10 0" />
-    </svg>
+    </Icon>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <Icon>
+      <path d="M3 6h18" />
+      <path d="M19 6v14H5V6" />
+      <path d="M8 6V4h8v2" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+    </Icon>
   );
 }
 
@@ -67,7 +68,10 @@ const EMPTY = {
   estado: "activo",
 };
 
+const USUARIOS_POR_PAGINA = 10;
+
 function Usuarios() {
+  const { user } = useAuth();
   const {
     usuarios,
     admins,
@@ -75,11 +79,11 @@ function Usuarios() {
     activos,
     loading,
     error,
-    fetchUsuarios,
     crearUsuario,
     actualizarUsuario,
     cambiarPassword,
     toggleEstado,
+    eliminarUsuario,
   } = useUsuarios();
 
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -90,6 +94,7 @@ function Usuarios() {
     id: null,
     password: "",
   });
+  const [usuarioAEliminar, setUsuarioAEliminar] = useState(null);
   const [mensaje, setMensaje] = useState("");
   const [busqueda, setBusqueda] = useState("");
   const [pagina, setPagina] = useState(1);
@@ -99,24 +104,23 @@ function Usuarios() {
       `${usuario.nombre} ${usuario.usuario} ${usuario.rol} ${usuario.estado}`.toLowerCase();
     return texto.includes(busqueda.toLowerCase());
   });
-
-  const totalPaginas = Math.max(1, Math.ceil(usuariosFiltrados.length / 10));
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(usuariosFiltrados.length / USUARIOS_POR_PAGINA),
+  );
   const paginaActual = Math.min(pagina, totalPaginas);
   const usuariosVisibles = usuariosFiltrados.slice(
-    (paginaActual - 1) * 10,
-    paginaActual * 10,
+    (paginaActual - 1) * USUARIOS_POR_PAGINA,
+    paginaActual * USUARIOS_POR_PAGINA,
   );
 
   useEffect(() => {
-    if (!mensaje) return;
+    if (!mensaje) return undefined;
     const timer = setTimeout(() => setMensaje(""), 3000);
     return () => clearTimeout(timer);
   }, [mensaje]);
 
-  useEffect(() => {
-    setPagina(1);
-  }, [busqueda]);
-
+  useEffect(() => setPagina(1), [busqueda]);
   useEffect(() => {
     if (pagina > totalPaginas) setPagina(totalPaginas);
   }, [pagina, totalPaginas]);
@@ -151,120 +155,110 @@ function Usuarios() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setMensaje("");
-
     if (!form.nombre.trim() || !form.usuario.trim() || !form.rol) {
       setMensaje("Completa nombre, usuario y rol.");
       return;
     }
 
-    if (editandoId) {
-      const resultado = await actualizarUsuario({
-        id: editandoId,
-        nombre: form.nombre.trim(),
-        usuario: form.usuario.trim(),
-        rol: form.rol,
-        estado: form.estado,
-      });
-
-      if (!resultado.ok) {
-        setMensaje(resultado.message || "No se pudo actualizar el usuario.");
-        return;
-      }
-
-      setMensaje("Usuario actualizado correctamente.");
-      cerrarModal();
-      return;
-    }
-
-    if (!form.password.trim()) {
-      setMensaje("Ingresa una contraseña para el nuevo usuario.");
-      return;
-    }
-
-    const resultado = await crearUsuario({
+    const datos = {
       nombre: form.nombre.trim(),
       usuario: form.usuario.trim(),
-      password: form.password,
       rol: form.rol,
       estado: form.estado,
-    });
+    };
+    const resultado = editandoId
+      ? await actualizarUsuario({ id: editandoId, ...datos })
+      : form.password.trim()
+        ? await crearUsuario({ ...datos, password: form.password })
+        : {
+            ok: false,
+            message: "Ingresa una contrasena para el nuevo usuario.",
+          };
 
     if (!resultado.ok) {
-      setMensaje(resultado.message || "No se pudo crear el usuario.");
+      setMensaje(resultado.message || "No se pudo guardar el usuario.");
       return;
     }
-
-    setMensaje("Usuario creado correctamente.");
+    setMensaje(
+      editandoId
+        ? "Usuario actualizado correctamente."
+        : "Usuario creado correctamente.",
+    );
     cerrarModal();
   };
 
-  const abrirCambioPassword = (usuarioId) => {
-    setPasswordState({ abierto: true, id: usuarioId, password: "" });
+  const abrirCambioPassword = (id) => {
+    setPasswordState({ abierto: true, id, password: "" });
     setMensaje("");
   };
 
-  const cerrarPasswordModal = () => {
+  const cerrarPasswordModal = () =>
     setPasswordState({ abierto: false, id: null, password: "" });
-    setMensaje("");
-  };
 
   const handleCambioPassword = async (event) => {
     event.preventDefault();
-    setMensaje("");
-
     if (!passwordState.password.trim() || passwordState.password.length < 4) {
-      setMensaje("Ingresa una contraseña válida (mínimo 4 caracteres).");
+      setMensaje("Ingresa una contrasena valida (minimo 4 caracteres).");
       return;
     }
-
     const resultado = await cambiarPassword(
       passwordState.id,
       passwordState.password,
     );
     if (!resultado.ok) {
-      setMensaje(resultado.message || "No se pudo cambiar la contraseña.");
+      setMensaje(resultado.message || "No se pudo cambiar la contrasena.");
       return;
     }
-
-    setMensaje("Contraseña actualizada correctamente.");
     cerrarPasswordModal();
+    setMensaje("Contrasena actualizada correctamente.");
   };
 
-  const handleToggleEstado = async (usuarioId) => {
-    const resultado = await toggleEstado(usuarioId);
+  const handleToggleEstado = async (id) => {
+    const resultado = await toggleEstado(id);
     if (!resultado.ok) {
       setMensaje(
         resultado.message || "No se pudo cambiar el estado del usuario.",
       );
       return;
     }
-
     setMensaje(`Usuario ${resultado.data.estado} correctamente.`);
   };
 
-  if (loading) {
-    return <div className="page-loading">Cargando usuarios…</div>;
-  }
+  const solicitarEliminar = (usuario) => {
+    if (usuario.id === user?.id) {
+      setMensaje("No puedes eliminar el usuario con el que estas conectado.");
+      return;
+    }
+    setUsuarioAEliminar(usuario);
+  };
+
+  const handleEliminar = async () => {
+    if (!usuarioAEliminar) return;
+    const resultado = await eliminarUsuario(usuarioAEliminar.id);
+    setUsuarioAEliminar(null);
+    setMensaje(
+      resultado.ok
+        ? "Usuario eliminado correctamente."
+        : resultado.message || "No se pudo eliminar el usuario.",
+    );
+  };
+
+  if (loading) return <div className="page-loading">Cargando usuarios...</div>;
 
   return (
     <div className="page-container">
       <div className="page-header">
         <div>
-          <h1>👥 Gestión de Usuarios</h1>
-          <p>
-            Administra accesos, roles y estados de cada cuenta con un flujo más
-            claro.
-          </p>
+          <h1>Gestion de Usuarios</h1>
+          <p>Administra accesos, roles y estados de cada cuenta.</p>
         </div>
-        <div className="header-actions">
-          <button className="btn-primary" type="button" onClick={abrirCrear}>
-            ➕ Nuevo usuario
-          </button>
-        </div>
+        <button className="btn-primary" type="button" onClick={abrirCrear}>
+          Nuevo usuario
+        </button>
       </div>
 
       {error && <p className="message-error">{error}</p>}
-      {mensaje && <div className="message-success-banner">✅ {mensaje}</div>}
+      {mensaje && <div className="message-success-banner">{mensaje}</div>}
 
       <div className="alertas-row">
         <div className="card-card">
@@ -291,23 +285,23 @@ function Usuarios() {
             type="text"
             placeholder="Buscar por nombre, usuario o rol..."
             value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
+            onChange={(event) => setBusqueda(event.target.value)}
           />
           {busqueda && (
             <button
               type="button"
               className="search-bar-clear"
               onClick={() => setBusqueda("")}
-              aria-label="Limpiar búsqueda"
+              aria-label="Limpiar busqueda"
             >
-              ✕
+              x
             </button>
           )}
         </div>
 
         {usuariosFiltrados.length === 0 ? (
           <p className="empty-state">
-            No se encontraron usuarios con esa búsqueda.
+            No se encontraron usuarios con esa busqueda.
           </p>
         ) : (
           <div className="table-wrapper">
@@ -347,7 +341,7 @@ function Usuarios() {
                         className="btn-view"
                         type="button"
                         onClick={() => abrirCambioPassword(usuario.id)}
-                        aria-label="Cambiar contraseña"
+                        aria-label="Cambiar contrasena"
                       >
                         <KeyIcon />
                       </button>
@@ -359,13 +353,18 @@ function Usuarios() {
                         }
                         type="button"
                         onClick={() => handleToggleEstado(usuario.id)}
-                        aria-label={
-                          usuario.estado === "activo"
-                            ? "Desactivar usuario"
-                            : "Activar usuario"
-                        }
+                        aria-label="Cambiar estado"
                       >
                         <PowerIcon />
+                      </button>
+                      <button
+                        className="btn-danger"
+                        type="button"
+                        onClick={() => solicitarEliminar(usuario)}
+                        aria-label="Eliminar usuario"
+                        title="Eliminar usuario"
+                      >
+                        <TrashIcon />
                       </button>
                     </td>
                   </tr>
@@ -373,7 +372,7 @@ function Usuarios() {
               </tbody>
             </table>
             {totalPaginas > 1 && (
-              <nav className="pagination" aria-label="Paginación de usuarios">
+              <nav className="pagination" aria-label="Paginacion de usuarios">
                 <button
                   type="button"
                   className="pagination-button"
@@ -414,7 +413,7 @@ function Usuarios() {
 
       {modalAbierto && (
         <div className="modal-overlay" onClick={cerrarModal}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
               <h2>{editandoId ? "Editar usuario" : "Nuevo usuario"}</h2>
               <button
@@ -422,7 +421,7 @@ function Usuarios() {
                 type="button"
                 onClick={cerrarModal}
               >
-                ✕
+                x
               </button>
             </div>
             <form className="modal-form" onSubmit={handleSubmit}>
@@ -430,60 +429,59 @@ function Usuarios() {
                 <label>Nombre *</label>
                 <input
                   value={form.nombre}
-                  onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Usuario *</label>
-                <input
-                  value={form.usuario}
-                  onChange={(e) =>
-                    setForm({ ...form, usuario: e.target.value })
+                  onChange={(event) =>
+                    setForm({ ...form, nombre: event.target.value })
                   }
                   required
                 />
               </div>
-
+              <div className="form-group">
+                <label>Usuario *</label>
+                <input
+                  value={form.usuario}
+                  onChange={(event) =>
+                    setForm({ ...form, usuario: event.target.value })
+                  }
+                  required
+                />
+              </div>
               {!editandoId && (
                 <div className="form-group">
-                  <label>Contraseña *</label>
+                  <label>Contrasena *</label>
                   <input
                     type="password"
                     value={form.password}
-                    onChange={(e) =>
-                      setForm({ ...form, password: e.target.value })
+                    onChange={(event) =>
+                      setForm({ ...form, password: event.target.value })
                     }
                     required
                   />
                 </div>
               )}
-
               <div className="form-group">
                 <label>Rol</label>
                 <select
                   value={form.rol}
-                  onChange={(e) => setForm({ ...form, rol: e.target.value })}
+                  onChange={(event) =>
+                    setForm({ ...form, rol: event.target.value })
+                  }
                 >
                   <option value="admin">admin</option>
                   <option value="vendedor">vendedor</option>
                 </select>
               </div>
-
               <div className="form-group">
                 <label>Estado</label>
                 <select
                   value={form.estado}
-                  onChange={(e) => setForm({ ...form, estado: e.target.value })}
+                  onChange={(event) =>
+                    setForm({ ...form, estado: event.target.value })
+                  }
                 >
                   <option value="activo">activo</option>
                   <option value="inactivo">inactivo</option>
                 </select>
               </div>
-
-              {mensaje && <p className="message-success">{mensaje}</p>}
-
               <div className="modal-footer">
                 <button
                   className="btn-secondary"
@@ -503,33 +501,32 @@ function Usuarios() {
 
       {passwordState.abierto && (
         <div className="modal-overlay" onClick={cerrarPasswordModal}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
-              <h2>Cambiar contraseña</h2>
+              <h2>Cambiar contrasena</h2>
               <button
                 className="modal-close"
                 type="button"
                 onClick={cerrarPasswordModal}
               >
-                ✕
+                x
               </button>
             </div>
             <form className="modal-form" onSubmit={handleCambioPassword}>
               <div className="form-group">
-                <label>Nueva contraseña</label>
+                <label>Nueva contrasena</label>
                 <input
                   type="password"
                   value={passwordState.password}
-                  onChange={(e) =>
+                  onChange={(event) =>
                     setPasswordState({
                       ...passwordState,
-                      password: e.target.value,
+                      password: event.target.value,
                     })
                   }
                   required
                 />
               </div>
-              {mensaje && <p className="message-success">{mensaje}</p>}
               <div className="modal-footer">
                 <button
                   className="btn-secondary"
@@ -539,10 +536,49 @@ function Usuarios() {
                   Cancelar
                 </button>
                 <button className="btn-primary" type="submit">
-                  Guardar contraseña
+                  Guardar contrasena
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {usuarioAEliminar && (
+        <div
+          className="modal-overlay"
+          onClick={() => setUsuarioAEliminar(null)}
+        >
+          <div
+            className="modal-card modal-card-delete"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="modal-icon">!</div>
+            <h3>Eliminar usuario?</h3>
+            <p>
+              Estas a punto de eliminar permanentemente a{" "}
+              <strong className="modal-confirm-name">
+                {usuarioAEliminar.nombre}
+              </strong>
+              .<br />
+              Esta accion no se puede deshacer.
+            </p>
+            <div className="modal-actions modal-actions-compact">
+              <button
+                className="btn-secondary"
+                type="button"
+                onClick={() => setUsuarioAEliminar(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn-secondary btn-delete-modal"
+                type="button"
+                onClick={handleEliminar}
+              >
+                Eliminar
+              </button>
+            </div>
           </div>
         </div>
       )}

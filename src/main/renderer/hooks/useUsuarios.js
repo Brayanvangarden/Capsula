@@ -1,72 +1,82 @@
-import { useState, useEffect, useCallback } from 'react'
-import { usuariosService } from '../services/usuarios.service'
+import { useState, useEffect, useCallback } from "react";
+import { usuariosService } from "../services/usuarios.service";
 
 export function useUsuarios() {
-  const [usuarios, setUsuarios] = useState([])
-  const [loading,  setLoading]  = useState(false)
-  const [error,    setError]    = useState(null)
+  const [usuarios, setUsuarios] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const fetchUsuarios = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
-      const data = await usuariosService.getAll()
-      setUsuarios(data)
+      const data = await usuariosService.getAll();
+      setUsuarios(data);
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   const crearUsuario = useCallback(async (data) => {
     try {
-      const nuevo = await usuariosService.create(data)
-      setUsuarios(prev => [...prev, nuevo])
-      return { ok: true, data: nuevo }
+      const nuevo = await usuariosService.create(data);
+      setUsuarios((prev) => [...prev, nuevo]);
+      return { ok: true, data: nuevo };
     } catch (err) {
-      return { ok: false, message: err.message }
+      return { ok: false, message: err.message };
     }
-  }, [])
+  }, []);
 
   const actualizarUsuario = useCallback(async (data) => {
     try {
-      const actualizado = await usuariosService.update(data)
-      setUsuarios(prev =>
-        prev.map(u => u.id === actualizado.id ? actualizado : u)
-      )
-      return { ok: true, data: actualizado }
+      const actualizado = await usuariosService.update(data);
+      setUsuarios((prev) =>
+        prev.map((u) => (u.id === actualizado.id ? actualizado : u)),
+      );
+      return { ok: true, data: actualizado };
     } catch (err) {
-      return { ok: false, message: err.message }
+      return { ok: false, message: err.message };
     }
-  }, [])
+  }, []);
 
   const cambiarPassword = useCallback(async (id, password) => {
     try {
-      await usuariosService.changePassword(id, password)
-      return { ok: true }
+      await usuariosService.changePassword(id, password);
+      return { ok: true };
     } catch (err) {
-      return { ok: false, message: err.message }
+      return { ok: false, message: err.message };
     }
-  }, [])
+  }, []);
 
   const toggleEstado = useCallback(async (id) => {
     try {
-      const actualizado = await usuariosService.toggleEstado(id)
-      setUsuarios(prev =>
-        prev.map(u => u.id === id ? actualizado : u)
-      )
-      return { ok: true, data: actualizado }
+      const actualizado = await usuariosService.toggleEstado(id);
+      setUsuarios((prev) => prev.map((u) => (u.id === id ? actualizado : u)));
+      return { ok: true, data: actualizado };
     } catch (err) {
-      return { ok: false, message: err.message }
+      return { ok: false, message: err.message };
     }
-  }, [])
+  }, []);
 
-  useEffect(() => { fetchUsuarios() }, [fetchUsuarios])
+  const eliminarUsuario = useCallback(async (id) => {
+    try {
+      await usuariosService.delete(id);
+      setUsuarios((prev) => prev.filter((u) => u.id !== id));
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, message: err.message };
+    }
+  }, []);
 
-  const admins    = usuarios.filter(u => u.rol    === 'admin')
-  const vendedores = usuarios.filter(u => u.rol   === 'vendedor')
-  const activos   = usuarios.filter(u => u.estado === 'activo')
+  useEffect(() => {
+    fetchUsuarios();
+  }, [fetchUsuarios]);
+
+  const admins = usuarios.filter((u) => u.rol === "admin");
+  const vendedores = usuarios.filter((u) => u.rol === "vendedor");
+  const activos = usuarios.filter((u) => u.estado === "activo");
 
   return {
     usuarios,
@@ -80,5 +90,6 @@ export function useUsuarios() {
     actualizarUsuario,
     cambiarPassword,
     toggleEstado,
-  }
+    eliminarUsuario,
+  };
 }
