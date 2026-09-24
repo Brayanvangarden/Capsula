@@ -233,9 +233,7 @@ function Dashboard() {
   const movimientosHoy = movimientos.filter((movimiento) =>
     String(movimiento.fecha ?? "").startsWith(hoy),
   ).length;
-  const hayAlertas =
-    stockBajo.length > 0 ||
-    clientesConDeuda.length > 0;
+  const hayAlertas = stockBajo.length > 0 || clientesConDeuda.length > 0;
 
   const actualizarDashboard = async () => {
     await Promise.all([
@@ -306,39 +304,6 @@ function Dashboard() {
               </div>
             </div>
           )}
-
-          <div className="stats-grid">
-            <StatCard
-              type="box"
-              value={productos?.length ?? 0}
-              label="Productos activos"
-            />
-            <StatCard
-              type="users"
-              value={clientes?.length ?? 0}
-              label="Clientes registrados"
-            />
-            <StatCard
-              type="clip"
-              value={ordenesPendientes?.length ?? 0}
-              label="Órdenes pendientes"
-            />
-            <StatCard
-              type="card"
-              value={moneda(cobradoEsteMes)}
-              label="Cobrado este mes"
-            />
-            <StatCard
-              type="alert"
-              value={moneda(totalPorCobrar)}
-              label="Saldo por cobrar"
-            />
-            <StatCard
-              type="refresh"
-              value={movimientosHoy}
-              label="Movimientos hoy"
-            />
-          </div>
         </div>
 
         {/*

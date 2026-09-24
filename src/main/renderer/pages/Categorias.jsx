@@ -82,6 +82,7 @@ function Categorias() {
   const [filtroEstado, setFiltroEstado] = useState("todas"); // todas | activas | inactivas
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState("");
+  const [mensajeTipo, setMensajeTipo] = useState("success");
   const [pagina, setPagina] = useState(1);
 
   // Autolimpia el mensaje después de unos segundos
@@ -127,6 +128,7 @@ function Categorias() {
     setForm(EMPTY);
     setEditando(null);
     setMensaje("");
+    setMensajeTipo("success");
     setModal(true);
   };
 
@@ -138,6 +140,7 @@ function Categorias() {
     });
     setEditando(c.id);
     setMensaje("");
+    setMensajeTipo("success");
     setModal(true);
   };
 
@@ -151,9 +154,11 @@ function Categorias() {
 
       if (!resultado.ok) {
         setMensaje(resultado.message || "No se pudo guardar la categoría.");
+        setMensajeTipo("error");
         return;
       }
 
+      setMensajeTipo("success");
       setMensaje(
         editando
           ? "Categoría actualizada correctamente."
@@ -169,11 +174,13 @@ function Categorias() {
     if (!confirmCategoria) return;
     const resultado = await eliminarCategoria(confirmCategoria.id);
     if (!resultado.ok) {
-      setMensaje(resultado.message || "No se pudo desactivar la categoría.");
+      setMensaje(resultado.message || "No se pudo eliminar la categoría.");
+      setMensajeTipo("error");
       setConfirmCategoria(null);
       return;
     }
-    setMensaje("Categoría desactivada correctamente.");
+    setMensajeTipo("success");
+    setMensaje("Categoría eliminada correctamente.");
     setConfirmCategoria(null);
   };
 
@@ -190,7 +197,15 @@ function Categorias() {
         </div>
       </div>
 
-      {mensaje && <div className="message-success-banner">✅ {mensaje}</div>}
+      {mensaje && (
+        <div
+          className={
+            mensajeTipo === "error" ? "message-error" : "message-success-banner"
+          }
+        >
+          {mensajeTipo === "error" ? "⚠️" : "✅"} {mensaje}
+        </div>
+      )}
 
       <div className="list-container">
         <div className="search-bar">
@@ -418,7 +433,7 @@ function Categorias() {
             </div>
             <h3>¿Eliminar categoría?</h3>
             <p>
-              Estás a punto de desactivar{" "}
+              Estás a punto de eliminar{" "}
               <span className="modal-confirm-name">
                 {confirmCategoria.nombre}
               </span>
