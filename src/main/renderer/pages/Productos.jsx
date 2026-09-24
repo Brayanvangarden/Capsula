@@ -81,7 +81,7 @@ function Productos() {
     buscarProductos,
   } = useProductos();
 
-  const { categorias } = useCategorias();
+  const { categorias, categoriasActivas } = useCategorias();
 
   const [busqueda, setBusqueda] = useState("");
   const [tab, setTab] = useState("lista");
@@ -379,7 +379,7 @@ function Productos() {
             onChange={(e) => setForm({ ...form, categoriaId: e.target.value })}
           >
             <option value="">Sin categoría</option>
-            {categorias.map((c) => (
+            {categoriasActivas.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.nombre}
               </option>
