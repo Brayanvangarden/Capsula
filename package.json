@@ -28,8 +28,11 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "assets/icon.ico",
-      "signAndEditExecutable": false
+      "icon": "assets/logi.ico"
+    },
+    "nsis": {
+      "installerIcon": "assets/logi.ico",
+      "uninstallerIcon": "assets/logi.ico"
     },
     "files": [
       "dist/**/*",

@@ -1,4 +1,5 @@
 const bcrypt = require("bcryptjs");
+const { app } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { getDb } = require("./db");
@@ -27,7 +28,8 @@ function initDatabase() {
       .get();
 
     if (userCount.total === 0 && clienteCount.total === 0) {
-      const seedsPath = path.join(__dirname, "seeds.sql");
+      const seedFile = app.isPackaged ? "seeds.production.sql" : "seeds.sql";
+      const seedsPath = path.join(__dirname, seedFile);
       const seeds = fs.readFileSync(seedsPath, "utf-8");
       db.exec(seeds);
       console.log("✅ Datos iniciales cargados (seeds)");
