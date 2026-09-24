@@ -28,6 +28,13 @@ const normalizeList = (productos = []) => productos.map(normalizeProductoFromDb)
 
 export const productosService = {
 
+  importBulk: async (filas) => {
+    const payload = filas.map(mapProductoToDb)
+    const res = await window.api.productos.importBulk(payload)
+    if (!res.ok) throw new Error(res.message)
+    return res.data
+  },
+
   getAll: async () => {
     const res = await window.api.productos.getAll()
     if (!res.ok) throw new Error(res.message)

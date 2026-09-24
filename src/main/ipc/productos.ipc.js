@@ -1,5 +1,6 @@
 const { ipcMain }   = require('electron')
 const productosRepo = require('../database/repositories/productos.repository')
+const { validarProductoImport } = require('../shared/validators/producto.validator')
 
 function registerProductosIpc() {
 
@@ -42,6 +43,46 @@ function registerProductosIpc() {
     } catch (error) {
       return { ok: false, message: error.message }
     }
+  })
+
+  // ── Importar en lote ──────────────────────────────
+  ipcMain.handle('productos:importBulk', async (_, filas) => {
+    const resultado = { creados: 0, fallidos: 0, errores: [] }
+    const skusExistentes = new Set(
+      productosRepo
+        .getAll()
+        .map((producto) => String(producto.sku ?? '').trim().toLowerCase())
+        .filter(Boolean),
+    )
+
+    for (let i = 0; i < filas.length; i++) {
+      const validacion = validarProductoImport(filas[i])
+      if (!validacion.ok) {
+        resultado.fallidos++
+        resultado.errores.push(`Fila ${i + 2}: ${validacion.message}`)
+        continue
+      }
+
+      const skuNormalizado = validacion.data.sku.trim().toLowerCase()
+      if (skusExistentes.has(skuNormalizado)) {
+        resultado.fallidos++
+        resultado.errores.push(
+          `Fila ${i + 2}: ya existe un producto con el SKU "${validacion.data.sku}"`,
+        )
+        continue
+      }
+
+      try {
+        productosRepo.create(validacion.data)
+        skusExistentes.add(skuNormalizado)
+        resultado.creados++
+      } catch (error) {
+        resultado.fallidos++
+        resultado.errores.push(`Fila ${i + 2}: ${error.message}`)
+      }
+    }
+
+    return { ok: true, data: resultado }
   })
 
   // ── Eliminar lógico ────────────────────────────────
