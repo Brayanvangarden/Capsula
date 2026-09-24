@@ -114,6 +114,12 @@ function registerClientesIpc() {
   // ── Importar en lote (restaurar respaldo) ──────────
   ipcMain.handle('clientes:importBulk', async (_, filas) => {
     const resultado = { creados: 0, fallidos: 0, errores: [] }
+    const nombresExistentes = new Set(
+      clientesRepo
+        .getAll(true)
+        .map((cliente) => String(cliente.nombre ?? '').trim().toLowerCase())
+        .filter(Boolean),
+    )
 
     for (let i = 0; i < filas.length; i++) {
       const validacion = validarClienteImport(filas[i])
@@ -122,8 +128,19 @@ function registerClientesIpc() {
         resultado.errores.push(`Fila ${i + 2}: ${validacion.message}`)
         continue
       }
+
+      const nombreNormalizado = validacion.data.nombre.trim().toLowerCase()
+      if (nombresExistentes.has(nombreNormalizado)) {
+        resultado.fallidos++
+        resultado.errores.push(
+          `Fila ${i + 2}: ya existe un cliente con el nombre "${validacion.data.nombre}"`,
+        )
+        continue
+      }
+
       try {
         clientesRepo.create(validacion.data)
+        nombresExistentes.add(nombreNormalizado)
         resultado.creados++
       } catch (error) {
         resultado.fallidos++

@@ -123,6 +123,7 @@ function Clientes() {
     clientes,
     loading,
     error,
+    fetchClientes,
     crearCliente,
     actualizarCliente,
     eliminarCliente,
@@ -398,14 +399,10 @@ function Clientes() {
       }
 
       const resultado = await clientesService.importBulk(filas);
-      setMensaje(
-        `Importación completa: ${resultado.creados} creados, ${resultado.fallidos} fallidos.` +
-          (resultado.errores.length ? ` Ver consola para detalles.` : ""),
-      );
+      setMensaje(`Importación completa: ${resultado.creados} creados.`);
       if (resultado.errores.length) console.warn(resultado.errores);
 
-      // refresca la lista
-      window.location.reload(); // opción simple; ver nota abajo
+      await fetchClientes();
     } catch (err) {
       setMensaje(err.message || "No se pudo importar el archivo.");
     } finally {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useProductos } from "../hooks/useProductos";
 import { useCategorias } from "../hooks/useCategorias";
+import { productosService } from "../services/productos.service";
 
 function PencilIcon(props) {
   return (
@@ -71,6 +72,8 @@ function Productos() {
     productosActivos,
     stockBajo,
     loading,
+    fetchProductos,
+    fetchAlertas,
     crearProducto,
     actualizarProducto,
     eliminarProducto,
@@ -275,39 +278,11 @@ function Productos() {
         return;
       }
 
-      const resultado = { creados: 0, fallidos: 0, errores: [] };
-      for (let i = 0; i < filas.length; i++) {
-        const fila = filas[i];
-        if (!fila.nombre) {
-          resultado.fallidos++;
-          resultado.errores.push(`Fila ${i + 2}: el nombre es obligatorio.`);
-          continue;
-        }
+      const resultado = await productosService.importBulk(filas);
 
-        if (!fila.sku) {
-          resultado.fallidos++;
-          resultado.errores.push(`Fila ${i + 2}: el SKU es obligatorio.`);
-          continue;
-        }
-
-        const creado = await crearProducto(fila);
-        if (!creado.ok) {
-          resultado.fallidos++;
-          resultado.errores.push(
-            `Fila ${i + 2}: ${creado.message || "Error al crear producto."}`,
-          );
-          continue;
-        }
-
-        resultado.creados++;
-      }
-
-      setMensaje(
-        `Importación completa: ${resultado.creados} creados, ${resultado.fallidos} fallidos.` +
-          (resultado.errores.length ? " Ver consola para detalles." : ""),
-      );
+      setMensaje(`Importación completa: ${resultado.creados} creados.`);
       if (resultado.errores.length) console.warn(resultado.errores);
-      window.location.reload();
+      await Promise.all([fetchProductos(), fetchAlertas()]);
     } catch (err) {
       setMensaje(err.message || "No se pudo importar el archivo.");
     } finally {
@@ -540,7 +515,6 @@ function Productos() {
       <div className="page-header">
         <div>
           <h1>📦 Productos</h1>
-          <p>{productos.length} productos registrados</p>
         </div>
         <button className="btn-primary" onClick={abrirCrear}>
           ➕ Nuevo producto

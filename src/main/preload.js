@@ -33,6 +33,7 @@ contextBridge.exposeInMainWorld("api", {
     getById: (id) => ipcRenderer.invoke("productos:getById", id),
     create: (data) => ipcRenderer.invoke("productos:create", data),
     update: (data) => ipcRenderer.invoke("productos:update", data),
+    importBulk: (filas) => ipcRenderer.invoke("productos:importBulk", filas),
     delete: (id) => ipcRenderer.invoke("productos:delete", id),
     stockBajo: () => ipcRenderer.invoke("productos:stockBajo"),
   },
