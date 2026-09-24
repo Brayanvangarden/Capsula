@@ -180,26 +180,6 @@ function Inventario() {
     <div className="page-container">
       <div className="page-header">
         <h1>📦 Inventario</h1>
-        <div className="header-actions">
-          <button
-            className="btn-secondary"
-            onClick={() => {
-              setMensaje("");
-              setTab("entrada");
-            }}
-          >
-            <ArrowDownIcon /> Entrada
-          </button>
-          <button
-            className="btn-secondary"
-            onClick={() => {
-              setMensaje("");
-              setTab("salida");
-            }}
-          >
-            <ArrowUpIcon /> Salida
-          </button>
-        </div>
       </div>
 
       {error && <p className="message-error">{error}</p>}
