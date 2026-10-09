@@ -502,9 +502,10 @@
 }
 
 .factura-brand-logo {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  display: block;
+  width: 120px;
+  height: 72px;
+  object-fit: contain;
   margin-bottom: 10px;
 }
 

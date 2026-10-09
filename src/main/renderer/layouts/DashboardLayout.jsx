@@ -18,7 +18,7 @@ const navLinks = [
 ];
 
 function DashboardLayout() {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(
     () => window.matchMedia("(min-width: 901px)").matches,
   );
@@ -43,18 +43,20 @@ function DashboardLayout() {
         </div>
 
         <nav className="sidebar-nav">
-          {navLinks.map(({ label, path, icon }) => (
-            <NavLink
-              key={path}
-              to={path}
-              className={({ isActive }) =>
-                `sidebar-link ${isActive ? "active" : ""}`
-              }
-            >
-              <span className="sidebar-icon">{icon}</span>
-              <span>{label}</span>
-            </NavLink>
-          ))}
+          {navLinks
+            .filter(({ path }) => path !== "/usuarios" || isAdmin)
+            .map(({ label, path, icon }) => (
+              <NavLink
+                key={path}
+                to={path}
+                className={({ isActive }) =>
+                  `sidebar-link ${isActive ? "active" : ""}`
+                }
+              >
+                <span className="sidebar-icon">{icon}</span>
+                <span>{label}</span>
+              </NavLink>
+            ))}
         </nav>
 
         <div className="sidebar-footer">

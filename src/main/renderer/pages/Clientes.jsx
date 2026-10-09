@@ -774,7 +774,7 @@ function Clientes() {
               <div className="detail-row">
                 <span className="detail-label">Balance pendiente</span>
                 <span className="detail-value">
-                  ₡
+                  $
                   {Number(clienteDetalle.balance_pendiente ?? 0).toLocaleString(
                     "es-CR",
                   )}

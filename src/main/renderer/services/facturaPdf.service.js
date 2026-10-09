@@ -1,7 +1,42 @@
 import { jsPDF } from "jspdf";
 
+export const COMPANY_LOGO_URL = new URL(
+  "../../../../assets/logo factura.jpeg",
+  import.meta.url,
+).href;
+
+let companyLogoPromise;
+
+function getCompanyLogo() {
+  if (!companyLogoPromise) {
+    companyLogoPromise = new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext("2d");
+        if (!context) {
+          reject(new Error("No se pudo preparar el logo de la empresa."));
+          return;
+        }
+        context.drawImage(image, 0, 0);
+        resolve({
+          data: canvas.toDataURL("image/png"),
+          width: image.naturalWidth,
+          height: image.naturalHeight,
+        });
+      };
+      image.onerror = () =>
+        reject(new Error("No se pudo cargar el logo de la empresa."));
+      image.src = COMPANY_LOGO_URL;
+    });
+  }
+  return companyLogoPromise;
+}
+
 function moneda(value) {
-  return `CRC ${Number(value ?? 0).toLocaleString("en-US")}`;
+  return `$${Number(value ?? 0).toLocaleString("en-US")}`;
 }
 
 function formatOrdenNumero(id) {
@@ -143,41 +178,78 @@ function dibujarNotas(pdf, { margin, pageWidth, pageHeight, startY }) {
   });
 }
 
-function crearPdf(factura) {
+async function dibujarEncabezado(
+  pdf,
+  { pageWidth, margin, titulo, numero, layout = "horizontal" },
+) {
+  const logo = await getCompanyLogo();
+  const stacked = layout === "stacked";
+  const maxLogoWidth = stacked ? 192 : 96;
+  const maxLogoHeight = stacked ? 128 : 64;
+  const logoScale = Math.min(
+    maxLogoWidth / logo.width,
+    maxLogoHeight / logo.height,
+  );
+  const logoWidth = logo.width * logoScale;
+  const logoHeight = logo.height * logoScale;
+  const logoX = margin;
+  const logoY = stacked
+    ? 24 + (maxLogoHeight - logoHeight) / 2
+    : 32 + (64 - logoHeight) / 2;
+
+  pdf.addImage(
+    logo.data,
+    "PNG",
+    logoX,
+    logoY,
+    logoWidth,
+    logoHeight,
+  );
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(10);
+  const companyInfo = [
+    "NATUR VITALIA LLC",
+    "7980 W 25th Ct. Hialeah, FL 33016",
+    "Tel. (754) 209-3195 / (954) 889-4019",
+  ];
+  if (stacked) {
+    const companyX = margin;
+    companyInfo.forEach((line, index) => {
+      pdf.text(line, companyX, 24 + maxLogoHeight + 18 + index * 14);
+    });
+  } else {
+    const companyX = margin + maxLogoWidth + 12;
+    companyInfo.forEach((line, index) => {
+      pdf.text(line, companyX, 48 + index * 14);
+    });
+  }
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(18);
+  pdf.text(titulo, pageWidth - 150, 52);
+  pdf.setFontSize(11);
+  pdf.text(numero, pageWidth - 150, 72);
+}
+
+async function crearPdf(factura) {
   const pdf = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 42;
   const boxWidth = pageWidth / 2 - 70;
-  let y = 48;
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(20);
-  pdf.text("LOGICAPS", margin, y);
-
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(10);
-  y += 18;
-  pdf.text("NATUR VITALIA LLC", margin, y);
-  y += 14;
-  pdf.text("7980 W 25th Ct. Hialeah, FL 33016", margin, y);
-  y += 14;
-  pdf.text("Tel. (754) 209-3195 / (954) 889-4019", margin, y);
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(18);
-  pdf.text("INVOICE", pageWidth - 150, 52);
-  pdf.setFontSize(11);
-  pdf.text(
-    `No. ${String(factura.orden_id ?? 0).padStart(4, "0")}`,
-    pageWidth - 150,
-    72,
-  );
+  await dibujarEncabezado(pdf, {
+    pageWidth,
+    margin,
+    titulo: "INVOICE",
+    numero: `No. ${String(factura.orden_id ?? 0).padStart(4, "0")}`,
+    layout: "stacked",
+  });
 
   const billX = margin;
   const shipX = pageWidth / 2 + 12;
   const boxHeight = 108;
-  y = 132;
+  let y = 230;
 
   pdf.setDrawColor(0, 0, 0);
   pdf.setLineWidth(0.8);
@@ -215,7 +287,7 @@ function crearPdf(factura) {
     shipY += 12;
   });
 
-  y = 250;
+  y += boxHeight + 10;
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(9);
   pdf.text("Item No.", margin, y);
@@ -273,41 +345,24 @@ function crearPdf(factura) {
   return pdf;
 }
 
-function crearProformaPdf(orden) {
+async function crearProformaPdf(orden) {
   const pdf = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 42;
   const boxWidth = pageWidth / 2 - 70;
-  let y = 48;
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(20);
-  pdf.text("LOGICAPS", margin, y);
-
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(10);
-  y += 18;
-  pdf.text("NATUR VITALIA LLC", margin, y);
-  y += 14;
-  pdf.text("7980 W 25th Ct. Hialeah, FL 33016", margin, y);
-  y += 14;
-  pdf.text("Tel. (754) 209-3195 / (954) 889-4019", margin, y);
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(18);
-  pdf.text("QUOTATION", pageWidth - 150, 52);
-  pdf.setFontSize(11);
-  pdf.text(
-    `No. ${String(orden?.id ?? 0).padStart(4, "0")}`,
-    pageWidth - 150,
-    72,
-  );
+  await dibujarEncabezado(pdf, {
+    pageWidth,
+    margin,
+    titulo: "QUOTATION",
+    numero: `No. ${String(orden?.id ?? 0).padStart(4, "0")}`,
+    layout: "stacked",
+  });
 
   const billX = margin;
   const shipX = pageWidth / 2 + 12;
   const boxHeight = 108;
-  y = 132;
+  let y = 230;
 
   pdf.setDrawColor(0, 0, 0);
   pdf.setLineWidth(0.8);
@@ -345,7 +400,7 @@ function crearProformaPdf(orden) {
     shipY += 12;
   });
 
-  y = 250;
+  y += boxHeight + 10;
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(9);
   pdf.text("Item No.", margin, y);
@@ -404,20 +459,30 @@ function crearProformaPdf(orden) {
   return pdf;
 }
 
-export function generarFacturaPdf(factura) {
-  crearPdf(factura).save(`${factura.numero_factura}.pdf`);
+export async function generarFacturaPdf(factura) {
+  (await crearPdf(factura)).save(`${factura.numero_factura}.pdf`);
 }
 
-export function generarProformaPdf(orden) {
+export async function generarProformaPdf(orden) {
   if (!orden) return;
-  crearProformaPdf(orden).save(
+  (await crearProformaPdf(orden)).save(
     `PROFORMA-${String(orden.id).padStart(4, "0")}.pdf`,
   );
 }
 
-export function imprimirFactura(factura) {
-  const pdf = crearPdf(factura);
-  const blobUrl = pdf.output("bloburl");
-  const ventana = window.open(blobUrl, "_blank");
-  ventana?.addEventListener("load", () => ventana.print());
+export async function imprimirFactura(factura) {
+  const ventana = window.open("about:blank", "_blank");
+  if (!ventana) {
+    throw new Error("El navegador bloqueó la ventana de impresión.");
+  }
+
+  try {
+    const pdf = await crearPdf(factura);
+    const blobUrl = pdf.output("bloburl");
+    ventana.addEventListener("load", () => ventana.print(), { once: true });
+    ventana.location.href = blobUrl;
+  } catch (error) {
+    ventana.close();
+    throw error;
+  }
 }

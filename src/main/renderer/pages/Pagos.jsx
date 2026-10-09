@@ -33,7 +33,7 @@ function Pagos() {
     monto: "",
     tipoPago: "abono",
     metodoPago: "efectivo",
-    referenciaDatafono: "",
+    referencia: "",
     notas: "",
   });
   const [mensaje, setMensaje] = useState("");
@@ -52,7 +52,7 @@ function Pagos() {
       monto: "",
       tipoPago: "abono",
       metodoPago: "efectivo",
-      referenciaDatafono: "",
+      referencia: "",
       notas: "",
     });
     setBusqueda("");
@@ -163,14 +163,14 @@ function Pagos() {
       clienteId: String(orden.cliente_id),
       ordenId: String(orden.id),
       monto: form.tipoPago === "pago_total" ? String(orden.saldoPendiente) : "",
-      referenciaDatafono: "",
+      referencia: "",
     });
     setBusquedaOrden("");
     setMensaje("");
   };
 
   const limpiarOrdenSeleccionada = () => {
-    setForm({ ...form, ordenId: "", monto: "", referenciaDatafono: "" });
+    setForm({ ...form, ordenId: "", monto: "", referencia: "" });
   };
 
   const cambiarTipoPago = (tipoPago) => {
@@ -203,7 +203,7 @@ function Pagos() {
     }
     return {
       tipo: "abono",
-      texto: `Es un abono. Después de este pago quedarán ₡${restante.toLocaleString("es-CR")} pendientes.`,
+      texto: `Es un abono. Después de este pago quedarán $${restante.toLocaleString("es-CR")} pendientes.`,
     };
   }, [form.monto, saldoOrdenRestante]);
 
@@ -242,18 +242,24 @@ function Pagos() {
     if (monto > saldoOrdenRestante + 0.005) {
       setMensajeTipo("error");
       setMensaje(
-        `El monto no puede ser mayor al saldo pendiente de la orden (₡${Number(
+        `El monto no puede ser mayor al saldo pendiente de la orden ($${Number(
           saldoOrdenRestante,
         ).toLocaleString("es-CR")}).`,
       );
       return;
     }
 
-    const referenciaDatafono =
-      form.metodoPago === "datafono" ? form.referenciaDatafono.trim() : "";
+    const referencia = form.referencia.trim();
+    const etiquetaReferencia = {
+      cheque: "Referencia Cheque",
+      datafono: "Referencia Datafono",
+      zelle: "Referencia Zelle",
+    }[form.metodoPago];
     const notasPayload = [
       form.notas?.trim(),
-      referenciaDatafono ? `Referencia Datafono: ${referenciaDatafono}` : "",
+      referencia && etiquetaReferencia
+        ? `${etiquetaReferencia}: ${referencia}`
+        : "",
     ]
       .filter(Boolean)
       .join(" | ");
@@ -280,7 +286,7 @@ function Pagos() {
     setFacturaSeleccionada(null);
     setMensaje(
       saldoRestante > 0.005
-        ? `Abono registrado. Saldo restante: ₡${saldoRestante.toLocaleString("es-CR")}`
+        ? `Abono registrado. Saldo restante: $${saldoRestante.toLocaleString("es-CR")}`
         : "Pago registrado. La orden quedó pagada.",
     );
     if (resultado.data?.id) {
@@ -304,7 +310,7 @@ function Pagos() {
       monto: "",
       tipoPago: "abono",
       metodoPago: "efectivo",
-      referenciaDatafono: "",
+      referencia: "",
       notas: "",
     });
   };
@@ -334,7 +340,7 @@ function Pagos() {
           <div className="stat-icon">📈</div>
           <div>
             <h3>
-              ₡{Number(resumen?.total_recaudado ?? 0).toLocaleString("es-CR")}
+              ${Number(resumen?.total_recaudado ?? 0).toLocaleString("es-CR")}
             </h3>
             <p>Total recaudado</p>
           </div>
@@ -342,7 +348,7 @@ function Pagos() {
         <div className="stat-card">
           <div className="stat-icon">🏦</div>
           <div>
-            <h3>₡{Number(resumen?.efectivo ?? 0).toLocaleString("es-CR")}</h3>
+            <h3>${Number(resumen?.efectivo ?? 0).toLocaleString("es-CR")}</h3>
             <p>Efectivo</p>
           </div>
         </div>
@@ -405,7 +411,7 @@ function Pagos() {
                           {formatOrdenNumero(orden.id)} — {orden.cliente_nombre}
                         </span>
                         <span className="pill pill-warn">
-                          Faltan ₡{orden.saldoPendiente.toLocaleString("es-CR")}
+                          Faltan ${orden.saldoPendiente.toLocaleString("es-CR")}
                         </span>
                       </button>
                     ))
@@ -456,7 +462,7 @@ function Pagos() {
                             {formatOrdenNumero(orden.id)}
                           </span>
                           <span className="pill pill-warn">
-                            Faltan ₡
+                            Faltan $
                             {orden.saldoPendiente.toLocaleString("es-CR")}
                           </span>
                         </button>
@@ -495,13 +501,13 @@ function Pagos() {
                   <div className="detail-row">
                     <span className="detail-label">Total de la orden</span>
                     <span className="detail-value">
-                      ₡{Number(ordenSeleccionada.total).toLocaleString("es-CR")}
+                      ${Number(ordenSeleccionada.total).toLocaleString("es-CR")}
                     </span>
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">Ya pagado</span>
                     <span className="detail-value">
-                      ₡
+                      $
                       {Number(ordenSeleccionada.totalPagado).toLocaleString(
                         "es-CR",
                       )}
@@ -510,7 +516,7 @@ function Pagos() {
                   <div className="detail-row">
                     <span className="detail-label">Saldo pendiente</span>
                     <span className="detail-value">
-                      ₡{Number(saldoOrdenRestante).toLocaleString("es-CR")}
+                      ${Number(saldoOrdenRestante).toLocaleString("es-CR")}
                     </span>
                   </div>
                 </div>
@@ -544,7 +550,7 @@ function Pagos() {
 
               <div className="form-group">
                 <label>
-                  Monto a pagar * (máximo ₡
+                  Monto a pagar * (máximo $
                   {Number(saldoOrdenRestante).toLocaleString("es-CR")})
                 </label>
                 <input
@@ -566,7 +572,7 @@ function Pagos() {
                     className="btn-link-inline"
                     onClick={() => cambiarTipoPago("pago_total")}
                   >
-                    Usar el saldo completo (₡
+                    Usar el saldo completo ($
                     {Number(saldoOrdenRestante).toLocaleString("es-CR")})
                   </button>
                 )}
@@ -595,8 +601,7 @@ function Pagos() {
                     setForm({
                       ...form,
                       metodoPago: metodo,
-                      referenciaDatafono:
-                        metodo === "datafono" ? form.referenciaDatafono : "",
+                      referencia: metodo === form.metodoPago ? form.referencia : "",
                     });
                   }}
                 >
@@ -608,16 +613,22 @@ function Pagos() {
                 </select>
               </div>
 
-              {form.metodoPago === "datafono" && (
+              {["cheque", "datafono", "zelle"].includes(form.metodoPago) && (
                 <div className="form-group">
                   <label>Referencia</label>
                   <input
                     type="text"
-                    value={form.referenciaDatafono}
+                    value={form.referencia}
                     onChange={(e) =>
-                      setForm({ ...form, referenciaDatafono: e.target.value })
+                      setForm({ ...form, referencia: e.target.value })
                     }
-                    placeholder="Número o referencia del datáfono"
+                    placeholder={
+                      form.metodoPago === "cheque"
+                        ? "Número o referencia del cheque"
+                        : form.metodoPago === "zelle"
+                          ? "Número o referencia de Zelle"
+                          : "Número o referencia del datáfono"
+                    }
                   />
                 </div>
               )}
@@ -633,7 +644,7 @@ function Pagos() {
 
               {clienteSeleccionado?.balance_pendiente != null && (
                 <div className="form-note">
-                  Balance pendiente total del cliente: ₡
+                  Balance pendiente total del cliente: $
                   {Number(clienteSeleccionado.balance_pendiente).toLocaleString(
                     "es-CR",
                   )}
@@ -709,12 +720,12 @@ function Pagos() {
                     >
                       <td>{formatOrdenNumero(orden.id)}</td>
                       <td>{orden.cliente_nombre}</td>
-                      <td>₡{Number(orden.total).toLocaleString("es-CR")}</td>
+                      <td>${Number(orden.total).toLocaleString("es-CR")}</td>
                       <td>
-                        ₡{Number(orden.totalPagado).toLocaleString("es-CR")}
+                        ${Number(orden.totalPagado).toLocaleString("es-CR")}
                       </td>
                       <td>
-                        ₡{Number(orden.saldoPendiente).toLocaleString("es-CR")}
+                        ${Number(orden.saldoPendiente).toLocaleString("es-CR")}
                       </td>
                     </tr>
                   ))}
@@ -759,7 +770,7 @@ function Pagos() {
                       <td>
                         {pago.orden_id ? formatOrdenNumero(pago.orden_id) : "—"}
                       </td>
-                      <td>₡{Number(pago.monto).toLocaleString("es-CR")}</td>
+                      <td>${Number(pago.monto).toLocaleString("es-CR")}</td>
                       <td>
                         {pago.tipo_pago === "pago_total"
                           ? "Pago total"

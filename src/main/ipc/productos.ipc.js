@@ -51,7 +51,15 @@ function registerProductosIpc() {
     const skusExistentes = new Set(
       productosRepo
         .getAll()
+        .filter((producto) => producto.estado === 'activo')
         .map((producto) => String(producto.sku ?? '').trim().toLowerCase())
+        .filter(Boolean),
+    )
+    const nombresExistentes = new Set(
+      productosRepo
+        .getAll()
+        .filter((producto) => producto.estado === 'activo')
+        .map((producto) => String(producto.nombre ?? '').trim().toLowerCase())
         .filter(Boolean),
     )
 
@@ -72,9 +80,19 @@ function registerProductosIpc() {
         continue
       }
 
+      const nombreNormalizado = validacion.data.nombre.trim().toLowerCase()
+      if (nombresExistentes.has(nombreNormalizado)) {
+        resultado.fallidos++
+        resultado.errores.push(
+          `Fila ${i + 2}: ya existe un producto con el nombre "${validacion.data.nombre}"`,
+        )
+        continue
+      }
+
       try {
         productosRepo.create(validacion.data)
         skusExistentes.add(skuNormalizado)
+        nombresExistentes.add(nombreNormalizado)
         resultado.creados++
       } catch (error) {
         resultado.fallidos++

@@ -38,11 +38,12 @@ export function useProductos() {
     try {
       const nuevo = await productosService.create({ ...data, usuario_id: user?.id ?? null })
       setProductos(prev => [...prev, nuevo])
+      await fetchAlertas()
       return { ok: true, data: nuevo }
     } catch (err) {
       return { ok: false, message: err.message }
     }
-  }, [user?.id])
+  }, [fetchAlertas, user?.id])
 
   // ── Actualizar ──────────────────────────────────────
   const actualizarProducto = useCallback(async (data) => {
@@ -51,11 +52,12 @@ export function useProductos() {
       setProductos(prev =>
         prev.map(p => p.id === actualizado.id ? actualizado : p)
       )
+      await fetchAlertas()
       return { ok: true, data: actualizado }
     } catch (err) {
       return { ok: false, message: err.message }
     }
-  }, [user?.id])
+  }, [fetchAlertas, user?.id])
 
   // ── Eliminar (lógico) ───────────────────────────────
   const eliminarProducto = useCallback(async (id) => {
@@ -64,11 +66,12 @@ export function useProductos() {
       setProductos(prev =>
         prev.map(p => p.id === id ? { ...p, estado: 'inactivo' } : p)
       )
+      await fetchAlertas()
       return { ok: true }
     } catch (err) {
       return { ok: false, message: err.message }
     }
-  }, [user?.id])
+  }, [fetchAlertas, user?.id])
 
   const obtenerProducto = useCallback(async (id) => {
     try {

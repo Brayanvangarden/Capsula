@@ -1,7 +1,9 @@
 import {
+  COMPANY_LOGO_URL,
   generarFacturaPdf,
   imprimirFactura,
 } from "../services/facturaPdf.service";
+import { useState } from "react";
 
 function moneda(value) {
   return `$${Number(value ?? 0).toLocaleString("en-US", {
@@ -15,6 +17,7 @@ function formatNumeroOrden(id) {
 }
 
 export default function Factura({ factura, onClose }) {
+  const [error, setError] = useState("");
   if (!factura) return null;
 
   const subtotal = Number(factura.subtotal ?? 0);
@@ -33,14 +36,28 @@ export default function Factura({ factura, onClose }) {
           <button
             type="button"
             className="btn-secondary factura-imprimir"
-            onClick={() => imprimirFactura(factura)}
+            onClick={async () => {
+              setError("");
+              try {
+                await imprimirFactura(factura);
+              } catch (actionError) {
+                setError(actionError.message || "No se pudo imprimir la factura.");
+              }
+            }}
           >
             Print
           </button>
           <button
             type="button"
             className="btn-primary"
-            onClick={() => generarFacturaPdf(factura)}
+            onClick={async () => {
+              setError("");
+              try {
+                await generarFacturaPdf(factura);
+              } catch (actionError) {
+                setError(actionError.message || "No se pudo generar el PDF.");
+              }
+            }}
           >
             Download PDF
           </button>
@@ -53,10 +70,16 @@ export default function Factura({ factura, onClose }) {
           </button>
         </div>
 
+        {error && <p className="message-error">{error}</p>}
+
         <article className="factura-documento factura-documento-proforma">
           <header className="factura-header-proforma">
             <div className="factura-brand-block">
-              <div className="factura-brand-logo">LOGICAPS</div>
+              <img
+                className="factura-brand-logo"
+                src={COMPANY_LOGO_URL}
+                alt="Logo de Logicaps"
+              />
               <p>NATUR VITALIA LLC</p>
               <p>7980 W 25th Ct. Hialeah, FL 33016</p>
               <p>Tel. (754) 209-3195 / (954) 889-4019</p>
