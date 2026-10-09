@@ -437,42 +437,46 @@ function Clientes() {
         </div>
 
         <div className="form-group">
-          <label>Teléfono</label>
+          <label>Teléfono *</label>
           <input
             type="tel"
             value={form.telefono}
             onChange={(e) => setForm({ ...form, telefono: e.target.value })}
             placeholder="Ej: 8888-8888"
+            required
           />
         </div>
 
         <div className="form-group">
-          <label>Correo Electrónico</label>
+          <label>Correo Electrónico *</label>
           <input
             type="email"
             value={form.correo}
             onChange={(e) => setForm({ ...form, correo: e.target.value })}
             placeholder="correo@ejemplo.com"
+            required
           />
         </div>
 
         <div className="form-group">
-          <label>Dirección</label>
+          <label>Dirección *</label>
           <input
             type="text"
             value={form.direccion}
             onChange={(e) => setForm({ ...form, direccion: e.target.value })}
             placeholder="Dirección del cliente"
+            required
           />
         </div>
 
         <div className="form-group full-width">
-          <label>Notas</label>
+          <label>Notas *</label>
           <textarea
             rows={3}
             value={form.notas}
             onChange={(e) => setForm({ ...form, notas: e.target.value })}
             placeholder="Observaciones o información adicional..."
+            required
           />
         </div>
 
@@ -492,11 +496,12 @@ function Clientes() {
 
         {form.tiene_descuento && (
           <div className="form-group">
-            <label>Porcentaje de descuento (%)</label>
+            <label>Porcentaje de descuento (%) *</label>
             <input
               type="text"
               inputMode="decimal"
               value={form.descuento_porcentaje}
+              required
               onKeyDown={bloquearTeclasNoNumericas}
               onChange={(e) => {
                 const value = aceptarPorcentaje(e.target.value);

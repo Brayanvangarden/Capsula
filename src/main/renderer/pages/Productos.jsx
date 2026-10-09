@@ -301,7 +301,6 @@ function Productos() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensaje("");
-    setLoadingOp(true);
 
     const data = {
       ...form,
@@ -313,29 +312,53 @@ function Productos() {
       material: form.material || null,
     };
 
-    if (
-      !Number.isFinite(data.precio) ||
-      data.precio < 0 ||
-      !Number.isInteger(data.stock) ||
-      data.stock < 0 ||
-      !Number.isInteger(data.stockMinimo) ||
-      data.stockMinimo < 0
-    ) {
-      setMensajeTipo("error");
-      setMensaje(
-        "Precio, stock y stock mínimo deben ser valores numéricos válidos.",
+    const errores = [];
+    if (!data.nombre.trim()) errores.push("El nombre es obligatorio.");
+    if (!Number.isFinite(data.precio) || data.precio < 0) {
+      errores.push("El precio debe ser un número mayor o igual a 0.");
+    }
+    if (!Number.isInteger(data.stock) || data.stock < 0) {
+      errores.push("El stock debe ser un número entero mayor o igual a 0.");
+    }
+    if (!Number.isInteger(data.stockMinimo) || data.stockMinimo < 0) {
+      errores.push(
+        "El stock mínimo debe ser un número entero mayor o igual a 0.",
       );
-      setLoadingOp(false);
-      return;
+    }
+    if (tab === "nuevo" && !form.categoriaId) {
+      errores.push("La categoría es obligatoria.");
+    } else if (form.categoriaId) {
+      const categoriaId = Number(form.categoriaId);
+      if (
+        !Number.isInteger(categoriaId) ||
+        !categoriasActivas.some((categoria) => categoria.id === categoriaId)
+      ) {
+        errores.push("Seleccione una categoría válida.");
+      }
     }
 
+    const skuNormalizado = data.sku.toLowerCase();
     if (!data.sku) {
+      errores.push("El SKU es obligatorio para identificar el producto.");
+    } else if (
+      productos.some(
+        (producto) =>
+          producto.id !== editando &&
+          String(producto.sku ?? "")
+            .trim()
+            .toLowerCase() === skuNormalizado,
+      )
+    ) {
+      errores.push("Ya existe un producto con ese SKU.");
+    }
+
+    if (errores.length) {
       setMensajeTipo("error");
-      setMensaje("El SKU es obligatorio para identificar el producto.");
-      setLoadingOp(false);
+      setMensaje(errores.join(" "));
       return;
     }
 
+    setLoadingOp(true);
     try {
       const resultado = editando
         ? await actualizarProducto({ id: editando, ...data })
@@ -373,12 +396,15 @@ function Productos() {
         </div>
 
         <div className="form-group">
-          <label>Categoría</label>
+          <label>Categoría{tab === "nuevo" ? " *" : ""}</label>
           <select
+            required={tab === "nuevo"}
             value={form.categoriaId}
             onChange={(e) => setForm({ ...form, categoriaId: e.target.value })}
           >
-            <option value="">Sin categoría</option>
+            <option value="">
+              {tab === "nuevo" ? "Seleccione una categoría" : "Sin categoría"}
+            </option>
             {categoriasActivas.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.nombre}
