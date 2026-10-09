@@ -127,6 +127,6 @@ VALUES
   ('creacion', 'clientes',   'Carga inicial de clientes',               1, datetime('now', '-30 days')),
   ('venta',    'ordenes',    'Orden #1 completada - Farmacia S. Lucía', 3, datetime('now', '-18 days')),
   ('venta',    'ordenes',    'Orden #2 completada - NutriMax CR',       3, datetime('now', '-15 days')),
-  ('pago',     'pagos',      'Pago recibido de NutriMax CR ₡100,000',   3, datetime('now', '-14 days')),
+  ('pago',     'pagos',      'Pago recibido de NutriMax CR $100,000',   3, datetime('now', '-14 days')),
   ('alerta',   'inventario', 'Stock bajo: Cápsula Gelatina Talla 5',    1, datetime('now', '-2 days')),
   ('alerta',   'inventario', 'Producto próximo a vencer: Vegetal T3',   1, datetime('now', '-1 days'));

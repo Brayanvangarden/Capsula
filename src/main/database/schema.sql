@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS productos (
   stock_minimo        REAL    NOT NULL DEFAULT 0,
   material            TEXT,
   color               TEXT,
-  sku                 TEXT    NOT NULL UNIQUE,
+  sku                 TEXT    NOT NULL,
   estado              TEXT    NOT NULL DEFAULT 'activo' CHECK(estado IN ('activo', 'inactivo')),
   notas               TEXT,
   creado_en           TEXT    NOT NULL DEFAULT (datetime('now')),

@@ -7,7 +7,7 @@ const ESTADOS = {
   morosa: "Morosa",
 };
 
-const moneda = (valor) => `₡${Number(valor ?? 0).toLocaleString("es-CR")}`;
+const moneda = (valor) => `$${Number(valor ?? 0).toLocaleString("es-CR")}`;
 const fecha = (valor) =>
   valor ? new Date(valor).toLocaleDateString("es-CR") : "—";
 const mesActual = () => new Date().toISOString().slice(0, 7);

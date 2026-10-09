@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "../hooks/useAuth";
 import { useProductos } from "../hooks/useProductos";
 import { useCategorias } from "../hooks/useCategorias";
 import { productosService } from "../services/productos.service";
@@ -67,6 +68,7 @@ const aceptarNumero = (value, decimal = false) => {
 const PRODUCTOS_POR_PAGINA = 10;
 
 function Productos() {
+  const { isAdmin } = useAuth();
   const {
     productos,
     productosActivos,
@@ -126,6 +128,7 @@ function Productos() {
 
   // ── Handlers ─────────────────────────────────────────
   const abrirCrear = () => {
+    if (!isAdmin) return;
     setForm(EMPTY);
     setEditando(null);
     setMensaje("");
@@ -133,6 +136,7 @@ function Productos() {
   };
 
   const abrirEditar = (p) => {
+    if (!isAdmin) return;
     setMensaje("");
     setForm({
       nombre: p.nombre,
@@ -265,6 +269,7 @@ function Productos() {
   };
 
   const handleImportarCSV = async (event) => {
+    if (!isAdmin) return;
     const archivo = event.target.files?.[0];
     if (!archivo) return;
 
@@ -301,6 +306,11 @@ function Productos() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensaje("");
+    if (!isAdmin) {
+      setMensajeTipo("error");
+      setMensaje("No tienes permiso para modificar productos.");
+      return;
+    }
 
     const data = {
       ...form,
@@ -338,11 +348,26 @@ function Productos() {
     }
 
     const skuNormalizado = data.sku.toLowerCase();
+    const nombreNormalizado = data.nombre.trim().toLowerCase();
+    if (
+      productos.some(
+        (producto) =>
+          producto.estado === "activo" &&
+          producto.id !== editando &&
+          String(producto.nombre ?? "")
+            .trim()
+            .toLowerCase() === nombreNormalizado,
+      )
+    ) {
+      errores.push("Ya existe un producto con ese nombre.");
+    }
+
     if (!data.sku) {
       errores.push("El SKU es obligatorio para identificar el producto.");
     } else if (
       productos.some(
         (producto) =>
+          producto.estado === "activo" &&
           producto.id !== editando &&
           String(producto.sku ?? "")
             .trim()
@@ -522,7 +547,7 @@ function Productos() {
   );
 
   const handleEliminar = async (id) => {
-    if (!id) return;
+    if (!isAdmin || !id) return;
     const resultado = await eliminarProducto(id);
     if (!resultado.ok) {
       setMensaje(resultado.message || "No se pudo eliminar el producto.");
@@ -542,9 +567,11 @@ function Productos() {
         <div>
           <h1>📦 Productos</h1>
         </div>
-        <button className="btn-primary" onClick={abrirCrear}>
-          ➕ Nuevo producto
-        </button>
+        {isAdmin && (
+          <button className="btn-primary" onClick={abrirCrear}>
+            ➕ Nuevo producto
+          </button>
+        )}
       </div>
 
       {mensaje && !["nuevo", "editar"].includes(tab) && (
@@ -576,22 +603,26 @@ function Productos() {
           className="search-input"
         />
         <div className="toolbar-actions">
-          <button
-            className="btn-secondary"
-            onClick={() => inputImportRef.current?.click()}
-          >
-            📤 Importar CSV
-          </button>
+          {isAdmin && (
+            <button
+              className="btn-secondary"
+              onClick={() => inputImportRef.current?.click()}
+            >
+              📤 Importar CSV
+            </button>
+          )}
           <button className="btn-secondary" onClick={exportarCSV}>
             📥 Exportar CSV
           </button>
-          <input
-            ref={inputImportRef}
-            type="file"
-            accept=".csv"
-            style={{ display: "none" }}
-            onChange={handleImportarCSV}
-          />
+          {isAdmin && (
+            <input
+              ref={inputImportRef}
+              type="file"
+              accept=".csv"
+              style={{ display: "none" }}
+              onChange={handleImportarCSV}
+            />
+          )}
         </div>
         <div className="filtros">
           {["todos", "stockBajo"].map((f) => (
@@ -644,7 +675,7 @@ function Productos() {
                         p.categoria_nombre ??
                         "—"}
                     </td>
-                    <td>₡{parseFloat(p.precio).toLocaleString("es-CR")}</td>
+                    <td>${parseFloat(p.precio).toLocaleString("es-CR")}</td>
                     <td>
                       <strong>{p.sku || "—"}</strong>
                     </td>
@@ -670,22 +701,26 @@ function Productos() {
                       >
                         👁️
                       </button>
-                      <button
-                        className="btn-edit"
-                        title="Editar producto"
-                        aria-label="Editar producto"
-                        onClick={() => abrirEditar(p)}
-                      >
-                        <PencilIcon />
-                      </button>
-                      <button
-                        className="btn-edit btn-danger"
-                        title="Eliminar producto"
-                        aria-label="Eliminar producto"
-                        onClick={() => setConfirmId(p.id)}
-                      >
-                        <TrashIcon />
-                      </button>
+                      {isAdmin && (
+                        <>
+                          <button
+                            className="btn-edit"
+                            title="Editar producto"
+                            aria-label="Editar producto"
+                            onClick={() => abrirEditar(p)}
+                          >
+                            <PencilIcon />
+                          </button>
+                          <button
+                            className="btn-edit btn-danger"
+                            title="Eliminar producto"
+                            aria-label="Eliminar producto"
+                            onClick={() => setConfirmId(p.id)}
+                          >
+                            <TrashIcon />
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -759,7 +794,7 @@ function Productos() {
                 <div className="form-group">
                   <label>Precio</label>
                   <div className="readonly-field">
-                    ₡
+                    $
                     {parseFloat(detalleProducto.precio).toLocaleString("es-CR")}
                   </div>
                 </div>

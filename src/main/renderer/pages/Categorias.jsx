@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../hooks/useAuth";
 import { useCategorias } from "../hooks/useCategorias";
 
 function TagIcon(props) {
@@ -65,6 +66,7 @@ const EMPTY = { nombre: "", descripcion: "", estado: "activo" };
 const CATEGORIAS_POR_PAGINA = 10;
 
 function Categorias() {
+  const { isAdmin } = useAuth();
   const {
     categorias,
     categoriasActivas,
@@ -125,6 +127,7 @@ function Categorias() {
   }, [pagina, totalPaginas]);
 
   const abrirCrear = () => {
+    if (!isAdmin) return;
     setForm(EMPTY);
     setEditando(null);
     setMensaje("");
@@ -133,6 +136,7 @@ function Categorias() {
   };
 
   const abrirEditar = (c) => {
+    if (!isAdmin) return;
     setForm({
       nombre: c.nombre,
       descripcion: c.descripcion ?? "",
@@ -146,6 +150,11 @@ function Categorias() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isAdmin) {
+      setMensaje("No tienes permiso para modificar categorías.");
+      setMensajeTipo("error");
+      return;
+    }
     setGuardando(true);
     try {
       const resultado = editando
@@ -171,7 +180,7 @@ function Categorias() {
   };
 
   const handleEliminar = async () => {
-    if (!confirmCategoria) return;
+    if (!isAdmin || !confirmCategoria) return;
     const resultado = await eliminarCategoria(confirmCategoria.id);
     if (!resultado.ok) {
       setMensaje(resultado.message || "No se pudo eliminar la categoría.");
@@ -191,9 +200,11 @@ function Categorias() {
       <div className="page-header">
         <h1>🗂️ Categorías</h1>
         <div className="header-actions">
-          <button className="btn-primary" onClick={abrirCrear}>
-            + Nueva categoría
-          </button>
+          {isAdmin && (
+            <button className="btn-primary" onClick={abrirCrear}>
+              + Nueva categoría
+            </button>
+          )}
         </div>
       </div>
 
@@ -262,7 +273,7 @@ function Categorias() {
                   <th>Nombre</th>
                   <th>Descripción</th>
                   <th>Estado</th>
-                  <th>Acciones</th>
+                  {isAdmin && <th>Acciones</th>}
                 </tr>
               </thead>
               <tbody>
@@ -283,22 +294,24 @@ function Categorias() {
                         {c.estado === "activo" ? "Activa" : "Inactiva"}
                       </span>
                     </td>
-                    <td className="action-buttons">
-                      <button
-                        className="btn-edit"
-                        onClick={() => abrirEditar(c)}
-                        aria-label="Editar categoría"
-                      >
-                        <PencilIcon />
-                      </button>
-                      <button
-                        className="btn-danger"
-                        onClick={() => setConfirmCategoria(c)}
-                        aria-label="Eliminar categoría"
-                      >
-                        <TrashIcon />
-                      </button>
-                    </td>
+                    {isAdmin && (
+                      <td className="action-buttons">
+                        <button
+                          className="btn-edit"
+                          onClick={() => abrirEditar(c)}
+                          aria-label="Editar categoría"
+                        >
+                          <PencilIcon />
+                        </button>
+                        <button
+                          className="btn-danger"
+                          onClick={() => setConfirmCategoria(c)}
+                          aria-label="Eliminar categoría"
+                        >
+                          <TrashIcon />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

@@ -31,8 +31,31 @@ function registrarMovimientoInventario(productoId, tipo, cantidad, observaciones
   `).run(productoId, tipo, cantidad, observaciones, usuarioId)
 }
 
+function validarUnicidad(data, id = null) {
+  const existentes = getDb()
+    .prepare("SELECT id, nombre, sku FROM productos WHERE estado = 'activo'")
+    .all()
+  const nombreNormalizado = String(data.nombre ?? "").trim().toLowerCase()
+  const skuNormalizado = String(data.sku ?? "").trim().toLowerCase()
+  const existente = existentes.find((producto) => {
+    if (producto.id === id) return false
+    return (
+      String(producto.nombre ?? "").trim().toLowerCase() ===
+        nombreNormalizado ||
+      String(producto.sku ?? "").trim().toLowerCase() === skuNormalizado
+    )
+  })
+
+  if (!existente) return
+  if (String(existente.nombre ?? "").trim().toLowerCase() === nombreNormalizado) {
+    throw new Error(`Ya existe un producto con el nombre "${data.nombre.trim()}".`)
+  }
+  throw new Error(`Ya existe un producto con el SKU "${data.sku.trim()}".`)
+}
+
 function create(data) {
   const db = getDb()
+  validarUnicidad(data)
   const stmt = db.prepare(`
     INSERT INTO productos
       (nombre, categoria_id, cantidad, cantidad_paquete,
@@ -62,6 +85,7 @@ function create(data) {
 }
 
 function update(id, data) {
+  validarUnicidad(data, id)
   const productoActual = getById(id)
   const cantidadAnterior = Number(productoActual?.cantidad ?? 0)
   const cantidadNueva = Number(data.cantidad ?? cantidadAnterior)

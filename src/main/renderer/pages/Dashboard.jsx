@@ -191,7 +191,7 @@ function EstadoBadge({ value, prefix = "" }) {
 }
 
 function moneda(value) {
-  return `₡${Number(value ?? 0).toLocaleString("es-CR")}`;
+  return `$${Number(value ?? 0).toLocaleString("es-CR")}`;
 }
 
 function fechaCorta(value) {

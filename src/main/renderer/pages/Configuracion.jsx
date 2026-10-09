@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 const DEFAULT_CONFIG = {
   negocio: '',
-  moneda: 'CRC',
+  moneda: 'USD',
   tema: 'light',
   notificaciones: true,
 }

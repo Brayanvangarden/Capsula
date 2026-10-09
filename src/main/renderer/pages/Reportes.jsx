@@ -54,14 +54,14 @@ function Reportes() {
         <div className="stat-card">
           <div className="stat-icon">💵</div>
           <div>
-            <h3>₡{Number(resumenOrdenes?.monto_total ?? 0).toLocaleString('es-CR')}</h3>
+            <h3>${Number(resumenOrdenes?.monto_total ?? 0).toLocaleString('es-CR')}</h3>
             <p>Total facturado</p>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon">⏳</div>
           <div>
-            <h3>₡{Number(resumenOrdenes?.pendiente_cobro ?? 0).toLocaleString('es-CR')}</h3>
+            <h3>${Number(resumenOrdenes?.pendiente_cobro ?? 0).toLocaleString('es-CR')}</h3>
             <p>Pendiente por cobrar</p>
           </div>
         </div>
@@ -94,7 +94,7 @@ function Reportes() {
                     <tr key={cliente.id}>
                       <td>{cliente.nombre}</td>
                       <td>{cliente.empresa || '—'}</td>
-                      <td>₡{Number(cliente.balance_pendiente || 0).toLocaleString('es-CR')}</td>
+                      <td>${Number(cliente.balance_pendiente || 0).toLocaleString('es-CR')}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -121,7 +121,7 @@ function Reportes() {
                   {topClientes.map((cliente) => (
                     <tr key={cliente.id}>
                       <td>{cliente.nombre}</td>
-                      <td>₡{Number(cliente.balance_pendiente || 0).toLocaleString('es-CR')}</td>
+                      <td>${Number(cliente.balance_pendiente || 0).toLocaleString('es-CR')}</td>
                       <td>{cliente.estado}</td>
                     </tr>
                   ))}
@@ -153,7 +153,7 @@ function Reportes() {
                     <tr key={orden.id}>
                       <td>{orden.id}</td>
                       <td>{orden.cliente_nombre}</td>
-                      <td>₡{Number(orden.total || 0).toLocaleString('es-CR')}</td>
+                      <td>${Number(orden.total || 0).toLocaleString('es-CR')}</td>
                       <td>{orden.estado}</td>
                     </tr>
                   ))}
@@ -183,7 +183,7 @@ function Reportes() {
                     <tr key={pago.id}>
                       <td>{pago.id}</td>
                       <td>{pago.cliente_nombre}</td>
-                      <td>₡{Number(pago.monto || 0).toLocaleString('es-CR')}</td>
+                      <td>${Number(pago.monto || 0).toLocaleString('es-CR')}</td>
                       <td>{pago.metodo_pago}</td>
                     </tr>
                   ))}

@@ -4,7 +4,7 @@ import { facturasService } from "../services/facturas.service";
 import { generarFacturaPdf } from "../services/facturaPdf.service";
 
 const formatoMoneda = (value) =>
-  `₡${Number(value ?? 0).toLocaleString("es-CR")}`;
+  `$${Number(value ?? 0).toLocaleString("es-CR")}`;
 
 const FACTURAS_POR_PAGINA = 10;
 
@@ -204,7 +204,6 @@ function Facturas() {
                 <tr>
                   <th>Factura</th>
                   <th>Cliente</th>
-                  <th>Orden</th>
                   <th>Fecha</th>
                   <th>Total</th>
                   <th>Pagado</th>
@@ -215,7 +214,6 @@ function Facturas() {
               <tbody>
                 {registrosVisibles.map((registro) => (
                   <tr key={registro.orden_id}>
-                    <td>{registro.numero_factura || "Pendiente"}</td>
                     <td>
                       {registro.cliente_nombre ||
                         registro.cliente_empresa ||
@@ -252,7 +250,13 @@ function Facturas() {
                               const factura = await facturasService.getById(
                                 registro.factura_id,
                               );
-                              generarFacturaPdf(factura);
+                              try {
+                                await generarFacturaPdf(factura);
+                              } catch (err) {
+                                setError(
+                                  err.message || "No se pudo generar el PDF.",
+                                );
+                              }
                             }}
                           >
                             Descargar PDF

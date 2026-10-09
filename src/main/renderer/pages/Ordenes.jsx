@@ -7,6 +7,7 @@ import { usePagos } from "../hooks/usePagos";
 import { clientesService } from "../services/clientes.service";
 import { generarProformaPdf } from "../services/facturaPdf.service";
 import { ordenesService } from "../services/ordenes.service";
+import { formatDate } from "../utils/formatDate";
 
 const NUEVA_LINEA = { productoId: "", cantidad: "1", precio: "0" };
 const bloquearTeclasNoNumericas = (event) => {
@@ -123,6 +124,15 @@ function Ordenes() {
     if (pagina > totalPaginas) setPagina(totalPaginas);
   }, [pagina, totalPaginas]);
 
+  const handleClienteSelect = (clienteId) => {
+    const cliente = clientes.find((item) => String(item.id) === clienteId);
+    setForm((prev) => ({
+      ...prev,
+      clienteId,
+      notas: cliente?.direccion ?? "",
+    }));
+  };
+
   const actualizarLinea = (index, cambios) => {
     setLineas((prev) =>
       prev.map((linea, i) => (i === index ? { ...linea, ...cambios } : linea)),
@@ -130,6 +140,17 @@ function Ordenes() {
   };
 
   const handleProductoSelect = async (index, productoId) => {
+    if (
+      productoId &&
+      lineas.some(
+        (linea, lineaIndex) =>
+          lineaIndex !== index && linea.productoId === productoId,
+      )
+    ) {
+      setMensaje("Ese producto ya está agregado a la orden.");
+      return;
+    }
+
     const producto = productosActivos.find(
       (item) => String(item.id) === productoId,
     );
@@ -209,7 +230,12 @@ function Ordenes() {
       setForm({
         clienteId: String(ordenData.cliente_id),
         fechaEntrega: ordenData.fecha_entrega || "",
-        notas: ordenData.notas || "",
+        notas:
+          ordenData.notas ||
+          clientes.find(
+            (cliente) => String(cliente.id) === String(ordenData.cliente_id),
+          )?.direccion ||
+          "",
       });
       setLineas(detalle.length ? detalle : [NUEVA_LINEA]);
       setModal(true);
@@ -221,7 +247,7 @@ function Ordenes() {
   const generarProforma = async (orden) => {
     try {
       const ordenCompleta = await ordenesService.getById(orden.id);
-      generarProformaPdf(ordenCompleta);
+      await generarProformaPdf(ordenCompleta);
       setMensaje(
         `Proforma de la orden N.º ${String(orden.id).padStart(4, "0")} descargada.`,
       );
@@ -263,6 +289,19 @@ function Ordenes() {
 
     if (lineasValidas.length === 0) {
       setMensaje("Agrega al menos un producto a la orden.");
+      return;
+    }
+
+    const productosDuplicados = new Set();
+    const productosAgregados = new Set();
+    for (const linea of lineasValidas) {
+      if (productosAgregados.has(linea.productoId)) {
+        productosDuplicados.add(linea.productoId);
+      }
+      productosAgregados.add(linea.productoId);
+    }
+    if (productosDuplicados.size > 0) {
+      setMensaje("No puedes agregar el mismo producto más de una vez.");
       return;
     }
 
@@ -444,6 +483,7 @@ function Ordenes() {
                   <th>Cliente</th>
                   <th>Total</th>
                   <th>Pago</th>
+                  <th>Fecha de envío</th>
                   <th>Creado</th>
                   <th>Acciones</th>
                 </tr>
@@ -468,7 +508,7 @@ function Ordenes() {
                         )}
                       </td>
                       <td>
-                        ₡{Number(orden.total ?? 0).toLocaleString("es-CR")}
+                        ${Number(orden.total ?? 0).toLocaleString("es-CR")}
                       </td>
                       <td>
                         <span className={`pill ${pillPago(orden.estado_pago)}`}>
@@ -477,17 +517,16 @@ function Ordenes() {
                         {orden.estado_pago !== "pagado" &&
                           saldo?.saldoPendiente > 0 && (
                             <div className="pago-faltante">
-                              Faltan ₡
+                              Faltan $
                               {saldo.saldoPendiente.toLocaleString("es-CR")}
                             </div>
                           )}
                       </td>
                       <td>
-                        {orden.fecha_creacion
-                          ? new Date(orden.fecha_creacion).toLocaleDateString(
-                              "es-CR",
-                            )
-                          : "—"}
+                        {formatDate(orden.fecha_entrega)}
+                      </td>
+                      <td>
+                        {formatDate(orden.fecha_creacion)}
                       </td>
                       <td className="action-buttons">
                         <button
@@ -585,9 +624,7 @@ function Ordenes() {
                 <select
                   required
                   value={form.clienteId}
-                  onChange={(e) =>
-                    setForm({ ...form, clienteId: e.target.value })
-                  }
+                  onChange={(e) => handleClienteSelect(e.target.value)}
                 >
                   <option value="">Selecciona un cliente</option>
                   {clientes.map((cliente) => (
@@ -614,7 +651,7 @@ function Ordenes() {
               </div>
 
               <div className="form-group">
-                <label>Dirección de Envió</label>
+                <label>Dirección de Envío</label>
                 <textarea
                   rows={3}
                   value={form.notas}
@@ -640,7 +677,15 @@ function Ordenes() {
                           <option
                             key={productoItem.id}
                             value={productoItem.id}
-                            disabled={Number(productoItem.cantidad) <= 0}
+                            disabled={
+                              Number(productoItem.cantidad) <= 0 ||
+                              lineas.some(
+                                (otraLinea, otroIndice) =>
+                                  otroIndice !== index &&
+                                  otraLinea.productoId ===
+                                    String(productoItem.id),
+                              )
+                            }
                           >
                             {productoItem.nombre}{" "}
                             {productoItem.cantidad <= 0
@@ -708,7 +753,7 @@ function Ordenes() {
                       <input
                         type="text"
                         readOnly
-                        value={`₡${(Number(linea.precio) * Number(linea.cantidad)).toLocaleString("es-CR")}`}
+                        value={`$${(Number(linea.precio) * Number(linea.cantidad)).toLocaleString("es-CR")}`}
                       />
                     </div>
                     <button
@@ -732,17 +777,17 @@ function Ordenes() {
               <div className="orden-resumen">
                 <div className="orden-resumen-row">
                   <span>Subtotal</span>
-                  <span>₡{subtotalOrden.toLocaleString("es-CR")}</span>
+                  <span>${subtotalOrden.toLocaleString("es-CR")}</span>
                 </div>
                 {descuentoPorcentaje > 0 && (
                   <div className="orden-resumen-row orden-resumen-descuento">
                     <span>Descuento cliente ({descuentoPorcentaje}%)</span>
-                    <span>−₡{descuentoMonto.toLocaleString("es-CR")}</span>
+                    <span>−${descuentoMonto.toLocaleString("es-CR")}</span>
                   </div>
                 )}
                 <div className="orden-resumen-row orden-resumen-total">
                   <span>Total orden</span>
-                  <span>₡{totalOrden.toLocaleString("es-CR")}</span>
+                  <span>${totalOrden.toLocaleString("es-CR")}</span>
                 </div>
               </div>
 

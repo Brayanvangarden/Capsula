@@ -26,6 +26,11 @@ const ProtectedRoute = ({ children }) => {
   return user ? children : <Navigate to="/login" replace />;
 };
 
+const AdminRoute = ({ children }) => {
+  const { isAdmin } = useAuth();
+  return isAdmin ? children : <Navigate to="/" replace />;
+};
+
 function AppRoutes() {
   return (
     <Routes>
@@ -51,7 +56,14 @@ function AppRoutes() {
         <Route path="/pagos" element={<Pagos />} />
         <Route path="/facturas" element={<Facturas />} />
         <Route path="/cuentas-por-cobrar" element={<CuentasPorCobrar />} />
-        <Route path="/usuarios" element={<Usuarios />} />
+        <Route
+          path="/usuarios"
+          element={
+            <AdminRoute>
+              <Usuarios />
+            </AdminRoute>
+          }
+        />
         <Route path="/reportes" element={<Reportes />} />
         <Route path="/configuracion" element={<Configuracion />} />
       </Route>
