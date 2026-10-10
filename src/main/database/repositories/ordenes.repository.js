@@ -1,5 +1,34 @@
 const { getDb } = require("../db");
 
+function obtenerDatosShipTo(db, clienteId) {
+  if (!clienteId) {
+    return {
+      ship_to_cliente_id: null,
+      ship_to_nombre: null,
+      ship_to_empresa: null,
+      ship_to_direccion: null,
+      ship_to_telefono: null,
+      ship_to_correo: null,
+    };
+  }
+
+  const cliente = db
+    .prepare(
+      "SELECT id, nombre, empresa, direccion, telefono, correo FROM clientes WHERE id = ?",
+    )
+    .get(clienteId);
+  if (!cliente) throw new Error("No se encontró el cliente de envío");
+
+  return {
+    ship_to_cliente_id: cliente.id,
+    ship_to_nombre: cliente.nombre,
+    ship_to_empresa: cliente.empresa,
+    ship_to_direccion: cliente.direccion,
+    ship_to_telefono: cliente.telefono,
+    ship_to_correo: cliente.correo,
+  };
+}
+
 function getAll(filtros = {}) {
   const db = getDb();
 
@@ -108,7 +137,13 @@ function create(data) {
   const db = getDb();
 
   const transaction = db.transaction((data) => {
-    const { detalle = [], descuento_porcentaje = 0, ...ordenData } = data;
+    const {
+      detalle = [],
+      descuento_porcentaje = 0,
+      ship_to_cliente_id,
+      ...ordenData
+    } = data;
+    const shipTo = obtenerDatosShipTo(db, ship_to_cliente_id);
 
     const subtotal = detalle.reduce((sum, item) => sum + item.subtotal, 0);
     const descuentoMonto = subtotal * (Number(descuento_porcentaje) / 100);
@@ -118,13 +153,18 @@ function create(data) {
       .prepare(
         `
       INSERT INTO ordenes
-        (cliente_id, fecha_entrega, estado, estado_pago, total, notas, usuario_id)
+        (cliente_id, ship_to_cliente_id, ship_to_nombre, ship_to_empresa,
+         ship_to_direccion, ship_to_telefono, ship_to_correo, fecha_entrega,
+         estado, estado_pago, total, notas, usuario_id)
       VALUES
-        (@cliente_id, @fecha_entrega, @estado, @estado_pago, @total, @notas, @usuario_id)
+        (@cliente_id, @ship_to_cliente_id, @ship_to_nombre, @ship_to_empresa,
+         @ship_to_direccion, @ship_to_telefono, @ship_to_correo, @fecha_entrega,
+         @estado, @estado_pago, @total, @notas, @usuario_id)
     `,
       )
       .run({
         ...ordenData,
+        ...shipTo,
         total,
         estado: "pendiente",
         estado_pago: "pendiente",
@@ -224,7 +264,13 @@ function update(id, data) {
       throw new Error("Orden no encontrada");
     }
 
-    const { detalle = [], descuento_porcentaje = 0, ...ordenData } = data;
+    const {
+      detalle = [],
+      descuento_porcentaje = 0,
+      ship_to_cliente_id,
+      ...ordenData
+    } = data;
+    const shipTo = obtenerDatosShipTo(db, ship_to_cliente_id);
     const subtotal = detalle.reduce((sum, item) => sum + item.subtotal, 0);
     const descuentoMonto = subtotal * (Number(descuento_porcentaje) / 100);
     const total = subtotal - descuentoMonto;
@@ -285,6 +331,12 @@ function update(id, data) {
       `
       UPDATE ordenes
       SET cliente_id = @cliente_id,
+          ship_to_cliente_id = @ship_to_cliente_id,
+          ship_to_nombre = @ship_to_nombre,
+          ship_to_empresa = @ship_to_empresa,
+          ship_to_direccion = @ship_to_direccion,
+          ship_to_telefono = @ship_to_telefono,
+          ship_to_correo = @ship_to_correo,
           fecha_entrega = @fecha_entrega,
           notas = @notas,
           total = @total,
@@ -293,6 +345,7 @@ function update(id, data) {
     `,
     ).run({
       ...ordenData,
+      ...shipTo,
       cliente_id: clienteId,
       fecha_entrega: ordenData.fecha_entrega || null,
       notas: ordenData.notas || null,

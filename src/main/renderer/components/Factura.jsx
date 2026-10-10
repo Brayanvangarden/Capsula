@@ -93,15 +93,15 @@ export default function Factura({ factura, onClose }) {
           <div className="factura-box-grid">
             <div className="factura-box">
               <h2>Bill to:</h2>
-              <p>{factura.cliente_nombre || "Customer Company"}</p>
-              <p>{factura.cliente_identificacion || "Company name"}</p>
               <p>{factura.cliente_direccion || "Address not provided"}</p>
-              <p>{factura.cliente_telefono || "Phone not provided"}</p>
-              <p>{factura.cliente_correo || "Email not provided"}</p>
             </div>
             <div className="factura-box">
               <h2>Ship to:</h2>
-              <p>{factura.notas || "No shipping notes"}</p>
+              <p>
+                {factura.ship_to_direccion ||
+                  factura.notas ||
+                  "Address not provided"}
+              </p>
             </div>
           </div>
 

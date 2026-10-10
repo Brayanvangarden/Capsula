@@ -61,13 +61,17 @@ function crearParaPago(pagoId, ordenId) {
     .prepare(
       `
     INSERT INTO facturas (
-      numero_factura, orden_id, pago_id, cliente_id, empresa_nombre,
+      numero_factura, orden_id, pago_id, cliente_id, ship_to_cliente_id,
+      ship_to_nombre, ship_to_empresa, ship_to_direccion, ship_to_telefono,
+      ship_to_correo, empresa_nombre,
       empresa_nombre_comercial, empresa_identificacion, empresa_direccion,
       empresa_telefono, empresa_correo, cliente_nombre, cliente_identificacion,
       cliente_correo, cliente_telefono, cliente_direccion, orden_fecha,
       metodo_pago, estado_pago, subtotal, total, monto_pagado, saldo, notas
     ) VALUES (
-      @numero, @orden_id, @pago_id, @cliente_id, @empresa_nombre,
+      @numero, @orden_id, @pago_id, @cliente_id, @ship_to_cliente_id,
+      @ship_to_nombre, @ship_to_empresa, @ship_to_direccion, @ship_to_telefono,
+      @ship_to_correo, @empresa_nombre,
       @empresa_comercial, @empresa_identificacion, @empresa_direccion,
       @empresa_telefono, @empresa_correo, @cliente_nombre, @cliente_identificacion,
       @cliente_correo, @cliente_telefono, @cliente_direccion, @orden_fecha,
@@ -80,6 +84,12 @@ function crearParaPago(pagoId, ordenId) {
       orden_id: ordenId,
       pago_id: pagoId,
       cliente_id: orden.cliente_id,
+      ship_to_cliente_id: orden.ship_to_cliente_id,
+      ship_to_nombre: orden.ship_to_nombre,
+      ship_to_empresa: orden.ship_to_empresa,
+      ship_to_direccion: orden.ship_to_direccion,
+      ship_to_telefono: orden.ship_to_telefono,
+      ship_to_correo: orden.ship_to_correo,
       empresa_nombre: EMPRESA.nombre,
       empresa_comercial: EMPRESA.comercial,
       empresa_identificacion: EMPRESA.identificacion,

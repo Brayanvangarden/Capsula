@@ -43,6 +43,11 @@ function formatOrdenNumero(id) {
   return `N.º ${String(Number(id ?? 0)).padStart(4, "0")}`;
 }
 
+function obtenerLineasShipTo(documento) {
+  const direccion = documento?.ship_to_direccion || documento?.notas;
+  return String(direccion || "Address not provided").split(/\r?\n/);
+}
+
 function monedaUsd(value) {
   return `$${Number(value ?? 0).toLocaleString("en-US", {
     minimumFractionDigits: 2,
@@ -263,14 +268,10 @@ async function crearPdf(factura) {
 
   pdf.setFont("helvetica", "normal");
   const billToLines = [
-    factura.cliente_nombre || "Customer Company",
-    factura.cliente_identificacion || "Company name",
     factura.cliente_direccion || "Address not provided",
-    factura.cliente_telefono || "Phone not provided",
-    factura.cliente_correo || "Email not provided",
   ];
 
-  const shipToLines = (factura.notas || "No shipping notes").split(/\n|\r\n/);
+  const shipToLines = obtenerLineasShipTo(factura);
   const wrappedShip = shipToLines.flatMap((line) =>
     pdf.splitTextToSize(String(line || ""), boxWidth - 24),
   );
@@ -376,14 +377,10 @@ async function crearProformaPdf(orden) {
 
   pdf.setFont("helvetica", "normal");
   const billToLines = [
-    orden?.cliente_empresa || orden?.cliente_nombre || "Customer Company",
-    orden?.cliente_nombre || "Contact name",
     orden?.cliente_direccion || "Address not provided",
-    orden?.cliente_telefono || "Phone not provided",
-    orden?.cliente_correo || "Email not provided",
   ];
 
-  const shipToLines = (orden?.notas || "No shipping notes").split(/\n|\r\n/);
+  const shipToLines = obtenerLineasShipTo(orden);
   const wrappedShip = shipToLines.flatMap((line) =>
     pdf.splitTextToSize(String(line || ""), boxWidth - 24),
   );
