@@ -3,6 +3,40 @@ function up(db) {
 
   try {
     const migrate = db.transaction(() => {
+      const products = db
+        .prepare("SELECT id, sku, estado FROM productos ORDER BY id")
+        .all();
+      const reservedSkus = new Set(
+        products
+          .map((product) => String(product.sku ?? "").trim().toLowerCase())
+          .filter(Boolean),
+      );
+      const activeSkus = new Set();
+      const updateSku = db.prepare("UPDATE productos SET sku = ? WHERE id = ?");
+
+      for (const product of products) {
+        let sku = String(product.sku ?? "").trim();
+        let normalizedSku = sku.toLowerCase();
+        const duplicateActiveSku =
+          product.estado === "activo" && activeSkus.has(normalizedSku);
+
+        if (!sku || duplicateActiveSku) {
+          let suffix = 0;
+          do {
+            suffix += 1;
+            sku = `SKU-LEGACY-${product.id}-${suffix}`;
+            normalizedSku = sku.toLowerCase();
+          } while (reservedSkus.has(normalizedSku));
+
+          updateSku.run(sku, product.id);
+          reservedSkus.add(normalizedSku);
+        }
+
+        if (product.estado === "activo") {
+          activeSkus.add(normalizedSku);
+        }
+      }
+
       db.exec(`
         CREATE TABLE productos_new (
           id                  INTEGER PRIMARY KEY AUTOINCREMENT,
