@@ -1,5 +1,4 @@
 import { useClientes } from "../hooks/useClientes";
-import { useAuth } from "../hooks/useAuth";
 import { clientesService } from "../services/clientes.service";
 import { useState, useEffect, useRef } from "react";
 
@@ -120,8 +119,6 @@ const aceptarPorcentaje = (value) =>
 const CLIENTES_POR_PAGINA = 10;
 
 function Clientes() {
-  const { isVendedor } = useAuth();
-  const canManageClientes = !isVendedor;
   const {
     clientes,
     loading,
@@ -166,7 +163,6 @@ function Clientes() {
     if (pagina > totalPaginas) setPagina(totalPaginas);
   }, [pagina, totalPaginas]);
   const abrirNuevo = () => {
-    if (!canManageClientes) return;
     setClienteEdit(null);
     setForm(EMPTY_FORM);
     setMensaje("");
@@ -174,7 +170,6 @@ function Clientes() {
   };
 
   const abrirEditar = (cliente) => {
-    if (!canManageClientes) return;
     setClienteEdit(cliente);
     setForm({
       nombre: cliente.nombre || "",
@@ -187,7 +182,6 @@ function Clientes() {
       descuento_porcentaje: cliente.descuento_porcentaje ?? 0,
     });
     setMensaje("");
-    setTab("editar");
   };
 
   const cerrarFormulario = () => {
@@ -203,7 +197,6 @@ function Clientes() {
     return () => clearTimeout(timer);
   }, [mensaje]);
   const handleCrear = async (event) => {
-    if (!canManageClientes) return;
     event.preventDefault();
     setMensaje("");
 
@@ -231,7 +224,6 @@ function Clientes() {
   };
 
   const handleActualizar = async (event) => {
-    if (!canManageClientes) return;
     event.preventDefault();
     setMensaje("");
 
@@ -262,7 +254,6 @@ function Clientes() {
   };
 
   const handleEliminar = async () => {
-    if (!canManageClientes) return;
     if (!clienteToDelete) return;
 
     const resultado = await eliminarCliente(clienteToDelete.id);
@@ -392,7 +383,6 @@ function Clientes() {
   };
 
   const handleImportarCSV = async (event) => {
-    if (!canManageClientes) return;
     const archivo = event.target.files?.[0];
     if (!archivo) return;
 
@@ -554,31 +544,25 @@ function Clientes() {
         <div className="header-actions">
           {tab === "lista" && (
             <>
-              {canManageClientes && (
-                <>
-                  <input
-                    ref={inputImportRef}
-                    type="file"
-                    accept=".csv"
-                    onChange={handleImportarCSV}
-                    style={{ display: "none" }}
-                  />
-                  <button
-                    className="btn-secondary"
-                    onClick={() => inputImportRef.current?.click()}
-                  >
-                    <UploadIcon /> Importar CSV
-                  </button>
-                </>
-              )}
+              <input
+                ref={inputImportRef}
+                type="file"
+                accept=".csv"
+                onChange={handleImportarCSV}
+                style={{ display: "none" }}
+              />
+              <button
+                className="btn-secondary"
+                onClick={() => inputImportRef.current?.click()}
+              >
+                <UploadIcon /> Importar CSV
+              </button>
               <button className="btn-secondary" onClick={exportarCSV}>
                 <DownloadIcon /> Exportar CSV
               </button>
-              {canManageClientes && (
-                <button className="btn-primary" onClick={abrirNuevo}>
-                  ➕ Nuevo Cliente
-                </button>
-              )}
+              <button className="btn-primary" onClick={abrirNuevo}>
+                ➕ Nuevo Cliente
+              </button>
             </>
           )}
         </div>
@@ -648,7 +632,7 @@ function Clientes() {
                     <th>Teléfono</th>
                     <th>Correo</th>
                     <th>Descuento</th>
-                    <th>{isVendedor ? "Detalle" : "Acciones"}</th>
+                    <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -681,24 +665,20 @@ function Clientes() {
                         >
                           <EyeIcon />
                         </button>
-                        {canManageClientes && (
-                          <>
-                            <button
-                              className="btn-edit"
-                              onClick={() => abrirEditar(cliente)}
-                              aria-label="Editar cliente"
-                            >
-                              <PencilIcon />
-                            </button>
-                            <button
-                              className="btn-danger"
-                              onClick={() => setClienteToDelete(cliente)}
-                              aria-label="Eliminar cliente"
-                            >
-                              <TrashIcon />
-                            </button>
-                          </>
-                        )}
+                        <button
+                          className="btn-edit"
+                          onClick={() => abrirEditar(cliente)}
+                          aria-label="Editar cliente"
+                        >
+                          <PencilIcon />
+                        </button>
+                        <button
+                          className="btn-danger"
+                          onClick={() => setClienteToDelete(cliente)}
+                          aria-label="Eliminar cliente"
+                        >
+                          <TrashIcon />
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -828,22 +808,20 @@ function Clientes() {
               >
                 Cerrar
               </button>
-              {canManageClientes && (
-                <button
-                  className="btn-primary"
-                  onClick={() => {
-                    setClienteDetalle(null);
-                    abrirEditar(clienteDetalle);
-                  }}
-                >
-                  Editar
-                </button>
-              )}
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  setClienteDetalle(null);
+                  abrirEditar(clienteDetalle);
+                }}
+              >
+                Editar
+              </button>
             </div>
           </div>
         </div>
       )}
-      {canManageClientes && clienteToDelete && (
+      {clienteToDelete && (
         <div className="modal-overlay" onClick={() => setClienteToDelete(null)}>
           <div className="modal-confirm" onClick={(e) => e.stopPropagation()}>
             <div className="modal-confirm-icon">
@@ -874,14 +852,14 @@ function Clientes() {
           </div>
         </div>
       )}
-      {canManageClientes && tab === "nuevo" && (
+      {tab === "nuevo" && (
         <div className="form-section scrollable-form">
           <h2>➕ Registrar Nuevo Cliente</h2>
           {renderFormulario(handleCrear)}
         </div>
       )}
 
-      {canManageClientes && tab === "editar" && (
+      {tab === "editar" && (
         <div className="form-section scrollable-form">
           <h2>✏️ Editar Cliente — {clienteEdit?.nombre}</h2>
           {renderFormulario(handleActualizar)}
