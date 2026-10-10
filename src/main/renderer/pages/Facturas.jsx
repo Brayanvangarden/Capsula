@@ -202,8 +202,8 @@ function Facturas() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Factura</th>
                   <th>Cliente</th>
+                  <th>Factura</th>
                   <th>Fecha</th>
                   <th>Total</th>
                   <th>Pagado</th>

@@ -44,6 +44,7 @@ function Ordenes() {
   const [editandoId, setEditandoId] = useState(null);
   const [form, setForm] = useState({
     clienteId: "",
+    shipToClienteId: "",
     fechaEntrega: "",
     notas: "",
   });
@@ -64,6 +65,10 @@ function Ordenes() {
   const clienteSeleccionado = useMemo(
     () => clientes.find((c) => String(c.id) === form.clienteId),
     [clientes, form.clienteId],
+  );
+  const clienteEnvioSeleccionado = useMemo(
+    () => clientes.find((c) => String(c.id) === form.shipToClienteId),
+    [clientes, form.shipToClienteId],
   );
 
   const descuentoPorcentaje = clienteSeleccionado?.tiene_descuento
@@ -125,11 +130,17 @@ function Ordenes() {
   }, [pagina, totalPaginas]);
 
   const handleClienteSelect = (clienteId) => {
-    const cliente = clientes.find((item) => String(item.id) === clienteId);
+    setForm((prev) => ({ ...prev, clienteId }));
+  };
+
+  const handleShipToSelect = (shipToClienteId) => {
+    const cliente = clientes.find(
+      (item) => String(item.id) === shipToClienteId,
+    );
     setForm((prev) => ({
       ...prev,
-      clienteId,
-      notas: cliente?.direccion ?? "",
+      shipToClienteId,
+      notas: shipToClienteId ? cliente?.direccion ?? "" : "",
     }));
   };
 
@@ -210,7 +221,12 @@ function Ordenes() {
 
   const abrirNuevo = () => {
     setEditandoId(null);
-    setForm({ clienteId: "", fechaEntrega: "", notas: "" });
+    setForm({
+      clienteId: "",
+      shipToClienteId: "",
+      fechaEntrega: "",
+      notas: "",
+    });
     setLineas([NUEVA_LINEA]);
     setMensaje("");
     setModal(true);
@@ -229,13 +245,11 @@ function Ordenes() {
       setEditandoId(orden.id);
       setForm({
         clienteId: String(ordenData.cliente_id),
+        shipToClienteId: ordenData.ship_to_cliente_id
+          ? String(ordenData.ship_to_cliente_id)
+          : "",
         fechaEntrega: ordenData.fecha_entrega || "",
-        notas:
-          ordenData.notas ||
-          clientes.find(
-            (cliente) => String(cliente.id) === String(ordenData.cliente_id),
-          )?.direccion ||
-          "",
+        notas: ordenData.notas || "",
       });
       setLineas(detalle.length ? detalle : [NUEVA_LINEA]);
       setModal(true);
@@ -259,7 +273,12 @@ function Ordenes() {
   const cerrarModal = () => {
     setModal(false);
     setEditandoId(null);
-    setForm({ clienteId: "", fechaEntrega: "", notas: "" });
+    setForm({
+      clienteId: "",
+      shipToClienteId: "",
+      fechaEntrega: "",
+      notas: "",
+    });
     setLineas([NUEVA_LINEA]);
   };
 
@@ -334,6 +353,9 @@ function Ordenes() {
       if (editandoId) {
         const respuesta = await actualizarOrden(editandoId, {
           cliente_id: Number(form.clienteId),
+          ship_to_cliente_id: form.shipToClienteId
+            ? Number(form.shipToClienteId)
+            : null,
           fecha_entrega: form.fechaEntrega || null,
           notas: form.notas,
           usuario_id: user?.id,
@@ -353,6 +375,9 @@ function Ordenes() {
       } else {
         const respuesta = await crearOrden({
           cliente_id: Number(form.clienteId),
+          ship_to_cliente_id: form.shipToClienteId
+            ? Number(form.shipToClienteId)
+            : null,
           fecha_entrega: form.fechaEntrega || null,
           notas: form.notas,
           usuario_id: user?.id,
@@ -620,7 +645,7 @@ function Ordenes() {
             </div>
             <form className="modal-form" onSubmit={handleSubmit}>
               <div className="form-group">
-                <label>Cliente *</label>
+                <label>Bill To / Cliente de facturación *</label>
                 <select
                   required
                   value={form.clienteId}
@@ -640,6 +665,39 @@ function Ordenes() {
               </div>
 
               <div className="form-group">
+                <label>Dirección de facturación</label>
+                <div className="readonly-field">
+                  {clienteSeleccionado?.direccion || "Sin dirección registrada"}
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Ship To / Cliente destinatario</label>
+                <select
+                  value={form.shipToClienteId}
+                  onChange={(event) => handleShipToSelect(event.target.value)}
+                >
+                  <option value="">Sin cliente destinatario</option>
+                  {clientes.map((cliente) => (
+                    <option key={cliente.id} value={cliente.id}>
+                      {cliente.nombre}{" "}
+                      {cliente.empresa ? `- ${cliente.empresa}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Dirección de envío seleccionada</label>
+                <div className="readonly-field">
+                  {clienteEnvioSeleccionado?.direccion ||
+                    (form.shipToClienteId
+                      ? "Sin dirección registrada"
+                      : "Puedes ingresar una dirección manualmente")}
+                </div>
+              </div>
+
+              <div className="form-group">
                 <label>Fecha de entrega</label>
                 <input
                   type="date"
@@ -647,15 +705,6 @@ function Ordenes() {
                   onChange={(e) =>
                     setForm({ ...form, fechaEntrega: e.target.value })
                   }
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Dirección de Envío</label>
-                <textarea
-                  rows={3}
-                  value={form.notas}
-                  onChange={(e) => setForm({ ...form, notas: e.target.value })}
                 />
               </div>
 
