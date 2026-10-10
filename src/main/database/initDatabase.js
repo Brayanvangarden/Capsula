@@ -108,9 +108,8 @@ function repairLegacyClienteColumns(db) {
 
   if (legacyTable && clientesTable) {
     console.log(
-      "⚠️ Se encontró clientes_legacy residual. Eliminando copia vieja...",
+      "⚠️ Se encontró clientes_legacy residual. Se conservará hasta reparar sus referencias...",
     );
-    db.exec("DROP TABLE IF EXISTS clientes_legacy");
   }
 
   if (!clientesTable && legacyTable) {
@@ -143,11 +142,9 @@ function repairLegacyClienteColumns(db) {
   db.pragma("foreign_keys = OFF");
 
   try {
-    db.exec("DROP TABLE IF EXISTS clientes_legacy");
-    db.exec("ALTER TABLE clientes RENAME TO clientes_legacy");
-
-    db.exec(`
-      CREATE TABLE clientes (
+    const repair = db.transaction(() => {
+      db.exec(`
+      CREATE TABLE clientes_new (
         id               INTEGER PRIMARY KEY AUTOINCREMENT,
         empresa          TEXT,
         nombre           TEXT    NOT NULL,
@@ -162,10 +159,10 @@ function repairLegacyClienteColumns(db) {
         creado_en        TEXT    NOT NULL DEFAULT (datetime('now')),
         actualizado      TEXT    NOT NULL DEFAULT (datetime('now'))
       )
-    `);
+      `);
 
-    db.exec(`
-      INSERT INTO clientes (
+      db.exec(`
+      INSERT INTO clientes_new (
         id, empresa, nombre, telefono, correo, direccion, notas,
         balance_pendiente, tiene_descuento, descuento_porcentaje, estado, creado_en, actualizado
       )
@@ -181,10 +178,13 @@ function repairLegacyClienteColumns(db) {
         COALESCE(estado, 'activo'),
         COALESCE(creado_en, datetime('now')),
         COALESCE(actualizado, datetime('now'))
-      FROM clientes_legacy
-    `);
+        FROM clientes
+      `);
 
-    db.exec("DROP TABLE clientes_legacy");
+      db.exec("DROP TABLE clientes");
+      db.exec("ALTER TABLE clientes_new RENAME TO clientes");
+    });
+    repair();
     console.log("✅ Estructura de clientes reparada sin apellido ni cedula");
   } finally {
     db.pragma("foreign_keys = ON");

@@ -13,9 +13,8 @@ function up(db) {
       .get();
 
     if (clientesExists) {
-      db.exec("DROP TABLE clientes_legacy");
       console.log(
-        "📦 Migración v3: clientes_legacy eliminado para mantener la estructura actual",
+        "📦 Migración v3: clientes_legacy se conservará hasta reparar sus referencias",
       );
       return;
     }
