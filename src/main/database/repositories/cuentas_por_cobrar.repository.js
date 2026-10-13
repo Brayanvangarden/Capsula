@@ -1,4 +1,5 @@
 const { getDb } = require("../db");
+const { localDateString, parseUtcTimestamp } = require("../dateTime");
 
 const UMBRAL = 0.005;
 
@@ -30,7 +31,7 @@ function getResumen() {
         SELECT
           cliente_id,
           SUM(total) AS total_ventas,
-          MAX(fecha_creacion) AS ultima_venta,
+          strftime('%Y-%m-%dT%H:%M:%fZ', MAX(julianday(fecha_creacion))) AS ultima_venta,
           MAX(CASE
             WHEN total > (
               SELECT COALESCE(SUM(p2.monto), 0)
@@ -38,7 +39,7 @@ function getResumen() {
               WHERE p2.orden_id = o.id
             ) + @umbral
             AND fecha_entrega IS NOT NULL
-            AND DATE(fecha_entrega) < DATE('now')
+            AND DATE(fecha_entrega) < DATE('now', 'localtime')
             THEN 1 ELSE 0 END
           ) AS tiene_vencida
         FROM ordenes o
@@ -73,7 +74,7 @@ function getEstadoCuenta(clienteId, mes = "") {
             FROM ordenes o
             LEFT JOIN facturas f ON f.orden_id = o.id
             WHERE o.cliente_id = ?
-            ORDER BY o.fecha_creacion ASC, o.id ASC
+            ORDER BY julianday(o.fecha_creacion) ASC, o.id ASC
       `,
     )
     .all(clienteId);
@@ -86,7 +87,7 @@ function getEstadoCuenta(clienteId, mes = "") {
     INNER JOIN ordenes o ON o.id = p.orden_id
     LEFT JOIN facturas f ON f.pago_id = p.id
     WHERE o.cliente_id = ?
-    ORDER BY p.fecha_pago ASC, p.id ASC
+    ORDER BY julianday(p.fecha_pago) ASC, p.id ASC
     `,
     )
     .all(clienteId);
@@ -112,7 +113,8 @@ function getEstadoCuenta(clienteId, mes = "") {
       monto: -Number(pago.monto),
     })),
   ].sort((a, b) => {
-    const diferencia = new Date(a.fecha) - new Date(b.fecha);
+    const diferencia =
+      parseUtcTimestamp(a.fecha).getTime() - parseUtcTimestamp(b.fecha).getTime();
     if (diferencia !== 0) return diferencia;
     if (a.tipo === b.tipo) return a.clave.localeCompare(b.clave);
     return a.tipo === "venta" ? -1 : 1;
@@ -120,11 +122,13 @@ function getEstadoCuenta(clienteId, mes = "") {
 
   const movimientosDelMes = mes
     ? movimientos.filter((movimiento) =>
-        String(movimiento.fecha).startsWith(mes),
+        localDateString(movimiento.fecha).startsWith(mes),
       )
     : movimientos;
   const movimientosAnteriores = mes
-    ? movimientos.filter((movimiento) => String(movimiento.fecha) < `${mes}-01`)
+    ? movimientos.filter(
+        (movimiento) => localDateString(movimiento.fecha) < `${mes}-01`,
+      )
     : [];
   let saldo = movimientosAnteriores.reduce(
     (total, movimiento) => total + movimiento.monto,
@@ -159,7 +163,7 @@ function getEstadoCuenta(clienteId, mes = "") {
           .reduce((total, pago) => total + Number(pago.monto), 0) +
           UMBRAL &&
       orden.fecha_entrega &&
-      new Date(orden.fecha_entrega) < new Date(new Date().toDateString()),
+      orden.fecha_entrega < localDateString(),
   );
 
   return {

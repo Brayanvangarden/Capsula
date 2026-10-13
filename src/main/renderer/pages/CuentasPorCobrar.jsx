@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { cuentasPorCobrarService } from "../services/cuentasPorCobrar.service";
+import {
+  formatDate,
+  localMonthString,
+  parseStoredDate,
+} from "../utils/formatDate";
 
 const ESTADOS = {
   al_dia: "Al día",
@@ -8,9 +13,8 @@ const ESTADOS = {
 };
 
 const moneda = (valor) => `$${Number(valor ?? 0).toLocaleString("es-CR")}`;
-const fecha = (valor) =>
-  valor ? new Date(valor).toLocaleDateString("es-CR") : "—";
-const mesActual = () => new Date().toISOString().slice(0, 7);
+const fecha = (valor) => formatDate(valor);
+const mesActual = () => localMonthString();
 const nombreMes = (mes) => {
   if (!mes) return "Todos los movimientos";
   return new Date(`${mes}-01T12:00:00`).toLocaleDateString("es-CR", {
@@ -110,7 +114,7 @@ function CuentasPorCobrar() {
 
     const fechaLarga = (valor) =>
       valor
-        ? new Date(valor).toLocaleDateString("en-US", {
+        ? parseStoredDate(valor).toLocaleDateString("en-US", {
             month: "long",
             day: "numeric",
             year: "numeric",

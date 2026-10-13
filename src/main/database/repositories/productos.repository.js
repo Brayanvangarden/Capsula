@@ -25,10 +25,10 @@ function getById(id) {
 function registrarMovimientoInventario(productoId, tipo, cantidad, observaciones = null, usuarioId = null) {
   return getDb().prepare(`
     INSERT INTO movimientos_inventario
-      (producto_id, tipo, cantidad, observaciones, usuario_id)
+      (producto_id, tipo, cantidad, observaciones, usuario_id, fecha)
     VALUES
-      (?, ?, ?, ?, ?)
-  `).run(productoId, tipo, cantidad, observaciones, usuarioId)
+      (?, ?, ?, ?, ?, ?)
+  `).run(productoId, tipo, cantidad, observaciones, usuarioId, new Date().toISOString())
 }
 
 function validarUnicidad(data, id = null) {
@@ -106,7 +106,7 @@ function update(id, data) {
       sku               = @sku,
       estado            = @estado,
       notas             = @notas,
-      actualizado       = datetime('now')
+      actualizado       = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
     WHERE id = @id
   `).run({ ...data, id })
 
@@ -139,7 +139,7 @@ function remove(id, usuarioId = null) {
 
   return getDb()
     .prepare(`UPDATE productos SET cantidad = 0, estado = 'inactivo',
-              actualizado = datetime('now') WHERE id = ?`)
+              actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = ?`)
     .run(id)
 }
 

@@ -2,6 +2,10 @@ import { useState, useMemo, useEffect } from "react";
 import { useInventario } from "../hooks/useInventario";
 import { useProductos } from "../hooks/useProductos";
 import { useAuthStore } from "../store/auth.store";
+import {
+  formatDateTime,
+  localDateString,
+} from "../utils/formatDate";
 
 function ArrowDownIcon(props) {
   return (
@@ -91,10 +95,10 @@ function Inventario() {
     [productosActivos],
   );
 
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = localDateString();
   const resumenHoy = useMemo(() => {
     const deHoy = movimientos.filter(
-      (m) => (m.fecha ?? "").slice(0, 10) === hoy,
+      (m) => localDateString(m.fecha) === hoy,
     );
     return {
       entradas: deHoy.filter((m) => m.tipo === "entrada").length,
@@ -306,7 +310,7 @@ function Inventario() {
                       <td>{m.producto_nombre ?? "—"}</td>
                       <td>{m.cantidad}</td>
                       <td>{m.observaciones || "—"}</td>
-                      <td>{new Date(m.fecha).toLocaleString("es-CR")}</td>
+                      <td>{formatDateTime(m.fecha)}</td>
                     </tr>
                   ))}
                 </tbody>

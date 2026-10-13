@@ -3,6 +3,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useProductos } from "../hooks/useProductos";
 import { useCategorias } from "../hooks/useCategorias";
 import { productosService } from "../services/productos.service";
+import { localDateString } from "../utils/formatDate";
 
 function PencilIcon(props) {
   return (
@@ -199,7 +200,7 @@ function Productos() {
     const contenido = "\uFEFF" + [columnas.join(";"), ...filas].join("\r\n");
     const blob = new Blob([contenido], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const fecha = new Date().toISOString().slice(0, 10);
+    const fecha = localDateString();
 
     const link = document.createElement("a");
     link.href = url;

@@ -55,7 +55,7 @@ function update(id, data) {
       cliente_id    = @cliente_id,
       producto_id   = @producto_id,
       precio_unitario = @precio_unitario,
-      actualizado   = datetime('now')
+      actualizado   = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
     WHERE id = @id
   `).run({ ...data, id })
   return getById(id)

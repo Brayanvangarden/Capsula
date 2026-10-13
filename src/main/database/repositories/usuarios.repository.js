@@ -55,7 +55,7 @@ function update(id, data) {
         usuario     = @usuario,
         rol         = @rol,
         estado      = @estado,
-        actualizado = datetime('now')
+        actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = @id
     `,
     )
@@ -70,7 +70,7 @@ function updatePassword(id, newPassword) {
       `
       UPDATE usuarios
       SET password    = ?,
-          actualizado = datetime('now')
+          actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = ?
     `,
     )
@@ -85,7 +85,7 @@ function toggleEstado(id) {
 
   getDb()
     .prepare(
-      `UPDATE usuarios SET estado = ?, actualizado = datetime('now') WHERE id = ?`,
+      `UPDATE usuarios SET estado = ?, actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = ?`,
     )
     .run(nuevoEstado, id);
 

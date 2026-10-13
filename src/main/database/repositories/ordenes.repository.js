@@ -1,4 +1,5 @@
 const { getDb } = require("../db");
+const { localDayStartUtc, localDayAfterUtc } = require("../dateTime");
 
 function obtenerDatosShipTo(db, clienteId) {
   if (!clienteId) {
@@ -58,15 +59,15 @@ function getAll(filtros = {}) {
     params.push(filtros.estado_pago);
   }
   if (filtros.fecha_desde) {
-    query += " AND DATE(o.fecha_creacion) >= ?";
-    params.push(filtros.fecha_desde);
+    query += " AND julianday(o.fecha_creacion) >= julianday(?)";
+    params.push(localDayStartUtc(filtros.fecha_desde));
   }
   if (filtros.fecha_hasta) {
-    query += " AND DATE(o.fecha_creacion) <= ?";
-    params.push(filtros.fecha_hasta);
+    query += " AND julianday(o.fecha_creacion) < julianday(?)";
+    params.push(localDayAfterUtc(filtros.fecha_hasta));
   }
 
-  query += " ORDER BY o.fecha_creacion DESC";
+  query += " ORDER BY julianday(o.fecha_creacion) DESC";
   return db.prepare(query).all(...params);
 }
 
@@ -120,16 +121,17 @@ function registrarSalidaOrden(
 ) {
   db.prepare(
     `
-    INSERT INTO movimientos_inventario
-      (producto_id, tipo, cantidad, observaciones, usuario_id)
+      INSERT INTO movimientos_inventario
+        (producto_id, tipo, cantidad, observaciones, usuario_id, fecha)
     VALUES
-      (@producto_id, 'salida', @cantidad, @observaciones, @usuario_id)
+        (@producto_id, 'salida', @cantidad, @observaciones, @usuario_id, @fecha)
   `,
   ).run({
     producto_id: productoId,
     cantidad,
     observaciones: `Venta - Orden #${ordenId}`,
     usuario_id: usuarioId,
+    fecha: new Date().toISOString(),
   });
 }
 
@@ -153,11 +155,11 @@ function create(data) {
       .prepare(
         `
       INSERT INTO ordenes
-        (cliente_id, ship_to_cliente_id, ship_to_nombre, ship_to_empresa,
+        (fecha_creacion, cliente_id, ship_to_cliente_id, ship_to_nombre, ship_to_empresa,
          ship_to_direccion, ship_to_telefono, ship_to_correo, fecha_entrega,
          estado, estado_pago, total, notas, usuario_id)
       VALUES
-        (@cliente_id, @ship_to_cliente_id, @ship_to_nombre, @ship_to_empresa,
+        (@fecha_creacion, @cliente_id, @ship_to_cliente_id, @ship_to_nombre, @ship_to_empresa,
          @ship_to_direccion, @ship_to_telefono, @ship_to_correo, @fecha_entrega,
          @estado, @estado_pago, @total, @notas, @usuario_id)
     `,
@@ -165,6 +167,7 @@ function create(data) {
       .run({
         ...ordenData,
         ...shipTo,
+        fecha_creacion: new Date().toISOString(),
         total,
         estado: "pendiente",
         estado_pago: "pendiente",
@@ -182,7 +185,7 @@ function create(data) {
     const descontarStock = db.prepare(`
       UPDATE productos
       SET cantidad    = cantidad - @cantidad,
-          actualizado = datetime('now')
+          actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = @producto_id
     `);
 
@@ -212,7 +215,7 @@ function create(data) {
       `
       UPDATE clientes
       SET balance_pendiente = balance_pendiente + ?,
-          actualizado = datetime('now')
+          actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = ?
     `,
     ).run(total, ordenData.cliente_id);
@@ -278,7 +281,7 @@ function update(id, data) {
     const restoreStock = db.prepare(`
       UPDATE productos
       SET cantidad = cantidad + @cantidad,
-          actualizado = datetime('now')
+          actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = @producto_id
     `);
 
@@ -298,7 +301,7 @@ function update(id, data) {
     const descontarStock = db.prepare(`
       UPDATE productos
       SET cantidad    = cantidad - @cantidad,
-          actualizado = datetime('now')
+          actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = @producto_id
     `);
 
@@ -360,7 +363,7 @@ function update(id, data) {
         `
         UPDATE clientes
         SET balance_pendiente = balance_pendiente + ?,
-            actualizado = datetime('now')
+            actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
         WHERE id = ?
       `,
       ).run(diff, clienteId);
@@ -369,7 +372,7 @@ function update(id, data) {
         `
         UPDATE clientes
         SET balance_pendiente = balance_pendiente - ?,
-            actualizado = datetime('now')
+            actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
         WHERE id = ?
       `,
       ).run(existingOrder.total, existingOrder.cliente_id);
@@ -378,7 +381,7 @@ function update(id, data) {
         `
         UPDATE clientes
         SET balance_pendiente = balance_pendiente + ?,
-            actualizado = datetime('now')
+            actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
         WHERE id = ?
       `,
       ).run(total, clienteId);

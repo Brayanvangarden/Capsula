@@ -45,7 +45,7 @@ function update(id, data) {
       notas      = @notas,
       tiene_descuento = @tiene_descuento,
       descuento_porcentaje = @descuento_porcentaje,
-      actualizado = datetime('now')
+      actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
     WHERE id = @id
   `,
     )
@@ -80,7 +80,7 @@ function remove(id) {
   db.prepare(
     `
     UPDATE clientes
-    SET estado = 'inactivo', actualizado = datetime('now')
+    SET estado = 'inactivo', actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
     WHERE id = ?
   `,
   ).run(id);
@@ -94,7 +94,7 @@ function updateBalance(id, monto) {
       `
       UPDATE clientes
       SET balance_pendiente = balance_pendiente + ?,
-          actualizado = datetime('now')
+          actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = ?
     `,
     )

@@ -156,8 +156,8 @@ function repairLegacyClienteColumns(db) {
         tiene_descuento       INTEGER NOT NULL DEFAULT 0 CHECK(tiene_descuento IN (0, 1)),
         descuento_porcentaje  REAL    NOT NULL DEFAULT 0,
         estado           TEXT    NOT NULL DEFAULT 'activo' CHECK(estado IN ('activo', 'inactivo')),
-        creado_en        TEXT    NOT NULL DEFAULT (datetime('now')),
-        actualizado      TEXT    NOT NULL DEFAULT (datetime('now'))
+        creado_en        TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        actualizado      TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
       )
       `);
 
@@ -176,8 +176,8 @@ function repairLegacyClienteColumns(db) {
         COALESCE(tiene_descuento, 0),
         COALESCE(descuento_porcentaje, 0),
         COALESCE(estado, 'activo'),
-        COALESCE(creado_en, datetime('now')),
-        COALESCE(actualizado, datetime('now'))
+        COALESCE(creado_en, strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        COALESCE(actualizado, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
         FROM clientes
       `);
 
@@ -235,7 +235,7 @@ function runMigrations(db) {
     CREATE TABLE IF NOT EXISTS migraciones (
       id        INTEGER PRIMARY KEY AUTOINCREMENT,
       version   TEXT NOT NULL UNIQUE,
-      ejecutado TEXT NOT NULL DEFAULT (datetime('now'))
+      ejecutado TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
     )
   `);
 

@@ -5,6 +5,7 @@ import { useClientes } from "../hooks/useClientes";
 import { useOrdenes } from "../hooks/useOrdenes";
 import Factura from "../components/Factura";
 import { facturasService } from "../services/facturas.service";
+import { formatDate } from "../utils/formatDate";
 
 const METODOS_PAGO = [
   { value: "efectivo", label: "Efectivo" },
@@ -777,13 +778,7 @@ function Pagos() {
                           : "Abono"}
                       </td>
                       <td>{pago.metodo_pago}</td>
-                      <td>
-                        {pago.fecha_pago
-                          ? new Date(pago.fecha_pago).toLocaleDateString(
-                              "es-CR",
-                            )
-                          : "—"}
-                      </td>
+                      <td>{formatDate(pago.fecha_pago)}</td>
                       <td>
                         {pago.orden_id ? (
                           <button

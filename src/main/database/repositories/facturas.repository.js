@@ -1,4 +1,5 @@
 const { getDb } = require("../db");
+const { localDayStartUtc, localDayAfterUtc } = require("../dateTime");
 
 const EMPRESA = {
   nombre: "Capsulas Inventario",
@@ -61,7 +62,8 @@ function crearParaPago(pagoId, ordenId) {
     .prepare(
       `
     INSERT INTO facturas (
-      numero_factura, orden_id, pago_id, cliente_id, ship_to_cliente_id,
+      numero_factura, orden_id, pago_id, cliente_id, fecha_emision,
+      ship_to_cliente_id,
       ship_to_nombre, ship_to_empresa, ship_to_direccion, ship_to_telefono,
       ship_to_correo, empresa_nombre,
       empresa_nombre_comercial, empresa_identificacion, empresa_direccion,
@@ -69,7 +71,8 @@ function crearParaPago(pagoId, ordenId) {
       cliente_correo, cliente_telefono, cliente_direccion, orden_fecha,
       metodo_pago, estado_pago, subtotal, total, monto_pagado, saldo, notas
     ) VALUES (
-      @numero, @orden_id, @pago_id, @cliente_id, @ship_to_cliente_id,
+      @numero, @orden_id, @pago_id, @cliente_id, @fecha_emision,
+      @ship_to_cliente_id,
       @ship_to_nombre, @ship_to_empresa, @ship_to_direccion, @ship_to_telefono,
       @ship_to_correo, @empresa_nombre,
       @empresa_comercial, @empresa_identificacion, @empresa_direccion,
@@ -84,6 +87,7 @@ function crearParaPago(pagoId, ordenId) {
       orden_id: ordenId,
       pago_id: pagoId,
       cliente_id: orden.cliente_id,
+      fecha_emision: new Date().toISOString(),
       ship_to_cliente_id: orden.ship_to_cliente_id,
       ship_to_nombre: orden.ship_to_nombre,
       ship_to_empresa: orden.ship_to_empresa,
@@ -193,12 +197,12 @@ function getHistorial(filtros = {}) {
   const params = [];
 
   if (filtros.fecha_desde) {
-    query += " AND DATE(o.fecha_creacion) >= ?";
-    params.push(filtros.fecha_desde);
+    query += " AND julianday(o.fecha_creacion) >= julianday(?)";
+    params.push(localDayStartUtc(filtros.fecha_desde));
   }
   if (filtros.fecha_hasta) {
-    query += " AND DATE(o.fecha_creacion) <= ?";
-    params.push(filtros.fecha_hasta);
+    query += " AND julianday(o.fecha_creacion) < julianday(?)";
+    params.push(localDayAfterUtc(filtros.fecha_hasta));
   }
   if (filtros.estado_pago === "pagado") {
     query += " AND COALESCE(p.total_pagado, 0) >= o.total - 0.005";
@@ -206,7 +210,7 @@ function getHistorial(filtros = {}) {
     query += " AND COALESCE(p.total_pagado, 0) < o.total - 0.005";
   }
 
-  query += " ORDER BY o.fecha_creacion DESC";
+  query += " ORDER BY julianday(o.fecha_creacion) DESC";
   return db.prepare(query).all(...params);
 }
 

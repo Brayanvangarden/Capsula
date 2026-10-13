@@ -1,5 +1,6 @@
 import { useClientes } from "../hooks/useClientes";
 import { clientesService } from "../services/clientes.service";
+import { localDateString } from "../utils/formatDate";
 import { useState, useEffect, useRef } from "react";
 
 function PencilIcon(props) {
@@ -310,7 +311,7 @@ function Clientes() {
 
     const blob = new Blob([contenido], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const fecha = new Date().toISOString().slice(0, 10);
+    const fecha = localDateString();
 
     const link = document.createElement("a");
     link.href = url;

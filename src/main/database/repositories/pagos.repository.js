@@ -1,5 +1,6 @@
 const { getDb } = require("../db");
 const facturasRepository = require("./facturas.repository");
+const { localDayStartUtc, localDayAfterUtc } = require("../dateTime");
 
 function getAll(filtros = {}) {
   let query = `
@@ -24,15 +25,15 @@ function getAll(filtros = {}) {
     params.push(filtros.orden_id);
   }
   if (filtros.fecha_desde) {
-    query += " AND DATE(p.fecha_pago) >= ?";
-    params.push(filtros.fecha_desde);
+    query += " AND julianday(p.fecha_pago) >= julianday(?)";
+    params.push(localDayStartUtc(filtros.fecha_desde));
   }
   if (filtros.fecha_hasta) {
-    query += " AND DATE(p.fecha_pago) <= ?";
-    params.push(filtros.fecha_hasta);
+    query += " AND julianday(p.fecha_pago) < julianday(?)";
+    params.push(localDayAfterUtc(filtros.fecha_hasta));
   }
 
-  query += " ORDER BY p.fecha_pago DESC";
+  query += " ORDER BY julianday(p.fecha_pago) DESC";
   return getDb()
     .prepare(query)
     .all(...params);
@@ -93,18 +94,18 @@ function create(data) {
       .prepare(
         `
       INSERT INTO pagos
-          (cliente_id, orden_id, monto, tipo_pago, metodo_pago, notas, usuario_id)
+          (cliente_id, orden_id, monto, tipo_pago, metodo_pago, notas, usuario_id, fecha_pago)
       VALUES
-          (@cliente_id, @orden_id, @monto, @tipo_pago, @metodo_pago, @notas, @usuario_id)
+          (@cliente_id, @orden_id, @monto, @tipo_pago, @metodo_pago, @notas, @usuario_id, @fecha_pago)
     `,
       )
-      .run(data);
+        .run({ ...data, fecha_pago: new Date().toISOString() });
 
     db.prepare(
       `
       UPDATE clientes
       SET balance_pendiente = MAX(0, balance_pendiente - ?),
-          actualizado = datetime('now')
+          actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = ?
     `,
     ).run(monto, data.cliente_id);
@@ -136,7 +137,7 @@ function getHistorialCliente(cliente_id) {
       FROM pagos p
       LEFT JOIN ordenes o ON p.orden_id = o.id
       WHERE p.cliente_id = ?
-      ORDER BY p.fecha_pago DESC
+      ORDER BY julianday(p.fecha_pago) DESC
     `,
     )
     .all(cliente_id);

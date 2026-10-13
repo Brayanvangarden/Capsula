@@ -28,7 +28,7 @@ function updatePassword(id, newPassword) {
   return getDb()
     .prepare(`
       UPDATE usuarios
-      SET password = ?, actualizado = datetime('now')
+      SET password = ?, actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = ?
     `)
     .run(hash, id)
@@ -40,7 +40,7 @@ function resetFailedLogin(id) {
       UPDATE usuarios
       SET failed_attempts = 0,
           locked_until = NULL,
-          actualizado = datetime('now')
+          actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = ?
     `)
     .run(id)
@@ -52,7 +52,7 @@ function updateFailedLogin(id, failedAttempts, lockedUntil = null) {
       UPDATE usuarios
       SET failed_attempts = ?,
           locked_until = ?,
-          actualizado = datetime('now')
+          actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = ?
     `)
     .run(failedAttempts, lockedUntil, id)
@@ -64,7 +64,7 @@ function setResetToken(id, resetCode, resetExpires) {
       UPDATE usuarios
       SET reset_code = ?,
           reset_expires = ?,
-          actualizado = datetime('now')
+          actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = ?
     `)
     .run(resetCode, resetExpires, id)
@@ -76,7 +76,7 @@ function clearResetToken(id) {
       UPDATE usuarios
       SET reset_code = NULL,
           reset_expires = NULL,
-          actualizado = datetime('now')
+          actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = ?
     `)
     .run(id)

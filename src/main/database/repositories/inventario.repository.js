@@ -1,4 +1,5 @@
 const { getDb } = require('../db')
+const { localDayStartUtc, localDayAfterUtc } = require('../dateTime')
 
 function getMovimientos(filtros = {}) {
   let query = `
@@ -20,15 +21,15 @@ function getMovimientos(filtros = {}) {
     params.push(filtros.tipo)
   }
   if (filtros.fecha_desde) {
-    query += ' AND DATE(m.fecha) >= ?'
-    params.push(filtros.fecha_desde)
+    query += ' AND julianday(m.fecha) >= julianday(?)'
+    params.push(localDayStartUtc(filtros.fecha_desde))
   }
   if (filtros.fecha_hasta) {
-    query += ' AND DATE(m.fecha) <= ?'
-    params.push(filtros.fecha_hasta)
+    query += ' AND julianday(m.fecha) < julianday(?)'
+    params.push(localDayAfterUtc(filtros.fecha_hasta))
   }
 
-  query += ' ORDER BY m.fecha DESC'
+  query += ' ORDER BY julianday(m.fecha) DESC'
 
   return getDb().prepare(query).all(...params)
 }
@@ -52,16 +53,16 @@ function registrarEntrada(data) {
     // 1️⃣ Registrar el movimiento
     const result = db.prepare(`
       INSERT INTO movimientos_inventario
-        (producto_id, tipo, cantidad, observaciones, usuario_id)
+        (producto_id, tipo, cantidad, observaciones, usuario_id, fecha)
       VALUES
-        (@producto_id, 'entrada', @cantidad, @observaciones, @usuario_id)
-    `).run(data)
+        (@producto_id, 'entrada', @cantidad, @observaciones, @usuario_id, @fecha)
+    `).run({ ...data, fecha: new Date().toISOString() })
 
     // 2️⃣ Actualizar cantidad en productos
     db.prepare(`
       UPDATE productos
       SET cantidad    = cantidad + @cantidad,
-          actualizado = datetime('now')
+          actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = @producto_id
     `).run(data)
 
@@ -87,16 +88,16 @@ function registrarSalida(data) {
     // 2️⃣ Registrar el movimiento
     const result = db.prepare(`
       INSERT INTO movimientos_inventario
-        (producto_id, tipo, cantidad, observaciones, usuario_id)
+        (producto_id, tipo, cantidad, observaciones, usuario_id, fecha)
       VALUES
-        (@producto_id, 'salida', @cantidad, @observaciones, @usuario_id)
-    `).run(data)
+        (@producto_id, 'salida', @cantidad, @observaciones, @usuario_id, @fecha)
+    `).run({ ...data, fecha: new Date().toISOString() })
 
     // 3️⃣ Restar cantidad en productos
     db.prepare(`
       UPDATE productos
       SET cantidad    = cantidad - @cantidad,
-          actualizado = datetime('now')
+          actualizado = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id = @producto_id
     `).run(data)
 

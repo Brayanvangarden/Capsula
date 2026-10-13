@@ -16,8 +16,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
   locked_until  TEXT,
   reset_code    TEXT,
   reset_expires TEXT,
-  creado_en     TEXT    NOT NULL DEFAULT (datetime('now')),
-  actualizado   TEXT    NOT NULL DEFAULT (datetime('now'))
+  creado_en     TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  actualizado   TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
 -- ════════════════════════════════════════
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS categorias (
   nombre      TEXT    NOT NULL UNIQUE,
   descripcion TEXT,
   estado      TEXT    NOT NULL DEFAULT 'activo' CHECK(estado IN ('activo', 'inactivo')),
-  creado_en   TEXT    NOT NULL DEFAULT (datetime('now'))
+  creado_en   TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
 -- ════════════════════════════════════════
@@ -49,8 +49,8 @@ CREATE TABLE IF NOT EXISTS productos (
   sku                 TEXT    NOT NULL,
   estado              TEXT    NOT NULL DEFAULT 'activo' CHECK(estado IN ('activo', 'inactivo')),
   notas               TEXT,
-  creado_en           TEXT    NOT NULL DEFAULT (datetime('now')),
-  actualizado         TEXT    NOT NULL DEFAULT (datetime('now'))
+  creado_en           TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  actualizado         TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
 -- ════════════════════════════════════════
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS movimientos_inventario (
   cantidad      REAL    NOT NULL,
   observaciones TEXT,
   usuario_id    INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
-  fecha         TEXT    NOT NULL DEFAULT (datetime('now'))
+  fecha         TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
 -- ════════════════════════════════════════
@@ -81,8 +81,8 @@ CREATE TABLE IF NOT EXISTS clientes (
   tiene_descuento       INTEGER NOT NULL DEFAULT 0 CHECK(tiene_descuento IN (0, 1)),
   descuento_porcentaje  REAL    NOT NULL DEFAULT 0,
   estado           TEXT    NOT NULL DEFAULT 'activo' CHECK(estado IN ('activo', 'inactivo')),
-  creado_en        TEXT    NOT NULL DEFAULT (datetime('now')),
-  actualizado      TEXT    NOT NULL DEFAULT (datetime('now'))
+  creado_en        TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  actualizado      TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
 -- ════════════════════════════════════════
@@ -93,8 +93,8 @@ CREATE TABLE IF NOT EXISTS clientes_precios (
   cliente_id      INTEGER NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
   producto_id     INTEGER NOT NULL REFERENCES productos(id) ON DELETE CASCADE,
   precio_unitario REAL    NOT NULL DEFAULT 0,
-  creado_en       TEXT    NOT NULL DEFAULT (datetime('now')),
-  actualizado     TEXT    NOT NULL DEFAULT (datetime('now')),
+  creado_en       TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  actualizado     TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   UNIQUE(cliente_id, producto_id)
 );
 
@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS ordenes (
   ship_to_direccion TEXT,
   ship_to_telefono TEXT,
   ship_to_correo  TEXT,
-  fecha_creacion  TEXT    NOT NULL DEFAULT (datetime('now')),
+  fecha_creacion  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   fecha_entrega   TEXT,
   estado          TEXT    NOT NULL DEFAULT 'pendiente'
                     CHECK(estado IN ('pendiente','en_proceso','completada','cancelada')),
@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS pagos (
   monto       REAL    NOT NULL,
   tipo_pago   TEXT    NOT NULL DEFAULT 'abono' CHECK(tipo_pago IN ('pago_total','abono')),
   metodo_pago TEXT    NOT NULL CHECK(metodo_pago IN ('efectivo','cheque','datafono','zelle')),
-  fecha_pago  TEXT    NOT NULL DEFAULT (datetime('now')),
+  fecha_pago  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   notas       TEXT,
   usuario_id  INTEGER REFERENCES usuarios(id) ON DELETE SET NULL
 );
@@ -163,7 +163,7 @@ CREATE TABLE IF NOT EXISTS facturas (
   ship_to_direccion     TEXT,
   ship_to_telefono      TEXT,
   ship_to_correo        TEXT,
-  fecha_emision         TEXT NOT NULL DEFAULT (datetime('now')),
+  fecha_emision         TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   estado                TEXT NOT NULL DEFAULT 'emitida' CHECK(estado IN ('emitida','anulada')),
   empresa_nombre        TEXT NOT NULL,
   empresa_nombre_comercial TEXT NOT NULL,
@@ -210,5 +210,5 @@ CREATE TABLE IF NOT EXISTS historial (
   modulo      TEXT    NOT NULL,
   descripcion TEXT    NOT NULL,
   usuario_id  INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
-  fecha       TEXT    NOT NULL DEFAULT (datetime('now'))
+  fecha       TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );

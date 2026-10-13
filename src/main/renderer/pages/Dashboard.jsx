@@ -4,6 +4,11 @@ import { useClientes } from "../hooks/useClientes";
 import { useOrdenes } from "../hooks/useOrdenes";
 import { usePagos } from "../hooks/usePagos";
 import { useInventario } from "../hooks/useInventario";
+import {
+  formatDate,
+  localDateString,
+  localMonthString,
+} from "../utils/formatDate";
 import "../styles/globals.css";
 import "../styles/theme.css";
 
@@ -195,7 +200,7 @@ function moneda(value) {
 }
 
 function fechaCorta(value) {
-  return value ? new Date(value).toLocaleDateString("es-CR") : "—";
+  return formatDate(value);
 }
 
 function Dashboard() {
@@ -221,17 +226,15 @@ function Dashboard() {
         Math.max(0, Number(orden.total) - (pagosPorOrden[orden.id] ?? 0)),
       0,
     ) ?? 0;
-  const inicioMes = new Date();
-  inicioMes.setDate(1);
-  inicioMes.setHours(0, 0, 0, 0);
+  const mesActual = localMonthString();
   const cobradoEsteMes = pagos.reduce((total, pago) => {
-    return new Date(pago.fecha_pago) >= inicioMes
+    return localDateString(pago.fecha_pago).startsWith(mesActual)
       ? total + Number(pago.monto)
       : total;
   }, 0);
-  const hoy = new Date().toLocaleDateString("en-CA");
+  const hoy = localDateString();
   const movimientosHoy = movimientos.filter((movimiento) =>
-    String(movimiento.fecha ?? "").startsWith(hoy),
+    localDateString(movimiento.fecha) === hoy,
   ).length;
   const hayAlertas = stockBajo.length > 0 || clientesConDeuda.length > 0;
 
