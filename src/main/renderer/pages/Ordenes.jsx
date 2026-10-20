@@ -4,6 +4,7 @@ import { useOrdenes } from "../hooks/useOrdenes";
 import { useClientes } from "../hooks/useClientes";
 import { useProductos } from "../hooks/useProductos";
 import { usePagos } from "../hooks/usePagos";
+import Factura from "../components/Factura";
 import { clientesService } from "../services/clientes.service";
 import { generarProformaPdf } from "../services/facturaPdf.service";
 import { ordenesService } from "../services/ordenes.service";
@@ -54,6 +55,7 @@ function Ordenes() {
   const [mensaje, setMensaje] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [pagina, setPagina] = useState(1);
+  const [proformaPreview, setProformaPreview] = useState(null);
 
   // Auto-limpia el mensaje
   useEffect(() => {
@@ -267,6 +269,15 @@ function Ordenes() {
       );
     } catch (err) {
       setMensaje(err.message || "No se pudo generar la proforma.");
+    }
+  };
+
+  const verProforma = async (orden) => {
+    try {
+      const ordenCompleta = await ordenesService.getById(orden.id);
+      setProformaPreview(ordenCompleta);
+    } catch (err) {
+      setMensaje(err.message || "No se pudo cargar la proforma.");
     }
   };
 
@@ -568,6 +579,13 @@ function Ordenes() {
                         >
                           🧾 Generar PROFORMA
                         </button>
+                        <button
+                          className="btn-action-outline"
+                          type="button"
+                          onClick={() => verProforma(orden)}
+                        >
+                          👁️ Ver PROFORMA
+                        </button>
                         {(orden.estado === "pendiente" ||
                           orden.estado === "en_proceso") && (
                           <button
@@ -865,6 +883,13 @@ function Ordenes() {
             </form>
           </div>
         </div>
+      )}
+      {proformaPreview && (
+        <Factura
+          factura={proformaPreview}
+          tipoDocumento="proforma"
+          onClose={() => setProformaPreview(null)}
+        />
       )}
     </div>
   );

@@ -67,7 +67,8 @@ function crearParaPago(pagoId, ordenId) {
       empresa_nombre_comercial, empresa_identificacion, empresa_direccion,
       empresa_telefono, empresa_correo, cliente_nombre, cliente_identificacion,
       cliente_correo, cliente_telefono, cliente_direccion, orden_fecha,
-      metodo_pago, estado_pago, subtotal, total, monto_pagado, saldo, notas
+      metodo_pago, estado_pago, subtotal, descuentos, total, monto_pagado,
+      saldo, notas
     ) VALUES (
       @numero, @orden_id, @pago_id, @cliente_id, @ship_to_cliente_id,
       @ship_to_nombre, @ship_to_empresa, @ship_to_direccion, @ship_to_telefono,
@@ -75,7 +76,8 @@ function crearParaPago(pagoId, ordenId) {
       @empresa_comercial, @empresa_identificacion, @empresa_direccion,
       @empresa_telefono, @empresa_correo, @cliente_nombre, @cliente_identificacion,
       @cliente_correo, @cliente_telefono, @cliente_direccion, @orden_fecha,
-      @metodo_pago, 'pagado', @subtotal, @total, @monto_pagado, 0, @notas
+      @metodo_pago, 'pagado', @subtotal, @descuentos, @total, @monto_pagado,
+      0, @notas
     )
   `,
     )
@@ -104,6 +106,7 @@ function crearParaPago(pagoId, ordenId) {
       orden_fecha: orden.fecha_creacion,
       metodo_pago: pago.metodo_pago,
       subtotal,
+      descuentos: Math.max(0, subtotal - Number(orden.total)),
       total: Number(orden.total),
       monto_pagado: Number(totalPagado),
       notas: orden.notas,

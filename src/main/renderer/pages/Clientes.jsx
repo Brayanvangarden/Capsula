@@ -182,6 +182,7 @@ function Clientes() {
       descuento_porcentaje: cliente.descuento_porcentaje ?? 0,
     });
     setMensaje("");
+    setTab("editar");
   };
 
   const cerrarFormulario = () => {
