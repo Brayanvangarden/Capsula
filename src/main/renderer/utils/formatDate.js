@@ -3,17 +3,28 @@ import 'dayjs/locale/es'
 
 dayjs.locale('es')
 
+const parseDate = (date) => {
+  if (
+    typeof date === 'string' &&
+    /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(date) &&
+    !/(Z|[+-]\d{2}:?\d{2})$/i.test(date)
+  ) {
+    return dayjs(`${date.replace(' ', 'T')}Z`)
+  }
+  return dayjs(date)
+}
+
 export const formatDate = (date) =>
-  date ? dayjs(date).format('DD/MM/YYYY') : '—'
+  date ? parseDate(date).format('DD/MM/YYYY') : '—'
 
 export const formatDateTime = (date) =>
-  date ? dayjs(date).format('DD/MM/YYYY HH:mm') : '—'
+  date ? parseDate(date).format('DD/MM/YYYY HH:mm') : '—'
 
 export const formatDateInput = (date) =>
-  date ? dayjs(date).format('YYYY-MM-DD') : ''
+  date ? parseDate(date).format('YYYY-MM-DD') : ''
 
 export const diasParaVencer = (fecha) =>
-  fecha ? dayjs(fecha).diff(dayjs(), 'day') : null
+  fecha ? parseDate(fecha).diff(dayjs(), 'day') : null
 
 export const estaVencido = (fecha) =>
-  fecha ? dayjs(fecha).isBefore(dayjs()) : false
+  fecha ? parseDate(fecha).isBefore(dayjs()) : false

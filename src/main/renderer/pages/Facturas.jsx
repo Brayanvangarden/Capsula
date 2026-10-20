@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import Factura from "../components/Factura";
 import { facturasService } from "../services/facturas.service";
 import { generarFacturaPdf } from "../services/facturaPdf.service";
+import { formatDate } from "../utils/formatDate";
 
 const formatoMoneda = (value) =>
   `$${Number(value ?? 0).toLocaleString("es-CR")}`;
@@ -220,13 +221,7 @@ function Facturas() {
                         "—"}
                     </td>
                     <td>{`N.º ${String(registro.orden_id).padStart(4, "0")}`}</td>
-                    <td>
-                      {registro.fecha_creacion
-                        ? new Date(registro.fecha_creacion).toLocaleDateString(
-                            "es-CR",
-                          )
-                        : "—"}
-                    </td>
+                    <td>{formatDate(registro.fecha_creacion)}</td>
                     <td>{formatoMoneda(registro.total)}</td>
                     <td>{formatoMoneda(registro.monto_pagado)}</td>
                     <td>{formatoMoneda(registro.saldo)}</td>

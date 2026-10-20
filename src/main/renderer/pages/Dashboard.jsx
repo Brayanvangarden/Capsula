@@ -4,6 +4,7 @@ import { useClientes } from "../hooks/useClientes";
 import { useOrdenes } from "../hooks/useOrdenes";
 import { usePagos } from "../hooks/usePagos";
 import { useInventario } from "../hooks/useInventario";
+import { formatDate } from "../utils/formatDate";
 import "../styles/globals.css";
 import "../styles/theme.css";
 
@@ -194,10 +195,6 @@ function moneda(value) {
   return `$${Number(value ?? 0).toLocaleString("es-CR")}`;
 }
 
-function fechaCorta(value) {
-  return value ? new Date(value).toLocaleDateString("es-CR") : "—";
-}
-
 function Dashboard() {
   const { user, logout } = useAuth();
   const { productos, stockBajo } = useProductos();
@@ -365,7 +362,7 @@ function Dashboard() {
                   <td>
                     <EstadoBadge value={orden.estado_pago} prefix="pago-" />
                   </td>
-                  <td className="muted">{fechaCorta(orden.fecha_creacion)}</td>
+                  <td className="muted">{formatDate(orden.fecha_creacion)}</td>
                 </tr>
               ))}
             </tbody>
@@ -399,7 +396,7 @@ function Dashboard() {
                   </div>
                   <div className="activity-value">
                     <strong>{moneda(pago.monto)}</strong>
-                    <span>{fechaCorta(pago.fecha_pago)}</span>
+                    <span>{formatDate(pago.fecha_pago)}</span>
                   </div>
                 </div>
               ))}
@@ -434,7 +431,7 @@ function Dashboard() {
                       {movimiento.tipo === "entrada" ? "+" : "-"}
                       {movimiento.cantidad}
                     </strong>
-                    <span>{fechaCorta(movimiento.fecha)}</span>
+                    <span>{formatDate(movimiento.fecha)}</span>
                   </div>
                 </div>
               ))}
