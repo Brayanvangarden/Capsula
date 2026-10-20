@@ -539,10 +539,16 @@
 }
 
 .factura-box {
+  min-width: 0;
   min-height: 150px;
   padding: 16px 18px;
   border: 1px solid var(--border-default);
   background: #fafafa;
+}
+
+.factura-box p {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .factura-box h2 {

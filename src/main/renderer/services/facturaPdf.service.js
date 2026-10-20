@@ -45,7 +45,58 @@ function formatOrdenNumero(id) {
 
 function obtenerLineasShipTo(documento) {
   const direccion = documento?.ship_to_direccion || documento?.notas;
-  return String(direccion || "Address not provided").split(/\r?\n/);
+  return String(direccion || "Address not provided")
+    .split(/\r?\n/)
+    .filter((line) => line.trim());
+}
+
+function obtenerLineasBillTo(documento) {
+  const lineas = [documento?.cliente_nombre, documento?.cliente_direccion]
+    .map((line) => String(line || "").trim())
+    .filter(Boolean);
+
+  return lineas.length ? lineas : ["Address not provided"];
+}
+
+function dibujarCajasBillToShipTo(
+  pdf,
+  { billX, shipX, y, boxWidth, billToLines, shipToLines },
+) {
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(10);
+
+  const contentWidth = boxWidth - 24;
+  const wrapLines = (lines) =>
+    lines.flatMap((line) =>
+      String(line || "")
+        .split(/\r?\n/)
+        .filter((part) => part.trim())
+        .flatMap((part) => pdf.splitTextToSize(part, contentWidth)),
+    );
+  const wrappedBill = wrapLines(billToLines);
+  const wrappedShip = wrapLines(shipToLines);
+  const lineCount = Math.max(wrappedBill.length, wrappedShip.length);
+  const boxHeight = Math.max(108, 42 + lineCount * 12);
+
+  pdf.setDrawColor(0, 0, 0);
+  pdf.setLineWidth(0.8);
+  pdf.rect(billX, y, boxWidth, boxHeight);
+  pdf.rect(shipX, y, boxWidth, boxHeight);
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(10);
+  pdf.text("Bill to:", billX + 10, y + 18);
+  pdf.text("Ship to:", shipX + 10, y + 18);
+
+  pdf.setFont("helvetica", "normal");
+  wrappedBill.forEach((line, index) => {
+    pdf.text(String(line), billX + 18, y + 30 + index * 12);
+  });
+  wrappedShip.forEach((line, index) => {
+    pdf.text(String(line), shipX + 18, y + 30 + index * 12);
+  });
+
+  return y + boxHeight + 10;
 }
 
 function monedaUsd(value) {
@@ -68,7 +119,15 @@ function monedaUsd(value) {
  */
 function dibujarPieYPago(
   pdf,
-  { margin, pageWidth, startY, subtotal, total, impuestosLabel = "Included" },
+  {
+    margin,
+    pageWidth,
+    startY,
+    subtotal,
+    descuento = 0,
+    total,
+    impuestosLabel = "Included",
+  },
 ) {
   const totalsLabelX = pageWidth - 170;
   const totalsValueX = pageWidth - margin;
@@ -76,12 +135,15 @@ function dibujarPieYPago(
   const rowHeight = 20;
   const lineTop = startY - 16;
 
-  const rows = [
-    { label: "Subtotal", value: monedaUsd(subtotal) },
+  const rows = [{ label: "Subtotal", value: monedaUsd(subtotal) }];
+  if (descuento > 0) {
+    rows.push({ label: "Discount", value: `-${monedaUsd(descuento)}` });
+  }
+  rows.push(
     { label: "Shipping", value: monedaUsd(0) },
     { label: "Tax", value: impuestosLabel },
     { label: "Deposit", value: monedaUsd(0) },
-  ];
+  );
 
   // Línea horizontal completa arriba de todo el bloque
   pdf.setDrawColor(0, 0, 0);
@@ -253,42 +315,16 @@ async function crearPdf(factura) {
 
   const billX = margin;
   const shipX = pageWidth / 2 + 12;
-  const boxHeight = 108;
   let y = 230;
 
-  pdf.setDrawColor(0, 0, 0);
-  pdf.setLineWidth(0.8);
-  pdf.rect(billX, y, boxWidth, boxHeight);
-  pdf.rect(shipX, y, boxWidth, boxHeight);
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(10);
-  pdf.text("Bill to:", billX + 10, y + 18);
-  pdf.text("Ship to:", shipX + 10, y + 18);
-
-  pdf.setFont("helvetica", "normal");
-  const billToLines = [
-    factura.cliente_direccion || "Address not provided",
-  ];
-
-  const shipToLines = obtenerLineasShipTo(factura);
-  const wrappedShip = shipToLines.flatMap((line) =>
-    pdf.splitTextToSize(String(line || ""), boxWidth - 24),
-  );
-
-  let billY = y + 30;
-  billToLines.forEach((line) => {
-    pdf.text(String(line), billX + 18, billY);
-    billY += 14;
+  y = dibujarCajasBillToShipTo(pdf, {
+    billX,
+    shipX,
+    y,
+    boxWidth,
+    billToLines: obtenerLineasBillTo(factura),
+    shipToLines: obtenerLineasShipTo(factura),
   });
-
-  let shipY = y + 30;
-  wrappedShip.forEach((line) => {
-    pdf.text(String(line), shipX + 18, shipY);
-    shipY += 12;
-  });
-
-  y += boxHeight + 10;
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(9);
   pdf.text("Item No.", margin, y);
@@ -308,6 +344,9 @@ async function crearPdf(factura) {
   );
   const total = Number(factura.total ?? subtotal);
   const impuestos = Number(factura.impuestos ?? 0);
+  const descuento =
+    Number(factura.descuentos ?? 0) ||
+    Math.max(0, subtotal + impuestos - total);
 
   detalle.forEach((item) => {
     if (y > pageHeight - 220) {
@@ -338,6 +377,7 @@ async function crearPdf(factura) {
     pageWidth,
     startY,
     subtotal,
+    descuento,
     total,
   });
 
@@ -362,42 +402,16 @@ async function crearProformaPdf(orden) {
 
   const billX = margin;
   const shipX = pageWidth / 2 + 12;
-  const boxHeight = 108;
   let y = 230;
 
-  pdf.setDrawColor(0, 0, 0);
-  pdf.setLineWidth(0.8);
-  pdf.rect(billX, y, boxWidth, boxHeight);
-  pdf.rect(shipX, y, boxWidth, boxHeight);
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(10);
-  pdf.text("Bill to:", billX + 10, y + 18);
-  pdf.text("Ship to:", shipX + 10, y + 18);
-
-  pdf.setFont("helvetica", "normal");
-  const billToLines = [
-    orden?.cliente_direccion || "Address not provided",
-  ];
-
-  const shipToLines = obtenerLineasShipTo(orden);
-  const wrappedShip = shipToLines.flatMap((line) =>
-    pdf.splitTextToSize(String(line || ""), boxWidth - 24),
-  );
-
-  let billY = y + 30;
-  billToLines.forEach((line) => {
-    pdf.text(String(line), billX + 18, billY);
-    billY += 14;
+  y = dibujarCajasBillToShipTo(pdf, {
+    billX,
+    shipX,
+    y,
+    boxWidth,
+    billToLines: obtenerLineasBillTo(orden),
+    shipToLines: obtenerLineasShipTo(orden),
   });
-
-  let shipY = y + 30;
-  wrappedShip.forEach((line) => {
-    pdf.text(String(line), shipX + 18, shipY);
-    shipY += 12;
-  });
-
-  y += boxHeight + 10;
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(9);
   pdf.text("Item No.", margin, y);
@@ -416,6 +430,7 @@ async function crearProformaPdf(orden) {
     0,
   );
   const total = Number(orden?.total ?? subtotal);
+  const descuento = Math.max(0, subtotal - total);
 
   detalle.forEach((item) => {
     if (y > pageHeight - 220) {
@@ -448,6 +463,7 @@ async function crearProformaPdf(orden) {
     pageWidth,
     startY,
     subtotal,
+    descuento,
     total,
   });
 

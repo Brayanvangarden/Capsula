@@ -4,16 +4,16 @@ import { useAuth } from "../hooks/useAuth";
 
 const navLinks = [
   { label: "Inicio", path: "/", icon: "🏠" },
-  { label: "Productos", path: "/productos", icon: "📦" },
   { label: "Clientes", path: "/clientes", icon: "👥" },
+  { label: "Órdenes", path: "/ordenes", icon: "📝" },
   { label: "Pagos", path: "/pagos", icon: "💳" },
   { label: "Facturas", path: "/facturas", icon: "🧾" },
   { label: "Cuentas por Cobrar", path: "/cuentas-por-cobrar", icon: "💼" },
   { label: "Reportes", path: "/reportes", icon: "📊" },
-  { label: "Usuarios", path: "/usuarios", icon: "🧑‍💼" },
-  { label: "Órdenes", path: "/ordenes", icon: "📝" },
   { label: "Inventario", path: "/inventario", icon: "📋" },
+  { label: "Productos", path: "/productos", icon: "📦" },
   { label: "Categorías", path: "/categorias", icon: "🏷️" },
+  { label: "Usuarios", path: "/usuarios", icon: "🧑‍💼" },
   { label: "Configuración", path: "/configuracion", icon: "⚙️" },
 ];
 

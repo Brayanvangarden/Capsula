@@ -1,6 +1,7 @@
 import {
   COMPANY_LOGO_URL,
   generarFacturaPdf,
+  generarProformaPdf,
   imprimirFactura,
 } from "../services/facturaPdf.service";
 import { useState } from "react";
@@ -16,15 +17,35 @@ function formatNumeroOrden(id) {
   return `No. ${String(Number(id ?? 0)).padStart(4, "0")}`;
 }
 
-export default function Factura({ factura, onClose }) {
+export default function Factura({
+  factura,
+  onClose,
+  tipoDocumento = "factura",
+}) {
   const [error, setError] = useState("");
   if (!factura) return null;
 
-  const subtotal = Number(factura.subtotal ?? 0);
-  const descuentos = Number(factura.descuentos ?? 0);
+  const esProforma = tipoDocumento === "proforma";
+  const subtotal = Number(
+    factura.subtotal ??
+      factura.detalle?.reduce(
+        (total, item) => total + Number(item.subtotal ?? 0),
+        0,
+      ) ??
+      0,
+  );
   const impuestos = Number(factura.impuestos ?? 0);
-  const total = Number(factura.total ?? subtotal - descuentos + impuestos);
-  const saldo = Number(factura.saldo ?? 0);
+  const total = Number(
+    factura.total ?? subtotal - Number(factura.descuentos ?? 0) + impuestos,
+  );
+  const descuentos =
+    Number(factura.descuentos ?? 0) ||
+    Math.max(0, subtotal + impuestos - total);
+  const billToLines = [
+    factura.cliente_nombre,
+    factura.cliente_direccion,
+  ].filter((line) => typeof line === "string" && line.trim());
+  if (billToLines.length === 0) billToLines.push("Address not provided");
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -33,33 +54,44 @@ export default function Factura({ factura, onClose }) {
         onClick={(event) => event.stopPropagation()}
       >
         <div className="factura-actions">
-          <button
-            type="button"
-            className="btn-secondary factura-imprimir"
-            onClick={async () => {
-              setError("");
-              try {
-                await imprimirFactura(factura);
-              } catch (actionError) {
-                setError(actionError.message || "No se pudo imprimir la factura.");
-              }
-            }}
-          >
-            Print
-          </button>
+          {!esProforma && (
+            <button
+              type="button"
+              className="btn-secondary factura-imprimir"
+              onClick={async () => {
+                setError("");
+                try {
+                  await imprimirFactura(factura);
+                } catch (actionError) {
+                  setError(
+                    actionError.message || "No se pudo imprimir la factura.",
+                  );
+                }
+              }}
+            >
+              Print
+            </button>
+          )}
           <button
             type="button"
             className="btn-primary"
             onClick={async () => {
               setError("");
               try {
-                await generarFacturaPdf(factura);
+                if (esProforma) {
+                  await generarProformaPdf(factura);
+                } else {
+                  await generarFacturaPdf(factura);
+                }
               } catch (actionError) {
-                setError(actionError.message || "No se pudo generar el PDF.");
+                setError(
+                  actionError.message ||
+                    `No se pudo generar ${esProforma ? "la proforma" : "el PDF"}.`,
+                );
               }
             }}
           >
-            Download PDF
+            {esProforma ? "Download Proforma PDF" : "Download PDF"}
           </button>
           <button
             type="button"
@@ -85,15 +117,17 @@ export default function Factura({ factura, onClose }) {
               <p>Tel. (754) 209-3195 / (954) 889-4019</p>
             </div>
             <div className="factura-invoice-meta">
-              <strong>INVOICE</strong>
-              <span>{formatNumeroOrden(factura.orden_id)}</span>
+              <strong>{esProforma ? "QUOTATION" : "INVOICE"}</strong>
+              <span>{formatNumeroOrden(factura.orden_id ?? factura.id)}</span>
             </div>
           </header>
 
           <div className="factura-box-grid">
             <div className="factura-box">
               <h2>Bill to:</h2>
-              <p>{factura.cliente_direccion || "Address not provided"}</p>
+              {billToLines.map((line, index) => (
+                <p key={`${index}-${line}`}>{line}</p>
+              ))}
             </div>
             <div className="factura-box">
               <h2>Ship to:</h2>
@@ -118,7 +152,12 @@ export default function Factura({ factura, onClose }) {
             <tbody>
               {factura.detalle.map((item) => (
                 <tr key={item.id}>
-                  <td>{item.codigo_producto || item.producto_id || "—"}</td>
+                  <td>
+                    {item.codigo_producto ||
+                      item.producto_sku ||
+                      item.producto_id ||
+                      "—"}
+                  </td>
                   <td>
                     {item.descripcion || item.producto_nombre || "Product"}
                   </td>
@@ -135,6 +174,12 @@ export default function Factura({ factura, onClose }) {
               <span>Subtotal</span>
               <strong>{moneda(subtotal)}</strong>
             </div>
+            {descuentos > 0 && (
+              <div className="factura-totales-row">
+                <span>Discount</span>
+                <strong>-{moneda(descuentos)}</strong>
+              </div>
+            )}
             <div className="factura-totales-row">
               <span>Shipping</span>
               <strong>{moneda(0)}</strong>
